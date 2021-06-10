@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/rjkroege/edwood/internal/elog"
-	"github.com/rjkroege/edwood/internal/util"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -368,7 +366,7 @@ func (f *File) SetName(name string) {
 func (f *File) UnsetName(delta *[]*Undo) {
 	var u Undo
 	// undo a file name change by restoring old name
-	u.t = elog.Filename
+	u.t = Filename
 	u.mod = f.mod
 	u.seq = f.seq
 	u.p0 = 0 // unused
