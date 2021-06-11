@@ -488,7 +488,7 @@ func keyboardthread(display draw.Display) {
 				}
 				if t != nil && t.w != nil {
 					// In a set of zeroxes, the last typed-in body becomes the curtext.
-					t.w.body.file.curtext = &t.w.body
+					t.w.body.file.SetCurText(&t.w.body)
 				}
 				if timer != nil {
 					timer.Stop()
