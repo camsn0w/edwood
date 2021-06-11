@@ -5,6 +5,7 @@ import "fmt"
 type ObservableEditableBuffer interface {
 	AddText(observer BufferObserver)
 	DelText(observer BufferObserver) error
+	SetCurtext(observer BufferObserver)
 	AllText(tf func(i interface{}))
 	HasMultipleTexts() bool
 	InsertAt(p0 int, s []rune)
@@ -40,6 +41,10 @@ func (f *File) DelText(observer BufferObserver) error {
 		}
 	}
 	return fmt.Errorf("can't find text in File.DelText")
+}
+
+func (f *File) SetCurText(observer BufferObserver) {
+	f.buf.curtext = observer
 }
 
 func (f *File) AllText(tf func(i interface{})) {
