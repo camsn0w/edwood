@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -57,8 +56,7 @@ type File struct {
 	treatasclean bool // Window Clean tests should succeed if set. [private]
 
 	// Observer pattern: many Text instances can share a File.
-	curtext *Text
-	text    []*Text // [private I think]
+	buf Editbuf
 
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
 	isdir     bool // Used to track if this File is populated from a directory list. [private]
@@ -277,96 +275,6 @@ func (f *File) Dirty() bool {
 	return f.seq != f.putseq
 }
 
-// AddText adds t as an observer for edits to this File.
-// TODO(rjk): The observer should be an interface.
-func (f *File) AddText(t *Text) *File {
-	f.text = append(f.text, t)
-	f.curtext = t
-	return f
-}
-
-// DelText removes t as an observer for edits to this File.
-// TODO(rjk): The observer should be an interface.
-// TODO(rjk): Can make this more idiomatic?
-func (f *File) DelText(t *Text) error {
-	for i, text := range f.text {
-		if text == t {
-			f.text[i] = f.text[len(f.text)-1]
-			f.text = f.text[:len(f.text)-1]
-			if len(f.text) == 0 {
-				return nil
-			}
-			if t == f.curtext {
-				f.curtext = f.text[0]
-			}
-			return nil
-		}
-	}
-	return fmt.Errorf("can't find text in File.DelText")
-}
-
-func (f *File) AllText(tf func(t *Text)) {
-	for _, t := range f.text {
-		tf(t)
-	}
-}
-
-// HasMultipleTexts returns true if this File has multiple texts
-// display its contents.
-func (f *File) HasMultipleTexts() bool {
-	return len(f.text) > 1
-}
-
-// InsertAt inserts s runes at rune address p0.
-// TODO(rjk): run the observers here to simplify the Text code.
-// TODO(rjk): In terms of the undo.RuneArray conversion, this correponds
-// to undo.RuneArray.Insert.
-// NB: At suffix is to correspond to utf8string.String.At().
-func (f *File) InsertAt(p0 int, s []rune) {
-	f.treatasclean = false
-	if p0 > f.b.nc() {
-		panic("internal error: fileinsert")
-	}
-	if f.seq > 0 {
-		f.Uninsert(&f.delta, p0, len(s))
-	}
-	f.b.Insert(p0, s)
-	if len(s) != 0 {
-		f.Modded()
-	}
-	for _, text := range f.text {
-		text.inserted(p0, s)
-	}
-}
-
-// InsertAtWithoutCommit inserts s at p0 without creating
-// an undo record.
-// TODO(rjk): Remove this as a prelude to converting to undo.RuneArray
-// But preserve the cache. Every "small" insert should go into the cache.
-// It almost certainly greatly improves performance for a series of single
-// character insertions.
-func (f *File) InsertAtWithoutCommit(p0 int, s []rune) {
-	f.treatasclean = false
-	if p0 > f.b.nc()+len(f.cache) {
-		panic("File.InsertAtWithoutCommit insertion off the end")
-	}
-
-	if len(f.cache) == 0 {
-		f.cq0 = p0
-	} else {
-		if p0 != f.cq0+len(f.cache) {
-			// TODO(rjk): actually print something useful here
-			acmeerror("File.InsertAtWithoutCommit cq0", nil)
-		}
-	}
-	f.cache = append(f.cache, s...)
-
-	// run the observers
-	for _, text := range f.text {
-		text.inserted(p0, s)
-	}
-}
-
 // Uninsert generates an action record that deletes runes from the File
 // to undo an insertion.
 func (f *File) Uninsert(delta *[]*Undo, q0, ns int) {
@@ -379,34 +287,6 @@ func (f *File) Uninsert(delta *[]*Undo, q0, ns int) {
 	u.p0 = q0
 	u.n = ns
 	(*delta) = append(*delta, &u)
-}
-
-// DeleteAt removes the rune range [p0,p1) from File.
-// TODO(rjk): Currently, adds an Undo record. It shouldn't
-// TODO(rjk): should map onto undo.RuneArray.Delete
-// TODO(rjk): DeleteAt has an implied Commit operation
-// that makes it not match with undo.RuneArray.Delete
-func (f *File) DeleteAt(p0, p1 int) {
-	f.treatasclean = false
-	if !(p0 <= p1 && p0 <= f.b.nc() && p1 <= f.b.nc()) {
-		acmeerror("internal error: DeleteAt", nil)
-	}
-	if len(f.cache) > 0 {
-		acmeerror("internal error: DeleteAt", nil)
-	}
-
-	if f.seq > 0 {
-		f.Undelete(&f.delta, p0, p1)
-	}
-	f.b.Delete(p0, p1)
-
-	// Validate if this is right.
-	if p1 > p0 {
-		f.Modded()
-	}
-	for _, text := range f.text {
-		text.deleted(p0, p1)
-	}
 }
 
 // Undelete generates an action record that inserts runes into the File
@@ -480,8 +360,6 @@ func NewFile(filename string) *File {
 		//	seq       int
 		mod: false,
 
-		curtext: nil,
-		text:    []*Text{},
 		//	ntext   int
 	}
 }
@@ -525,93 +403,6 @@ func (f *File) RedoSeq() int {
 // Seq returns the current value of seq.
 func (f *File) Seq() int {
 	return f.seq
-}
-
-// Undo undoes edits if isundo is true or redoes edits if isundo is false.
-// It returns the new selection q0, q1 and a bool indicating if the
-// returned selection is meaningful.
-//
-// TODO(rjk): Separate Undo and Redo for better alignment with undo.RuneArray
-// TODO(rjk): This Undo implementation may Undo/Redo multiple changes.
-// The number actually processed is controlled by mutations to File.seq.
-// This does not align with the semantics of undo.RuneArray.
-// Each "Mark" needs to have a seq value provided.
-// TODO(rjk): Consider providing the target seq value as an argument.
-func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
-	var (
-		stop           int
-		delta, epsilon *[]*Undo
-	)
-	if isundo {
-		// undo; reverse delta onto epsilon, seq decreases
-		delta = &f.delta
-		epsilon = &f.epsilon
-		stop = f.seq
-	} else {
-		// redo; reverse epsilon onto delta, seq increases
-		delta = &f.epsilon
-		epsilon = &f.delta
-		stop = 0 // don't know yet
-	}
-
-	for len(*delta) > 0 {
-		u := (*delta)[len(*delta)-1]
-		if isundo {
-			if u.seq < stop {
-				f.seq = u.seq
-				return
-			}
-		} else {
-			if stop == 0 {
-				stop = u.seq
-			}
-			if u.seq > stop {
-				return
-			}
-		}
-		switch u.t {
-		default:
-			panic(fmt.Sprintf("undo: 0x%x\n", u.t))
-		case Delete:
-			f.seq = u.seq
-			f.Undelete(epsilon, u.p0, u.p0+u.n)
-			f.mod = u.mod
-			f.treatasclean = false
-			f.b.Delete(u.p0, u.p0+u.n)
-			for _, text := range f.text {
-				text.deleted(u.p0, u.p0+u.n)
-			}
-			q0 = u.p0
-			q1 = u.p0
-			ok = true
-		case Insert:
-			f.seq = u.seq
-			f.Uninsert(epsilon, u.p0, u.n)
-			f.mod = u.mod
-			f.treatasclean = false
-			f.b.Insert(u.p0, u.buf)
-			for _, text := range f.text {
-				text.inserted(u.p0, u.buf)
-			}
-			q0 = u.p0
-			q1 = u.p0 + u.n
-			ok = true
-		case Filename:
-			// TODO(rjk): If I have a zerox, does undo a filename change update?
-			f.seq = u.seq
-			f.UnsetName(epsilon)
-			f.mod = u.mod
-			f.treatasclean = false
-			newfname := string(u.buf)
-			f.setnameandisscratch(newfname)
-		}
-		(*delta) = (*delta)[0 : len(*delta)-1]
-	}
-	// TODO(rjk): Why do we do this?
-	if isundo {
-		f.seq = 0
-	}
-	return q0, q1, ok
 }
 
 // Reset removes all Undo records for this File.
