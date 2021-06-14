@@ -1,6 +1,6 @@
 package main
 
 type BufferObserver interface {
-	inserted(q0 int, r []rune)
-	deleted(q0, q1 int)
+	Inserted(q0 int, r []rune)
+	Deleted(q0, q1 int)
 }

@@ -418,7 +418,7 @@ func (t *Text) BsInsert(q0 int, r []rune, tofile bool) (q, nr int) {
 
 // inserted is a callback invoked by File on Insert* to update each Text
 // that is using a given File.
-func (t *Text) inserted(q0 int, r []rune) {
+func (t *Text) Inserted(q0 int, r []rune) {
 	if t.what == Body {
 		t.w.utflastqid = -1
 	}
@@ -565,7 +565,7 @@ func (t *Text) Delete(q0, q1 int, _ bool) {
 // deleted implements the single-text deletion observer for this Text's
 // backing File. It updates the Text (i.e. the view) for the removal of
 // runes [q0, q1).
-func (t *Text) deleted(q0, q1 int) {
+func (t *Text) Deleted(q0, q1 int) {
 	n := q1 - q0
 	if t.what == Body {
 		t.w.utflastqid = -1

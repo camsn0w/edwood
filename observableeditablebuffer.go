@@ -17,11 +17,6 @@ type ObservableEditableBuffer interface {
 	New() *Editbuf
 }
 
-type Editbuf struct {
-	curtext BufferObserver
-	text    map[BufferObserver]struct{} // [private I think]
-}
-
 func (f *File) AddText(observer BufferObserver) {
 	if f.buf.text == nil {
 		f.buf.text = make(map[BufferObserver]struct{})
@@ -80,7 +75,7 @@ func (f *File) InsertAt(p0 int, s []rune) {
 		f.Modded()
 	}
 	f.AllText(func(i interface{}) {
-		i.(BufferObserver).inserted(p0, s)
+		i.(BufferObserver).Inserted(p0, s)
 	})
 }
 
@@ -120,7 +115,7 @@ func (f *File) DeleteAt(p0, p1 int) {
 		f.Modded()
 	}
 	f.AllText(func(i interface{}) {
-		i.(BufferObserver).deleted(p0, p1)
+		i.(BufferObserver).Deleted(p0, p1)
 	})
 }
 
@@ -166,7 +161,7 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.treatasclean = false
 			f.b.Delete(u.p0, u.p0+u.n)
 			f.AllText(func(i interface{}) {
-				i.(BufferObserver).deleted(u.p0, u.p0+u.n)
+				i.(BufferObserver).Deleted(u.p0, u.p0+u.n)
 
 			})
 			q0 = u.p0
@@ -179,7 +174,7 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.treatasclean = false
 			f.b.Insert(u.p0, u.buf)
 			f.AllText(func(i interface{}) {
-				i.(BufferObserver).inserted(u.p0, u.buf)
+				i.(BufferObserver).Inserted(u.p0, u.buf)
 			})
 			q0 = u.p0
 			q1 = u.p0 + u.n
