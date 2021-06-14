@@ -20,7 +20,6 @@ func TestDelText(t *testing.T) {
 		},
 	}
 
-	f.AddText(&Text{})
 	testData := []*Text{&Text{file: NewFile("World sourdoughs from antiquity")},
 		&Text{file: NewFile("Willowbrook Association Handbook: 2011")},
 		&Text{file: NewFile("Weakest in the Nation")},
@@ -57,14 +56,15 @@ func TestDelText(t *testing.T) {
 	for _, text := range testData {
 		f.AddText(text)
 	}
+	println("Size is now: ", f.GetTextSize())
 	for i, text := range testData {
 		err := f.DelText(text)
-
 		if err != nil {
 			t.Errorf("DelText of text at index %d failed: %v", i, err)
 			continue
 		}
-		if got, want := len(f.buf.text), i; got != want {
+		if got, want := f.GetTextSize(), len(testData)-(i+1); got != want {
+			println("On test #", i)
 			t.Fatalf("DelText resulted in text of length %v; expected %v", got, want)
 		}
 		f.AllText(func(i interface{}) {
