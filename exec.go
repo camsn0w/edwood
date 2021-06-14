@@ -494,7 +494,7 @@ func local(et, _, argt *Text, _, _ bool, arg string) {
 //
 // TODO(flux): Write this in terms of the various cases.
 func putfile(f *File, q0 int, q1 int, name string) error {
-	w := f.curtext.w
+	w := f.GetCurText().(*Text).w
 	d, err := os.Stat(name)
 
 	// Putting to the same file that we already read from.
