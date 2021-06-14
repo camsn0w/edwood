@@ -125,8 +125,9 @@ func TestPutfile(t *testing.T) {
 		},
 	}
 	f := w.body.file
-	f.curtext = &w.body
-	f.curtext.w = w
+	cur := &w.body
+	cur.w = w
+	f.SetCurText(cur)
 	increaseMtime := func(t *testing.T, duration time.Duration) {
 		tm := f.info.ModTime().Add(duration)
 		if err := os.Chtimes(filename, tm, tm); err != nil {
