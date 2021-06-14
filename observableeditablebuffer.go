@@ -32,8 +32,7 @@ func (f *File) AddText(observer BufferObserver) {
 }
 
 func (f *File) DelText(observer BufferObserver) error {
-	_, exists := f.buf.text[observer]
-	if exists == true {
+	if _, exists := f.buf.text[observer]; exists {
 		delete(f.buf.text, observer)
 		if observer == f.buf.curtext {
 			for k := range f.buf.text {
