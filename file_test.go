@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"image"
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/rjkroege/edwood/internal/file"
@@ -12,29 +14,66 @@ import (
 
 func TestDelText(t *testing.T) {
 	f := &File{
-		text: []*Text{{}, {}, {}, {}, {}},
+		buf: Editbuf{
+			curtext: nil,
+			text:    nil,
+		},
 	}
+
+	f.AddText(&Text{})
+	testData := []*Text{&Text{file: NewFile("World sourdoughs from antiquity")},
+		&Text{file: NewFile("Willowbrook Association Handbook: 2011")},
+		&Text{file: NewFile("Weakest in the Nation")},
+	}
+
 	t.Run("Nonexistent", func(t *testing.T) {
-		err := f.DelText(&Text{})
+		err := f.DelText(&Text{
+			display:   nil,
+			file:      NewFile("HowToExitVim.txt"),
+			fr:        nil,
+			font:      "",
+			org:       0,
+			q0:        0,
+			q1:        0,
+			what:      0,
+			tabstop:   0,
+			tabexpand: false,
+			w:         nil,
+			scrollr:   image.Rectangle{},
+			lastsr:    image.Rectangle{},
+			all:       image.Rectangle{},
+			row:       nil,
+			col:       nil,
+			iq1:       0,
+			eq0:       0,
+			nofill:    false,
+			needundo:  false,
+			lk:        sync.Mutex{},
+		})
 		if err == nil {
 			t.Errorf("expected panic when deleting nonexistent text")
 		}
 	})
-	for i := len(f.text) - 1; i >= 0; i-- {
-		text := f.text[i]
+	for _, text := range testData {
+		f.AddText(text)
+	}
+	for i, text := range testData {
 		err := f.DelText(text)
+
 		if err != nil {
 			t.Errorf("DelText of text at index %d failed: %v", i, err)
 			continue
 		}
-		if got, want := len(f.text), i; got != want {
+		if got, want := len(f.buf.text), i; got != want {
 			t.Fatalf("DelText resulted in text of length %v; expected %v", got, want)
 		}
-		for i, t1 := range f.text {
-			if t1 == text {
+		f.AllText(func(i interface{}) {
+			inText := i.(*Text)
+			if inText == text {
 				t.Fatalf("DelText did not delete correctly at index %v", i)
 			}
-		}
+
+		})
 	}
 }
 

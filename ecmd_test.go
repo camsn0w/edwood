@@ -15,13 +15,11 @@ func TestXCmdPipeMultipleWindows(t *testing.T) {
 		w.body.file = NewFile(name)
 		w.body.w = w
 		w.body.fr = &MockFrame{}
-		w.body.file.text = []*Text{&w.body}
-		w.body.file.curtext = &w.body
+		w.body.file.AddText(&w.body)
 		w.tag.file = NewFile("")
 		w.tag.w = w
 		w.tag.fr = &MockFrame{}
-		w.tag.file.text = []*Text{&w.tag}
-		w.tag.file.curtext = &w.tag
+		w.tag.file.AddText(&w.tag)
 		w.editoutlk = make(chan bool, 1)
 		return w
 	}
