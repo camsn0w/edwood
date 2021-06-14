@@ -514,7 +514,8 @@ func lookfile(s string) *Window {
 		for _, w := range c.w {
 			k := strings.TrimRight(w.body.file.name, "/")
 			if k == s {
-				w = w.body.file.curtext.w
+				cur := w.body.file.GetCurText().(*Text)
+				w = cur.w
 				if w.col != nil { // protect against race deleting w
 					return w
 				}

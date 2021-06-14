@@ -34,8 +34,9 @@ func resetxec() {
 }
 
 func mkaddr(f *File) (a Address) {
-	a.r.q0 = f.curtext.q0
-	a.r.q1 = f.curtext.q1
+	cur := f.GetCurText()
+	a.r.q0 = cur.(*Text).q0
+	a.r.q1 = cur.(*Text).q1
 	a.f = f
 	return a
 }
@@ -58,7 +59,7 @@ func cmdexec(t *Text, cp *Cmd) bool {
 	if t != nil && t.w != nil {
 		t = &t.w.body
 		f = t.file
-		f.curtext = t
+		f.SetCurText(t)
 	}
 	if i >= 0 && cmdtab[i].defaddr != aNo {
 		ap := cp.addr
@@ -84,7 +85,7 @@ func cmdexec(t *Text, cp *Cmd) bool {
 				addr = cmdaddress(ap, none, 0)
 			}
 			f = addr.f
-			t = f.curtext
+			t = f.GetCurText().(*Text)
 		}
 	}
 	switch cp.cmdc {
@@ -154,7 +155,7 @@ func b_cmd(t *Text, cp *Cmd) bool {
 	if nest == 0 {
 		pfilename(f)
 	}
-	curtext = f.curtext
+	curtext = f.GetCurText().(*Text)
 	return true
 }
 
@@ -647,8 +648,9 @@ func appendx(f *File, cp *Cmd, p int) bool {
 	if len(cp.text) > 0 {
 		f.elog.Insert(p, []rune(cp.text))
 	}
-	f.curtext.q0 = p
-	f.curtext.q1 = p
+	cur := f.GetCurText().(*Text)
+	cur.q0 = p
+	cur.q1 = p
 	return true
 }
 
@@ -668,8 +670,9 @@ func pdisplay(f *File) bool {
 		warning(nil, "%s", string(buf[:np]))
 		p1 += np
 	}
-	f.curtext.q0 = addr.r.q0
-	f.curtext.q1 = addr.r.q1
+	cur := f.GetCurText().(*Text)
+	cur.q0 = addr.r.q0
+	cur.q1 = addr.r.q1
 	return true
 }
 
@@ -688,9 +691,10 @@ func pfilename(f *File) {
 
 func loopcmd(f *File, cp *Cmd, rp []Range) {
 	for _, r := range rp {
-		f.curtext.q0 = r.q0
-		f.curtext.q1 = r.q1
-		cmdexec(f.curtext, cp)
+		cur := f.GetCurText().(*Text)
+		cur.q0 = r.q0
+		cur.q1 = r.q1
+		cmdexec(cur, cp)
 	}
 }
 
@@ -708,7 +712,8 @@ func looper(f *File, cp *Cmd, isX bool) {
 	if isY {
 		op = r.q0
 	}
-	sels := are.rxexecute(f.curtext, nil, r.q0, r.q1, -1)
+	cur := f.GetCurText().(*Text)
+	sels := are.rxexecute(cur, nil, r.q0, r.q1, -1)
 	if len(sels) == 0 {
 		if isY {
 			rp = append(rp, Range{r.q0, r.q1})
@@ -786,7 +791,8 @@ func alllooper(w *Window, lp *Looper) {
 	cp := lp.cp
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	if t.file.curtext != t {
+	curr := t.file.GetCurText()
+	if curr != t {
 		return
 	}
 	// no auto-execute on files without names
@@ -866,8 +872,9 @@ func nextmatch(f *File, r string, p int, sign int) {
 		editerror("bad regexp in command address")
 	}
 	sel = RangeSet{Range{0, 0}}
+	cur := f.GetCurText().(*Text)
 	if sign >= 0 {
-		sels := are.rxexecute(f.curtext, nil, p, -1, 2)
+		sels := are.rxexecute(cur, nil, p, -1, 2)
 		if len(sels) == 0 {
 			editerror("no match for regexp")
 		} else {
@@ -881,7 +888,7 @@ func nextmatch(f *File, r string, p int, sign int) {
 				if p > f.Nr() {
 					p = 0
 				}
-				sels := are.rxexecute(f.curtext, nil, p, -1, 1)
+				sels := are.rxexecute(cur, nil, p, -1, 1)
 				if len(sels) == 0 {
 					editerror("address")
 				} else {
@@ -890,7 +897,7 @@ func nextmatch(f *File, r string, p int, sign int) {
 			}
 		}
 	} else {
-		sel = are.rxbexecute(f.curtext, p, NRange)
+		sel = are.rxbexecute(cur, p, NRange)
 		if len(sel) == 0 {
 			editerror("no match for regexp")
 		}
@@ -899,7 +906,7 @@ func nextmatch(f *File, r string, p int, sign int) {
 			if p < 0 {
 				p = f.Nr()
 			}
-			sel = are.rxbexecute(f.curtext, p, NRange)
+			sel = are.rxbexecute(cur, p, NRange)
 			if len(sel) != 0 {
 				editerror("address")
 			}
@@ -909,6 +916,7 @@ func nextmatch(f *File, r string, p int, sign int) {
 
 func cmdaddress(ap *Addr, a Address, sign int) Address {
 	f := a.f
+	cur := f.GetCurText().(*Text)
 	var a1, a2 Address
 	var qbydir int
 	for {
@@ -965,8 +973,8 @@ func cmdaddress(ap *Addr, a Address, sign int) Address {
 			if ap.typ == ';' {
 				f = a1.f
 				a = a1
-				f.curtext.q0 = a1.r.q0
-				f.curtext.q1 = a1.r.q1
+				cur.q0 = a1.r.q0
+				cur.q1 = a1.r.q1
 			}
 			if ap.next != nil {
 				a2 = cmdaddress(ap.next, a, 0)
@@ -1022,7 +1030,7 @@ func alltofile(w *Window, tp *Tofile) {
 	}
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	if t.file.curtext != t {
+	if t.file.GetCurText().(*Text) != t {
 		return
 	}
 	//	if w.nopen[QWevent] > 0   {
@@ -1050,7 +1058,7 @@ func allmatchfile(w *Window, tp *Tofile) {
 	}
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	if t.file.curtext != t {
+	if t.file.GetCurText().(*Text) != t {
 		return
 	}
 	//	if w.nopen[QWevent] > 0   {
@@ -1214,14 +1222,14 @@ func cmdname(f *File, str string, set bool) string {
 		return f.name
 	}
 	s = strings.TrimLeft(str, " \t")
+	cur := f.GetCurText().(*Text)
 	if s == "" {
 		goto Return
 	}
-
 	if filepath.IsAbs(s) {
 		r = s
 	} else {
-		r = f.curtext.DirName(s)
+		r = cur.DirName(s)
 	}
 	fc.f = f
 	fc.r = r
@@ -1234,7 +1242,7 @@ Return:
 	if set && !(r == f.name) {
 		f.Mark(seq)
 		f.Modded()
-		f.curtext.w.SetName(r)
+		cur.w.SetName(r)
 	}
 	return r
 }

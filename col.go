@@ -51,7 +51,8 @@ func (c *Column) Init(r image.Rectangle, dis draw.Display) *Column {
 
 	// TODO(rjk) better code: making tag should be split out.
 	tagfile := NewFile("")
-	c.tag.file = tagfile.AddText(&c.tag)
+	tagfile.AddText(&c.tag)
+	c.tag.file = tagfile
 	c.tag.Init(r1, tagfont, tagcolors, c.display)
 	c.tag.what = Columntag
 	r1.Min.Y = r1.Max.Y
