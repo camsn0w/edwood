@@ -46,17 +46,6 @@ func (f *File) DelText(observer BufferObserver) error {
 }
 
 func (f *File) SetCurText(observer BufferObserver) {
-	if f == nil {
-		println("F is nil in SetCurText")
-
-	}
-	if observer == nil {
-		println("Observer is nil in SetCurText")
-	}
-	if f.buf.curtext == nil {
-		println("Curtext IS NIL")
-	}
-
 	f.buf.curtext = observer
 }
 
