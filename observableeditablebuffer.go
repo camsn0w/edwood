@@ -5,13 +5,16 @@ import "fmt"
 type ObservableEditableBuffer interface {
 	AddText(observer BufferObserver)
 	DelText(observer BufferObserver) error
-	SetCurtext(observer BufferObserver)
+	SetCurText(observer BufferObserver)
+	GetCurText() interface{}
+	GetTextSize() int
 	AllText(tf func(i interface{}))
 	HasMultipleTexts() bool
 	InsertAt(p0 int, s []rune)
 	InsertAtWithoutCommit(p0 int, s []rune)
 	DeleteAt(p0, p1 int)
 	Undo(isundo bool) (q0, q1 int, ok bool)
+	New() *Editbuf
 }
 
 type Editbuf struct {
@@ -33,24 +36,43 @@ func (f *File) DelText(observer BufferObserver) error {
 	if exists == true {
 		delete(f.buf.text, observer)
 		if observer == f.buf.curtext {
-			for k, _ := range f.buf.text {
+			for k := range f.buf.text {
 				f.buf.curtext = k
 				break
 			}
-			return nil
 		}
+		return nil
 	}
 	return fmt.Errorf("can't find text in File.DelText")
 }
 
 func (f *File) SetCurText(observer BufferObserver) {
+	if f == nil {
+		println("F is nil in SetCurText")
+
+	}
+	if observer == nil {
+		println("Observer is nil in SetCurText")
+	}
+	if f.buf.curtext == nil {
+		println("Curtext IS NIL")
+	}
+
 	f.buf.curtext = observer
 }
 
+func (f *File) GetCurText() interface{} {
+	return f.buf.curtext
+}
+
 func (f *File) AllText(tf func(i interface{})) {
-	for t, _ := range f.buf.text {
+	for t := range f.buf.text {
 		tf(t)
 	}
+}
+
+func (f *File) GetTextSize() int {
+	return len(f.buf.text)
 }
 
 func (f *File) HasMultipleTexts() bool {
@@ -183,11 +205,17 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			newfname := string(u.buf)
 			f.setnameandisscratch(newfname)
 		}
-		(*delta) = (*delta)[0 : len(*delta)-1]
+		*delta = (*delta)[0 : len(*delta)-1]
 	}
 	// TODO(rjk): Why do we do this?
 	if isundo {
 		f.seq = 0
 	}
 	return q0, q1, ok
+}
+func (f *File) New() *Editbuf {
+	return &Editbuf{
+		curtext: nil,
+		text:    nil,
+	}
 }

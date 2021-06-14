@@ -970,7 +970,7 @@ func xfidindexread(x *Xfid) {
 	for _, c := range row.col {
 		for _, w := range c.w {
 			// only show the currently active window of a set
-			if w.body.file.curtext != &w.body {
+			if w.body.file.GetCurText().(*Text) != &w.body {
 				continue
 			}
 			sb.WriteString(w.CtlPrint(false))

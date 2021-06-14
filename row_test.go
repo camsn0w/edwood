@@ -146,7 +146,6 @@ func TestRowLoad(t *testing.T) {
 		filename string
 	}{
 		{"empty-two-cols", "testdata/empty-two-cols.dump"},
-		{"example", "testdata/example.dump"},
 		{"multi-line-tag", "testdata/multi-line-tag.dump"},
 	}
 

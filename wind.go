@@ -89,8 +89,8 @@ func (w *Window) initHeadless(clone *Window) *Window {
 		f = clone.body.file
 		w.body.org = clone.body.org
 	}
-	w.body.file = f.AddText(&w.body)
-
+	f.AddText(&w.body)
+	w.body.file = f
 	w.filemenu = true
 	w.autoindent = *globalAutoIndent
 
@@ -320,7 +320,8 @@ func (w *Window) Lock(owner int) {
 	w.ref.Inc()
 	w.owner = owner
 	f := w.body.file
-	f.AllText(func(t *Text) {
+	f.AllText(func(i interface{}) {
+		t := i.(*Text)
 		if t.w != w {
 			t.w.lock1(owner)
 		}
@@ -336,7 +337,8 @@ func (w *Window) unlock1() {
 
 // Unlock releases the lock on each clone of w
 func (w *Window) Unlock() {
-	w.body.file.AllText(func(t *Text) {
+	w.body.file.AllText(func(i interface{}) {
+		t := i.(*Text)
 		if t.w != w {
 			t.w.unlock1()
 		}
@@ -454,7 +456,8 @@ func (w *Window) ParseTag() string {
 // SetTag updates the tag for this Window and all of its clones.
 func (w *Window) SetTag() {
 	f := w.body.file
-	f.AllText(func(u *Text) {
+	f.AllText(func(i interface{}) {
+		u := i.(*Text)
 		if u.w.col.safe || u.fr.GetFrameFillStatus().Maxlines > 0 {
 			u.w.setTag1()
 		}
