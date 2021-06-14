@@ -20,9 +20,9 @@ func TestDelText(t *testing.T) {
 		},
 	}
 
-	testData := []*Text{&Text{file: NewFile("World sourdoughs from antiquity")},
-		&Text{file: NewFile("Willowbrook Association Handbook: 2011")},
-		&Text{file: NewFile("Weakest in the Nation")},
+	testData := []*Text{{file: NewFile("World sourdoughs from antiquity")},
+		{file: NewFile("Willowbrook Association Handbook: 2011")},
+		{file: NewFile("Weakest in the Nation")},
 	}
 
 	t.Run("Nonexistent", func(t *testing.T) {
