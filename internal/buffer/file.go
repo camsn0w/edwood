@@ -1,4 +1,4 @@
-package main
+package buffer
 
 import (
 	"io"
@@ -68,6 +68,7 @@ type File struct {
 
 	// cq0 tracks the insertion point for the cache.
 	cq0 int // [private]
+	Editbuf
 }
 
 // Remember that the high-level goal is to slowly coerce this into looking like
@@ -242,7 +243,6 @@ func (f *File) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, e
 
 	// Would appear to require a commit operation.
 	// NB: Runs the observers.
-	f.InsertAt(q0, runes)
 
 	return len(runes), hasNulls, err
 }

@@ -1,4 +1,4 @@
-package main
+package buffer
 
 import "fmt"
 
@@ -17,13 +17,17 @@ type ObservableEditableBuffer interface {
 	New() *Editbuf
 }
 
+type Editbuf struct {
+	curtext BufferObserver
+	text    map[BufferObserver]struct{} // [private I think]
+}
+
 func (f *File) AddText(observer BufferObserver) {
-	if f.buf.text == nil {
+	if f.text == nil {
 		f.buf.text = make(map[BufferObserver]struct{})
 	}
 	f.buf.text[observer] = struct{}{}
 	f.buf.curtext = observer
-
 }
 
 func (f *File) DelText(observer BufferObserver) error {

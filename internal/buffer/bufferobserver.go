@@ -1,4 +1,4 @@
-package main
+package buffer
 
 type BufferObserver interface {
 	Inserted(q0 int, r []rune)
