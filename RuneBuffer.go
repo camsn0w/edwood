@@ -9,7 +9,7 @@ type RuneBuffer interface {
 	Reader(q0, q1 int) io.Reader
 	ReadC(q int) rune
 	String() string
-	Reset()
+	ResetRunes()
 	nc() int
 	Nbyte() int
 	View(q0, q1 int) []rune

@@ -46,7 +46,7 @@ func (b *RuneArray) ReadC(q int) rune { return (*b)[q] }
 // String returns a string representation of buffer. See fmt.Stringer interface.
 func (b *RuneArray) String() string { return string(*b) }
 
-func (b *RuneArray) Reset() {
+func (b *RuneArray) ResetRunes() {
 	(*b) = (*b)[0:0]
 }
 
