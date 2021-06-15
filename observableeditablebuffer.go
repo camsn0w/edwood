@@ -39,6 +39,7 @@ type ObservableEditableBuffer interface {
 	HasRedoableChanges() bool
 	SaveableAndDirty() bool
 	Modded()
+	IsDirOrScratch() bool
 }
 
 type Editbuf struct {
