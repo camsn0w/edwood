@@ -71,6 +71,14 @@ type File struct {
 	cq0 int // [private]
 }
 
+func (f *File) Elog() interface{} {
+	return f.elog
+}
+
+func (f *File) SetElog(i interface{}) {
+	f.elog = i.(Elog)
+}
+
 func (f *File) B() RuneArray {
 	return f.b
 }
