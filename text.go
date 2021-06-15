@@ -274,7 +274,7 @@ func (t *Text) checkSafeToLoad(filename string) error {
 		panic("text.load")
 	}
 
-	if t.file.IsDir() && t.file.name == "" {
+	if t.file.IsDir() && t.file.Name() == "" {
 		return warnError(nil, "empty directory name")
 	}
 	if ismtpt(filename) {
@@ -320,7 +320,7 @@ func (t *Text) Load(q0 int, filename string, setqid bool) (nread int, err error)
 		return 0, warnError(nil, "can't fstat %s: %v", filename, err)
 	}
 	if setqid {
-		t.file.info = d
+		t.file.SetInfo(d)
 	}
 
 	if d.IsDir() {
@@ -330,9 +330,9 @@ func (t *Text) Load(q0 int, filename string, setqid bool) (nread int, err error)
 		}
 		t.file.SetDir(true)
 		t.w.filemenu = false
-		if len(t.file.name) > 0 && !strings.HasSuffix(t.file.name, string(filepath.Separator)) {
-			t.file.name = t.file.name + string(filepath.Separator)
-			t.w.SetName(t.file.name)
+		if len(t.file.Name()) > 0 && !strings.HasSuffix(t.file.Name(), string(filepath.Separator)) {
+			t.file.SetName(t.file.Name() + string(filepath.Separator))
+			t.w.SetName(t.file.Name())
 		}
 		dirNames, err := getDirNames(fd)
 		if err != nil {
@@ -523,7 +523,7 @@ func (t *Text) fill(fr frame.SelectScrollUpdater) error {
 			n = 2000
 		}
 		rp := make([]rune, n)
-		t.file.b.Read(t.org+fr.GetFrameFillStatus().Nchars, rp)
+		t.file.Read(t.org+fr.GetFrameFillStatus().Nchars, rp)
 		//
 		// it's expensive to frinsert more than we need, so
 		// count newlines.
@@ -584,7 +584,7 @@ func (t *Text) Deleted(q0, q1 int) {
 	} else if t.fr != nil && q0 < t.org+(t.fr.GetFrameFillStatus().Nchars) {
 		p1 := q1 - t.org
 		if p1 > (t.fr.GetFrameFillStatus().Nchars) {
-			p1 = (t.fr.GetFrameFillStatus().Nchars)
+			p1 = t.fr.GetFrameFillStatus().Nchars
 		}
 		p0 := 0
 		if q0 < t.org {
@@ -616,8 +616,8 @@ func (t *Text) logInsertDelete(q0, q1 int) {
 	}
 }
 
-func (t *Text) View(q0, q1 int) []rune                   { return t.file.b.View(q0, q1) }
-func (t *Text) ReadB(q int, r []rune) (n int, err error) { n, err = t.file.b.Read(q, r); return }
+func (t *Text) View(q0, q1 int) []rune                   { return t.file.View(q0, q1) }
+func (t *Text) ReadB(q int, r []rune) (n int, err error) { n, err = t.file.Read(q, r); return }
 func (t *Text) nc() int                                  { return t.file.Size() }
 func (t *Text) Q0() int                                  { return t.q0 }
 func (t *Text) Q1() int                                  { return t.q1 }
@@ -1571,7 +1571,7 @@ func (t *Text) setorigin(fr frame.SelectScrollUpdater, org int, exact bool, call
 		if a < 0 && -a < fr.GetFrameFillStatus().Nchars {
 			n = t.org - org
 			r = make([]rune, n)
-			t.file.b.Read(org, r)
+			t.file.Read(org, r)
 			fr.Insert(r, 0)
 		} else {
 			fr.Delete(0, fr.GetFrameFillStatus().Nchars)
@@ -1593,7 +1593,7 @@ func (t *Text) Reset() {
 	t.q0 = 0
 	t.q1 = 0
 	t.file.Reset()
-	t.file.b.Reset()
+	t.file.ResetRunes()
 }
 
 func (t *Text) dirName(name string) string {
