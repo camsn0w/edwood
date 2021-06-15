@@ -49,6 +49,8 @@ type ObservableEditableBuffer interface {
 	SetElog(i interface{})
 	Editclean() bool
 	SetEditclean(editclean bool)
+	Seq() int
+	RedoSeq() int
 }
 
 type Editbuf struct {
