@@ -43,6 +43,8 @@ type ObservableEditableBuffer interface {
 	TreatAsDirty() bool
 	TreatAsClean()
 	Dirty() bool
+	B() RuneArray
+	SetB(b RuneArray)
 }
 
 type Editbuf struct {

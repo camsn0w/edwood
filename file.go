@@ -71,6 +71,14 @@ type File struct {
 	cq0 int // [private]
 }
 
+func (f *File) B() RuneArray {
+	return f.b
+}
+
+func (f *File) SetB(b RuneArray) {
+	f.b = b
+}
+
 func (f *File) Info() os.FileInfo {
 	return f.info
 }
