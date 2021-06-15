@@ -71,6 +71,14 @@ type File struct {
 	cq0 int // [private]
 }
 
+func (f *File) Info() os.FileInfo {
+	return f.info
+}
+
+func (f *File) SetInfo(info os.FileInfo) {
+	f.info = info
+}
+
 func (f *File) Insert(q0 int, r []rune) {
 	f.b.Insert(q0, r)
 }
