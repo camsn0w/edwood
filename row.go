@@ -333,7 +333,7 @@ func (r *Row) Dump(file string) error {
 }
 
 func (r *Row) dump() (*dumpfile.Content, error) {
-	rowTag := string(r.tag.file.b)
+	rowTag := string(r.tag.file.B())
 	// Remove commands at the beginning of row tag.
 	if i := strings.Index(rowTag, RowTag); i > 1 {
 		rowTag = rowTag[i:]
@@ -357,7 +357,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 		dump.Columns[i] = dumpfile.Column{
 			Position: 100.0 * float64(c.r.Min.X-row.r.Min.X) / float64(r.r.Dx()),
 			Tag: dumpfile.Text{
-				Buffer: string(c.tag.file.b),
+				Buffer: string(c.tag.file.B()),
 				Q0:     c.tag.q0,
 				Q1:     c.tag.q1,
 			},
@@ -365,7 +365,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 		for _, w := range c.w {
 			if w.nopen[QWevent] != 0 {
 				// Mark zeroxes of external windows specially.
-				dumpid[w.body.file] = -1
+				dumpid[w.body.file.(*File)] = -1
 			}
 		}
 	}
@@ -384,7 +384,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 			}
 
 			// zeroxes of external windows are tossed
-			if dumpid[t.file] < 0 && w.nopen[QWevent] == 0 {
+			if dumpid[t.file.(*File)] < 0 && w.nopen[QWevent] == 0 {
 				continue
 			}
 
@@ -404,7 +404,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 			dw := dump.Windows[len(dump.Windows)-1]
 
 			switch {
-			case dumpid[t.file] > 0:
+			case dumpid[t.file.(*File)] > 0:
 				dw.Type = dumpfile.Zerox
 
 			case w.dumpstr != "":
@@ -412,18 +412,18 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 				dw.ExecDir = w.dumpdir
 				dw.ExecCommand = w.dumpstr
 
-			case !w.body.file.Dirty() && access(t.file.name) || w.body.file.IsDir():
-				dumpid[t.file] = w.id
+			case !w.body.file.Dirty() && access(t.file.Name()) || w.body.file.IsDir():
+				dumpid[t.file.(*File)] = w.id
 				dw.Type = dumpfile.Saved
 
 			default:
-				dumpid[t.file] = w.id
+				dumpid[t.file.(*File)] = w.id
 				// TODO(rjk): Conceivably this is a bit of a layering violation?
 				dw.Type = dumpfile.Unsaved
-				dw.Body.Buffer = string(t.file.b)
+				dw.Body.Buffer = string(t.file.B())
 			}
 			dw.Tag = dumpfile.Text{
-				Buffer: string(w.tag.file.b),
+				Buffer: string(w.tag.file.B()),
 				Q0:     w.tag.q0,
 				Q1:     w.tag.q1,
 			}
@@ -474,7 +474,7 @@ func (row *Row) loadhelper(win *dumpfile.Window) error {
 		return fmt.Errorf("bad window tag in dump file %q", win.Tag)
 	}
 	w.ClearTag()
-	w.tag.Insert(len(w.tag.file.b), []rune(afterbar[1]), true)
+	w.tag.Insert(len(w.tag.file.B()), []rune(afterbar[1]), true)
 	w.tag.Show(win.Tag.Q0, win.Tag.Q1, true)
 
 	if win.Type == dumpfile.Unsaved {
@@ -494,7 +494,7 @@ func (row *Row) loadhelper(win *dumpfile.Window) error {
 
 	q0 := win.Body.Q0
 	q1 := win.Body.Q1
-	if q0 > len(w.body.file.b) || q1 > len(w.body.file.b) || q0 > q1 {
+	if q0 > len(w.body.file.B()) || q1 > len(w.body.file.B()) || q0 > q1 {
 		q0 = 0
 		q1 = 0
 	}
