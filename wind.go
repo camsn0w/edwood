@@ -116,9 +116,9 @@ func (w *Window) Init(clone *Window, r image.Rectangle, dis draw.Display) {
 	// tag is a copy of the contents, not a tracked image
 	if clone != nil {
 		w.tag.Delete(0, w.tag.Nc(), true)
-		w.tag.Insert(0, clone.tag.file.g, true)
+		w.tag.Insert(0, clone.tag.file.B(), true)
 		w.tag.file.Reset()
-		w.tag.SetSelect(len(w.tag.file.b), len(w.tag.file.b))
+		w.tag.SetSelect(len(w.tag.file.B()), len(w.tag.file.B()))
 	}
 	r1 = r
 	r1.Min.Y += w.taglines*fontget(tagfont, w.display).Height() + 1
@@ -214,7 +214,7 @@ func (w *Window) TagLines(r image.Rectangle) int {
 	// if tag ends with \n, include empty line at end for typing
 	n := w.tag.fr.GetFrameFillStatus().Nlines
 	if w.tag.file.Size() > 0 {
-		c := w.tag.file.b.ReadC(w.tag.file.Size() - 1)
+		c := w.tag.file.ReadC(w.tag.file.Size() - 1)
 		if c == '\n' {
 			n++
 		}
@@ -500,8 +500,8 @@ func (w *Window) setTag1() {
 	if w.body.file.IsDir() {
 		sb.WriteString(Lget)
 	}
-	old := w.tag.file.b
-	oldbarIndex := w.tag.file.b.IndexRune('|')
+	old := w.tag.file.B()
+	oldbarIndex := w.tag.file.B().IndexRune('|')
 	if oldbarIndex >= 0 {
 		sb.WriteString(" ")
 		sb.WriteString(string(old[oldbarIndex:]))
@@ -516,7 +516,7 @@ func (w *Window) setTag1() {
 
 	// replace tag if the new one is different
 	resize := false
-	if !new.Equal(w.tag.file.b) {
+	if !new.Equal(w.tag.file.B()) {
 		resize = true // Might need to resize the tag
 		// try to preserve user selection
 		newbarIndex := new.IndexRune('|') // New always has '|'
@@ -562,7 +562,7 @@ func (w *Window) Commit(t *Text) {
 		return
 	}
 	filename := w.ParseTag()
-	if filename != w.body.file.name {
+	if filename != w.body.file.Name() {
 		seq++
 		w.body.file.Mark(seq)
 		w.body.file.Modded()
@@ -620,8 +620,8 @@ func (w *Window) Clean(conservative bool) bool {
 		return true
 	}
 	if w.body.file.TreatAsDirty() {
-		if len(w.body.file.name) != 0 {
-			warning(nil, "%v modified\n", w.body.file.name)
+		if len(w.body.file.Name()) != 0 {
+			warning(nil, "%v modified\n", w.body.file.Name())
 		} else {
 			if w.body.Nc() < 100 { // don't whine if it's too small
 				return true
