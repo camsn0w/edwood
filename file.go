@@ -71,6 +71,14 @@ type File struct {
 	cq0 int // [private]
 }
 
+func (f *File) Editclean() bool {
+	return f.editclean
+}
+
+func (f *File) SetEditclean(editclean bool) {
+	f.editclean = editclean
+}
+
 func (f *File) Elog() interface{} {
 	return f.elog
 }
