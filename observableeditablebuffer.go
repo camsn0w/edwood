@@ -45,6 +45,8 @@ type ObservableEditableBuffer interface {
 	Dirty() bool
 	B() RuneArray
 	SetB(b RuneArray)
+	Elog() interface{}
+	SetElog(i interface{})
 }
 
 type Editbuf struct {
