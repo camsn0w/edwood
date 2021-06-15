@@ -1,6 +1,9 @@
 package main
 
-import "io"
+import (
+	"io"
+	"os"
+)
 
 type ObservableEditableBuffer interface {
 	AddText(observer BufferObserver)
@@ -25,6 +28,16 @@ type ObservableEditableBuffer interface {
 	Mark(s int)
 	Commit()
 	Reset()
+	ResetRunes()
+	Info() os.FileInfo
+	SetInfo(info os.FileInfo)
+	SetName(name string)
+	Read(q0 int, r []rune) (int, error)
+	View(q0 int, q1 int) []rune
+	Clean()
+	HasUndoableChanges() bool
+	HasRedoableChanges() bool
+	SaveableAndDirty() bool
 }
 
 type Editbuf struct {
