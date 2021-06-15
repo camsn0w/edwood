@@ -118,7 +118,7 @@ func edittext(w *Window, q int, r []rune) error {
 		return ErrPermission
 	case Inserting:
 		f := w.body.file
-		f.elog.Insert(q, r)
+		f.Elog().(*Elog).Insert(q, r)
 		return nil
 	case Collecting:
 		collection = append(collection, r...)
@@ -1063,11 +1063,11 @@ func allmatchfile(w *Window, tp *Tofile) {
 	}
 	//	if w.nopen[QWevent] > 0   {
 	//		return;
-	if filematch(w.body.file, tp.r) {
+	if filematch(w.body.file.(*File), tp.r) {
 		if tp.f != nil {
 			editerror("too many files match \"%v\"", tp.r)
 		}
-		tp.f = w.body.file
+		tp.f = w.body.file.(*File)
 	}
 }
 
@@ -1205,7 +1205,7 @@ func allfilecheck(w *Window, fp *Filecheck) {
 	if w.body.file == fp.f {
 		return
 	}
-	if fp.r == f.name {
+	if fp.r == f.Name() {
 		warning(nil, "warning: duplicate file name \"%s\"\n", fp.r)
 	}
 }
