@@ -41,6 +41,8 @@ type ObservableEditableBuffer interface {
 	Modded()
 	IsDirOrScratch() bool
 	TreatAsDirty() bool
+	TreatAsClean()
+	Dirty() bool
 }
 
 type Editbuf struct {

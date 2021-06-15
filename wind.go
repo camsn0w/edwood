@@ -86,7 +86,7 @@ func (w *Window) initHeadless(clone *Window) *Window {
 	// Body setup.
 	f = NewFile("")
 	if clone != nil {
-		f = clone.body.file
+		f = clone.body.file.(*File)
 		w.body.org = clone.body.org
 	}
 	f.AddText(&w.body)
@@ -116,7 +116,7 @@ func (w *Window) Init(clone *Window, r image.Rectangle, dis draw.Display) {
 	// tag is a copy of the contents, not a tracked image
 	if clone != nil {
 		w.tag.Delete(0, w.tag.Nc(), true)
-		w.tag.Insert(0, clone.tag.file.b, true)
+		w.tag.Insert(0, clone.tag.file.g, true)
 		w.tag.file.Reset()
 		w.tag.SetSelect(len(w.tag.file.b), len(w.tag.file.b))
 	}
@@ -409,7 +409,7 @@ func (w *Window) ClearTag() {
 	// w must be committed
 	n := w.tag.Nc()
 	r := make([]rune, n)
-	w.tag.file.b.Read(0, r)
+	w.tag.file.Read(0, r)
 	i := len([]rune(w.ParseTag()))
 	for ; i < n; i++ {
 		if r[i] == '|' {
@@ -434,7 +434,7 @@ func (w *Window) ClearTag() {
 // ParseTag returns the filename in the window tag.
 func (w *Window) ParseTag() string {
 	r := make([]rune, w.tag.Nc())
-	w.tag.file.b.Read(0, r)
+	w.tag.file.Read(0, r)
 	tag := string(r)
 
 	// " |" or "\t|" ends left half of tag
@@ -483,7 +483,7 @@ func (w *Window) setTag1() {
 	// and put up with the traffic implied for a tag line.
 
 	var sb strings.Builder
-	sb.WriteString(w.body.file.name)
+	sb.WriteString(w.body.file.Name())
 	sb.WriteString(Ldelsnarf)
 
 	if w.filemenu {
