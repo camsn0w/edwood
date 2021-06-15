@@ -57,7 +57,7 @@ s/^[ 	]*([a-zA-Z0-9_]+)[ 	]+(\*?)(.*);/	\3 \2\1/g
 ,s/textcommit\(&([^),]+)([^)]*)\)/\1.Commit(\2)/g
 ,s/qlock\(&([^)]+)\)/\1.Lock()/g
 ,s/qunlock\(&([^)]+)\)/\1.Unlock()/g
-,s/filereset\(([^)]+)\)/\1.Reset()/g
+,s/filereset\(([^)]+)\)/\1.ResetRunes()/g
 var decls
 s/([a-zA-Z0-9_]+)[ 	]+(\*)?([a-zA-Z0-9_]+)/\3 \2 \1/g
 // Member function call
