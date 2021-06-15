@@ -458,6 +458,10 @@ func (f *File) Reset() {
 	f.seq = 0
 }
 
+func (f *File) ResetRunes() {
+	f.b.ResetRunes()
+}
+
 // Mark sets an Undo point and
 // and discards Redo records. Call this at the beginning
 // of a set of edits that ought to be undo-able as a unit. This
