@@ -82,13 +82,13 @@ func isexecc(c rune) bool {
 }
 
 func printarg(argt *Text, q0 int, q1 int) string {
-	if argt.what != Body || argt.file.name == "" {
+	if argt.what != Body || argt.file.Name() == "" {
 		return ""
 	}
 	if q0 == q1 {
-		return fmt.Sprintf("%s:#%d", argt.file.name, q0)
+		return fmt.Sprintf("%s:#%d", argt.file.Name(), q0)
 	}
-	return fmt.Sprintf("%s:#%d,#%d", argt.file.name, q0, q1)
+	return fmt.Sprintf("%s:#%d,#%d", argt.file.Name(), q0, q1)
 }
 
 // TODO(rjk): use a tokenizer on the results of getarg
@@ -113,7 +113,7 @@ func getarg(argt *Text, doaddr bool, dofile bool) (string, string) {
 	}
 	n := e.q1 - e.q0
 	r := make([]rune, n)
-	argt.file.b.Read(e.q0, r)
+	argt.file.Read(e.q0, r)
 	if doaddr {
 		a = printarg(argt, e.q0, e.q1)
 	}
@@ -154,7 +154,7 @@ func execute(t *Text, aq0 int, aq1 int, external bool, argt *Text) {
 		}
 	}
 	r := make([]rune, q1-q0)
-	t.file.b.Read(q0, r)
+	t.file.Read(q0, r)
 	e := lookup(string(r))
 	if !external && t.w != nil && t.w.nopen[QWevent] > 0 {
 		f = 0
@@ -163,7 +163,7 @@ func execute(t *Text, aq0 int, aq1 int, external bool, argt *Text) {
 		}
 		if q0 != aq0 || q1 != aq1 {
 			r = make([]rune, aq1-aq0)
-			t.file.b.Read(aq0, r)
+			t.file.Read(aq0, r)
 			f |= 2
 		}
 		aa, a := getarg(argt, true, true)
@@ -187,7 +187,7 @@ func execute(t *Text, aq0 int, aq1 int, external bool, argt *Text) {
 		if q0 != aq0 || q1 != aq1 {
 			n = q1 - q0
 			r := make([]rune, n)
-			t.file.b.Read(q0, r)
+			t.file.Read(q0, r)
 			if n <= EVENTSIZE {
 				t.w.Eventf("%c%d %d 0 %d %v\n", c, q0, q1, n, string(r))
 			} else {
@@ -305,7 +305,7 @@ func cut(et *Text, t *Text, _ *Text, dosnarf bool, docut bool, _ string) {
 			if n > RBUFSIZE {
 				n = RBUFSIZE
 			}
-			t.file.b.Read(q0, r[:n])
+			t.file.Read(q0, r[:n])
 			snarfbuf.Insert(snarfbuf.nc(), r[:n])
 			q0 += n
 		}
@@ -343,7 +343,7 @@ func delcol(et *Text, _ *Text, _ *Text, _, _ bool, _ string) {
 	for i := 0; i < len(c.w); i++ {
 		w := c.w[i]
 		if w.nopen[QWevent]+w.nopen[QWaddr]+w.nopen[QWdata]+w.nopen[QWxdata] > 0 {
-			warning(nil, "can't delete column; %s is running an external command\n", w.body.file.name)
+			warning(nil, "can't delete column; %s is running an external command\n", w.body.file.Name())
 			return
 		}
 	}
@@ -422,7 +422,7 @@ func getname(t *Text, argt *Text, arg string, isput bool) string {
 	}
 	if promote {
 		if arg == "" {
-			return t.file.name
+			return t.file.Name()
 		}
 		// prefix with directory name if necessary
 		r = filepath.Join(t.DirName(""), arg)
@@ -454,8 +454,8 @@ func get(et *Text, _ *Text, argt *Text, flag1 bool, _ bool, arg string) {
 		return
 	}
 
-	t.Delete(0, t.file.Nr(), true)
-	samename := name == t.file.name
+	t.Delete(0, t.file.Size(), true)
+	samename := name == t.file.Name()
 	t.Load(0, name, samename)
 
 	// Text.Delete followed by Text.Load will always mark the File as
@@ -568,7 +568,7 @@ func put(et *Text, _0 *Text, argt *Text, _1 bool, _2 bool, arg string) {
 		warning(nil, "no file name\n")
 		return
 	}
-	putfile(f, 0, f.Size(), name)
+	putfile(f.(*File), 0, f.Size(), name)
 	xfidlog(w, "put")
 }
 
@@ -578,7 +578,7 @@ func putall(et, _, _ *Text, _, _ bool, arg string) {
 			if w.nopen[QWevent] > 0 {
 				continue
 			}
-			a := w.body.file.name
+			a := w.body.file.Name()
 			if w.body.file.SaveableAndDirty() {
 				if _, err := os.Stat(a); err != nil {
 					warning(nil, "no auto-Put of %s: %v\n", a, err)
@@ -682,7 +682,7 @@ func look(et *Text, _ *Text, argt *Text, _, _ bool, arg string) {
 		if r == "" {
 			n := t.q1 - t.q0
 			rb := make([]rune, n)
-			t.file.b.Read(t.q0, rb[:n])
+			t.file.Read(t.q0, rb[:n])
 			r = string(rb) // TODO(flux) Too many gross []rune-string conversions in here
 		}
 		search(t, []rune(r))
@@ -719,7 +719,7 @@ func tab(et *Text, _ *Text, argt *Text, _, _ bool, arg string) {
 			w.Resize(w.r, false, true)
 		}
 	} else {
-		warning(nil, "%s: Tab %d\n", w.body.file.name, w.body.tabstop)
+		warning(nil, "%s: Tab %d\n", w.body.file.Name(), w.body.tabstop)
 	}
 }
 
@@ -730,10 +730,10 @@ func expandtab(et *Text, _ *Text, argt *Text, _, _ bool, arg string) {
 	w := et.w
 	if w.body.tabexpand {
 		w.body.tabexpand = false
-		warning(nil, "%s: Tab: %d, Tabexpand OFF\n", w.body.file.name, w.body.tabstop)
+		warning(nil, "%s: Tab: %d, Tabexpand OFF\n", w.body.file.Name(), w.body.tabstop)
 	} else {
 		w.body.tabexpand = true
-		warning(nil, "%s: Tab: %d, Tabexpand ON\n", w.body.file.name, w.body.tabstop)
+		warning(nil, "%s: Tab: %d, Tabexpand ON\n", w.body.file.Name(), w.body.tabstop)
 	}
 }
 
@@ -801,7 +801,7 @@ func zeroxx(et *Text, t *Text, _ *Text, _, _ bool, _4 string) {
 	t = &t.w.body
 	if t.w.body.file.IsDir() {
 		// TODO(rjk): Why?
-		warning(nil, "%s is a directory; Zerox illegal\n", t.file.name)
+		warning(nil, "%s is a directory; Zerox illegal\n", t.file.Name())
 	} else {
 		nw := t.w.col.Add(nil, t.w, -1)
 		// ugly: fix locks so w.unlock works
@@ -908,7 +908,7 @@ func runproc(win *Window, s string, dir string, newns bool, argaddr string, arg 
 		if win != nil {
 			// Access possibly mutable Window state inside a lock.
 			win.lk.Lock()
-			filename = win.body.file.name
+			filename = win.body.file.Name()
 			winid = win.id
 			incl = append([]string{}, win.incl...)
 			win.lk.Unlock()
