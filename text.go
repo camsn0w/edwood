@@ -56,7 +56,7 @@ const (
 // Files have possible multiple texts corresponding to clones.
 type Text struct {
 	display draw.Display
-	file    *File
+	file    ObservableEditableBuffer
 	fr      frame.Frame
 	font    string
 

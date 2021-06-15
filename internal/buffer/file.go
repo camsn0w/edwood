@@ -72,6 +72,10 @@ type File struct {
 	Editbuf
 }
 
+func (t *File) Name() string {
+	return t.name
+}
+
 // Remember that the high-level goal is to slowly coerce this into looking like
 // a scrawny wrapper around the Undo implementation. As a result, we should
 // expect to see the following entry points:

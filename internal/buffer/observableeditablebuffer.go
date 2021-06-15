@@ -1,5 +1,7 @@
 package main
 
+import "io"
+
 type ObservableEditableBuffer interface {
 	AddText(observer BufferObserver)
 	DelText(observer BufferObserver) error
@@ -13,6 +15,16 @@ type ObservableEditableBuffer interface {
 	DeleteAt(p0, p1 int)
 	Undo(isundo bool) (q0, q1 int, ok bool)
 	New() *Editbuf
+	Size() int
+	IsDir() bool
+	HasUncommitedChanges() bool
+	SetDir(b bool)
+	Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, err error)
+	Name() string
+	ReadC(q int) rune
+	Mark(s int)
+	Commit()
+	Reset()
 }
 
 type Editbuf struct {
