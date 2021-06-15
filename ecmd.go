@@ -58,7 +58,7 @@ func cmdexec(t *Text, cp *Cmd) bool {
 	f := (*File)(nil)
 	if t != nil && t.w != nil {
 		t = &t.w.body
-		f = t.file
+		f = t.file.(*File)
 		f.SetCurText(t)
 	}
 	if i >= 0 && cmdtab[i].defaddr != aNo {
@@ -95,7 +95,7 @@ func cmdexec(t *Text, cp *Cmd) bool {
 			dot = cmdaddress(cp.addr, dot, 0)
 		}
 		for cp = cp.cmd; cp != nil; cp = cp.next {
-			if dot.r.q1 > t.file.Nr() {
+			if dot.r.q1 > t.file.(*File).Nr() {
 				editerror("dot extends past end of buffer during { command")
 			}
 			// TODO(rjk): utf8 buffer addressing change.
@@ -147,7 +147,7 @@ func filelist(t *Text, r string) string {
 }
 
 func a_cmd(t *Text, cp *Cmd) bool {
-	return appendx(t.file, cp, addr.r.q1)
+	return appendx(t.file.(*File), cp, addr.r.q1)
 }
 
 func b_cmd(t *Text, cp *Cmd) bool {
@@ -180,7 +180,7 @@ func B_cmd(t *Text, cp *Cmd) bool {
 }
 
 func c_cmd(t *Text, cp *Cmd) bool {
-	t.file.elog.Replace(addr.r.q0, addr.r.q1, []rune(cp.text))
+	t.file.(*File).elog.Replace(addr.r.q0, addr.r.q1, []rune(cp.text))
 	t.q0 = addr.r.q0
 	t.q1 = addr.r.q1
 	return true
@@ -188,7 +188,7 @@ func c_cmd(t *Text, cp *Cmd) bool {
 
 func d_cmd(t *Text, cp *Cmd) bool {
 	if addr.r.q1 > addr.r.q0 {
-		t.file.elog.Delete(addr.r.q0, addr.r.q1)
+		t.file.(*File).elog.Delete(addr.r.q0, addr.r.q1)
 	}
 	t.q0 = addr.r.q0
 	t.q1 = addr.r.q0
@@ -223,7 +223,7 @@ func D_cmd(t *Text, cp *Cmd) bool {
 }
 
 func e_cmd(t *Text, cp *Cmd) bool {
-	f := t.file
+	f := t.file.(*File)
 	q0 := addr.r.q0
 	q1 := addr.r.q1
 	if cp.cmdc == 'e' {
@@ -238,7 +238,7 @@ func e_cmd(t *Text, cp *Cmd) bool {
 	if name == "" {
 		editerror(Enoname)
 	}
-	samename := name == t.file.name
+	samename := name == t.file.(*File).name
 	fd, err := os.Open(name)
 	if err != nil {
 		editerror("can't open %v: %v", name, err)
@@ -271,13 +271,13 @@ func f_cmd(t *Text, cp *Cmd) bool {
 	} else {
 		str = cp.text
 	}
-	cmdname(t.file, str, true)
-	pfilename(t.file)
+	cmdname(t.file.(*File), str, true)
+	pfilename(t.file.(*File))
 	return true
 }
 
 func g_cmd(t *Text, cp *Cmd) bool {
-	if t.file != addr.f {
+	if t.file.(*File) != addr.f {
 		warning(nil, "internal error: g_cmd f!=addr.f\n")
 		return false
 	}
@@ -295,7 +295,7 @@ func g_cmd(t *Text, cp *Cmd) bool {
 }
 
 func i_cmd(t *Text, cp *Cmd) bool {
-	return appendx(t.file, cp, addr.r.q0)
+	return appendx(t.file.(*File), cp, addr.r.q0)
 }
 
 func copyx(f *File, addr2 Address) {
@@ -326,18 +326,18 @@ func move(f *File, addr2 Address) {
 }
 
 func m_cmd(t *Text, cp *Cmd) bool {
-	dot := mkaddr(t.file)
+	dot := mkaddr(t.file.(*File))
 	addr2 := cmdaddress(cp.mtaddr, dot, 0)
 	if cp.cmdc == 'm' {
-		move(t.file, addr2)
+		move(t.file.(*File), addr2)
 	} else {
-		copyx(t.file, addr2)
+		copyx(t.file.(*File), addr2)
 	}
 	return true
 }
 
 func p_cmd(t *Text, cp *Cmd) bool {
-	return pdisplay(t.file)
+	return pdisplay(t.file.(*File))
 }
 
 func s_cmd(t *Text, cp *Cmd) bool {
@@ -386,7 +386,7 @@ func s_cmd(t *Text, cp *Cmd) bool {
 					if sel[j].q1-sel[j].q0 > RBUFSIZE {
 						editerror("replacement string too long")
 					}
-					t.file.b.Read(sel[j].q0, rbuf[:sel[j].q1-sel[j].q0])
+					t.file.(*File).b.Read(sel[j].q0, rbuf[:sel[j].q1-sel[j].q0])
 					for k := 0; k < sel[j].q1-sel[j].q0; k++ {
 						buf = buf + string(rbuf[k])
 					}
@@ -399,13 +399,13 @@ func s_cmd(t *Text, cp *Cmd) bool {
 				if sel[0].q1-sel[0].q0 > RBUFSIZE {
 					editerror("right hand side too long in substitution")
 				}
-				t.file.b.Read(sel[0].q0, rbuf[:sel[0].q1-sel[0].q0])
+				t.file.(*File).b.Read(sel[0].q0, rbuf[:sel[0].q1-sel[0].q0])
 				for k := 0; k < sel[0].q1-sel[0].q0; k++ {
 					buf += string(rbuf[k])
 				}
 			}
 		}
-		t.file.elog.Replace(sel[0].q0, sel[0].q1, []rune(buf))
+		t.file.(*File).elog.Replace(sel[0].q0, sel[0].q1, []rune(buf))
 		delta -= sel[0].q1 - sel[0].q0
 		delta += len([]rune(buf))
 		didsub = true
@@ -429,16 +429,16 @@ func u_cmd(t *Text, cp *Cmd) bool {
 		flag = false
 	}
 	oseq := -1
-	for n > 0 && t.file.Seq() != oseq {
+	for n > 0 && t.file.(*File).Seq() != oseq {
 		n--
-		oseq = t.file.Seq()
+		oseq = t.file.(*File).Seq()
 		undo(t, nil, nil, flag, false, "")
 	}
 	return true
 }
 
 func w_cmd(t *Text, cp *Cmd) bool {
-	f := t.file
+	f := t.file.(*File)
 	if f.Seq() == seq {
 		editerror("can't write file with pending modifications")
 	}
@@ -452,9 +452,9 @@ func w_cmd(t *Text, cp *Cmd) bool {
 
 func x_cmd(t *Text, cp *Cmd) bool {
 	if cp.re != "" {
-		looper(t.file, cp, cp.cmdc == 'x')
+		looper(t.file.(*File), cp, cp.cmdc == 'x')
 	} else {
-		linelooper(t.file, cp)
+		linelooper(t.file.(*File), cp)
 	}
 	return true
 }
@@ -487,7 +487,7 @@ func runpipe(t *Text, cmd rune, cr []rune, state int) {
 		t.q0 = addr.r.q0
 		t.q1 = addr.r.q1
 		if cmd == '<' || cmd == '|' {
-			t.file.elog.Delete(t.q0, t.q1)
+			t.file.(*File).elog.Delete(t.q0, t.q1)
 		}
 	}
 	s = append([]rune{cmd}, r...)
@@ -545,7 +545,7 @@ func nlcount(t *Text, q0, q1 int) (nl, pnr int) {
 			if nbuf > RBUFSIZE {
 				nbuf = RBUFSIZE
 			}
-			t.file.b.Read(q0, buf[:nbuf])
+			t.file.(*File).b.Read(q0, buf[:nbuf])
 			i = 0
 		}
 		if buf[i] == '\n' {
@@ -566,8 +566,8 @@ const (
 
 func printposn(t *Text, mode int) {
 	var l1, l2 int
-	if t != nil && t.file != nil && t.file.name != "" {
-		warning(nil, "%s:", t.file.name)
+	if t != nil && t.file.(*File) != nil && t.file.(*File).name != "" {
+		warning(nil, "%s:", t.file.(*File).name)
 	}
 	switch mode {
 	case PosnChars:
@@ -628,7 +628,7 @@ func eq_cmd(t *Text, cp *Cmd) bool {
 }
 
 func nl_cmd(t *Text, cp *Cmd) bool {
-	f := t.file
+	f := t.file.(*File)
 	if cp.addr == nil {
 		// First put it on newline boundaries
 		a := mkaddr(f)
@@ -682,7 +682,7 @@ func pfilename(f *File) {
 		dirtychar = '\''
 	}
 	fc := ' '
-	if curtext != nil && curtext.file == f {
+	if curtext != nil && curtext.file.(*File) == f {
 		fc = '.'
 	}
 	warning(nil, "%c%c%c %s\n", dirtychar,
@@ -791,15 +791,15 @@ func alllooper(w *Window, lp *Looper) {
 	cp := lp.cp
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	curr := t.file.GetCurText()
+	curr := t.file.(*File).GetCurText()
 	if curr != t {
 		return
 	}
 	// no auto-execute on files without names
-	if cp.re == "" && t.file.name == "" {
+	if cp.re == "" && t.file.(*File).name == "" {
 		return
 	}
-	if cp.re == "" || filematch(t.file, cp.re) == lp.XY {
+	if cp.re == "" || filematch(t.file.(*File), cp.re) == lp.XY {
 		lp.w = append(lp.w, w)
 	}
 }
@@ -1030,13 +1030,13 @@ func alltofile(w *Window, tp *Tofile) {
 	}
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	if t.file.GetCurText().(*Text) != t {
+	if t.file.(*File).GetCurText().(*Text) != t {
 		return
 	}
 	//	if w.nopen[QWevent] > 0   {
 	//		return;
-	if tp.r == t.file.name {
-		tp.f = t.file
+	if tp.r == t.file.(*File).name {
+		tp.f = t.file.(*File)
 	}
 }
 
@@ -1058,7 +1058,7 @@ func allmatchfile(w *Window, tp *Tofile) {
 	}
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	if t.file.GetCurText().(*Text) != t {
+	if t.file.(*File).GetCurText().(*Text) != t {
 		return
 	}
 	//	if w.nopen[QWevent] > 0   {
@@ -1095,7 +1095,7 @@ func filematch(f *File, r string) bool {
 		dmark = '\''
 	}
 	fmark := ' '
-	if curtext != nil && curtext.file == f {
+	if curtext != nil && curtext.file.(*File) == f {
 		fmark = '.'
 	}
 	buf := fmt.Sprintf("%c%c%c %s\n", dmark, '+', fmark, f.name)
