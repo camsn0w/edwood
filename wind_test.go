@@ -80,15 +80,15 @@ func TestSetTag1(t *testing.T) {
 		}
 
 		w.setTag1()
-		got := string(w.tag.file.b)
+		got := string(w.tag.file.B())
 		want := name + defaultSuffix
 		if got != want {
 			t.Errorf("bad initial tag for file %q:\n got: %q\nwant: %q", name, got, want)
 		}
 
-		w.tag.file.InsertAt(w.tag.file.Nr(), []rune(extraSuffix))
+		w.tag.file.InsertAt(w.tag.file.Size(), []rune(extraSuffix))
 		w.setTag1()
-		got = string(w.tag.file.b)
+		got = string(w.tag.file.B())
 		want = name + defaultSuffix + extraSuffix
 		if got != want {
 			t.Errorf("bad replacement tag for file %q:\n got: %q\nwant: %q", name, got, want)
@@ -155,7 +155,8 @@ func TestWindowClearTag(t *testing.T) {
 		},
 	}
 	w.ClearTag()
-	got := w.tag.file.b.String()
+	b := w.tag.file.B()
+	got := b.String()
 	if got != want {
 		t.Errorf("got %q; want %q", got, want)
 	}

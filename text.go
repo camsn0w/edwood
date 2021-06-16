@@ -613,7 +613,7 @@ func (t *Text) logInsertDelete(q0, q1 int) {
 }
 
 func (t *Text) View(q0, q1 int) []rune                   { return t.file.View(q0, q1) }
-func (t *Text) ReadB(q int, r []rune) (n int, err error) { n, err = t.file.Read(q, r); return }
+func (t *Text) ReadB(q int, r []rune) (n int, err error) { n, err = t.file.Read(q, r); return n, err }
 func (t *Text) Nc() int                                  { return t.file.Size() }
 func (t *Text) Q0() int                                  { return t.q0 }
 func (t *Text) Q1() int                                  { return t.q1 }
