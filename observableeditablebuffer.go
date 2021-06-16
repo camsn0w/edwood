@@ -52,6 +52,13 @@ type ObservableEditableBuffer interface {
 	Seq() int
 	RedoSeq() int
 	Reader(q0 int, q1 int) io.Reader
+	Cache() []rune
+	SetCache(cache []rune)
+	Nr() int
+	Nc() int
+	SetSeq(seq int)
+	Putseq() int
+	SetPutseq(putseq int)
 }
 
 type Editbuf struct {

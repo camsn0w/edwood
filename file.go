@@ -71,6 +71,26 @@ type File struct {
 	cq0 int // [private]
 }
 
+func (f *File) Putseq() int {
+	return f.putseq
+}
+
+func (f *File) SetPutseq(putseq int) {
+	f.putseq = putseq
+}
+
+func (f *File) SetSeq(seq int) {
+	f.seq = seq
+}
+
+func (f *File) Cache() []rune {
+	return f.cache
+}
+
+func (f *File) SetCache(cache []rune) {
+	f.cache = cache
+}
+
 func (f *File) Editclean() bool {
 	return f.editclean
 }
@@ -123,7 +143,7 @@ func (f *File) String() string {
 	return f.b.String()
 }
 
-func (f *File) nc() int {
+func (f *File) Nc() int {
 	return f.b.nc()
 }
 
