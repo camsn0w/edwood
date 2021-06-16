@@ -109,10 +109,6 @@ func (t *Text) Init(r image.Rectangle, rf string, cols [frame.NumColours]draw.Im
 	return t
 }
 
-func (t *Text) Nc() int {
-	return t.file.Size()
-}
-
 // String returns a string representation of the TextKind.
 func (tk TextKind) String() string {
 	switch tk {
@@ -618,7 +614,7 @@ func (t *Text) logInsertDelete(q0, q1 int) {
 
 func (t *Text) View(q0, q1 int) []rune                   { return t.file.View(q0, q1) }
 func (t *Text) ReadB(q int, r []rune) (n int, err error) { n, err = t.file.Read(q, r); return }
-func (t *Text) nc() int                                  { return t.file.Size() }
+func (t *Text) Nc() int                                  { return t.file.Size() }
 func (t *Text) Q0() int                                  { return t.q0 }
 func (t *Text) Q1() int                                  { return t.q1 }
 func (t *Text) SetQ0(q0 int)                             { t.q0 = q0 }

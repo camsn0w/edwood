@@ -37,7 +37,7 @@ func TestLoadReader(t *testing.T) {
 		if err != nil {
 			t.Fatalf("LoadReader failed: %v", err)
 		}
-		out := string(text.file.b)
+		out := string(text.file.B())
 		if out != tc.out {
 			t.Errorf("loaded text %q; expected %q", out, tc.out)
 		}
@@ -67,7 +67,7 @@ func TestLoad(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Load failed: %v", err)
 		}
-		out := string(text.file.b)
+		out := string(text.file.B())
 		if out != tc.out {
 			t.Errorf("loaded text %q; expected %q", out, tc.out)
 		}
@@ -85,7 +85,7 @@ func TestLoadError(t *testing.T) {
 	text = emptyText()
 	text.file.SetDir(true)
 
-	text.file.name = ""
+	text.file.SetName("")
 	wantErr = "empty directory name"
 	_, err = text.Load(0, "/", true)
 	if err == nil || err.Error() != wantErr {
@@ -100,7 +100,7 @@ func TestLoadError(t *testing.T) {
 	defer func() {
 		*mtpt = ""
 	}()
-	text.file.name = *mtpt
+	text.file.SetName(*mtpt)
 	wantErr = "will not open self mount point /mnt/acme"
 	_, err = text.Load(0, *mtpt, true)
 	if err == nil || err.Error() != wantErr {
@@ -412,8 +412,8 @@ func TestTextBsInsert(t *testing.T) {
 			if q != tc.q {
 				t.Errorf("q = %v; want %v", q, tc.q)
 			}
-			if got, want := []rune(text.file.b), tc.outbuf; !cmp.Equal(got, want) {
-				t.Errorf("text.file.b = %q; want %q", got, want)
+			if got, want := []rune(text.file.B()), tc.outbuf; !cmp.Equal(got, want) {
+				t.Errorf("text.file.B() = %q; want %q", got, want)
 			}
 		})
 	}
@@ -435,7 +435,7 @@ func checkTabexpand(t *testing.T, getText func(tabexpand bool, tabstop int) *Tex
 		for _, r := range tc.input {
 			text.Type(r)
 		}
-		if got := string(text.file.cache); got != tc.want {
+		if got := string(text.file.Cache()); got != tc.want {
 			t.Errorf("loaded text %q; expected %q", got, tc.want)
 		}
 	}
