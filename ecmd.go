@@ -118,7 +118,8 @@ func edittext(w *Window, q int, r []rune) error {
 		return ErrPermission
 	case Inserting:
 		f := w.body.file
-		f.Elog().(*Elog).Insert(q, r)
+		elog := f.Elog().(*Elog)
+		elog.Insert(q, r)
 		return nil
 	case Collecting:
 		collection = append(collection, r...)
