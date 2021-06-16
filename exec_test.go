@@ -129,17 +129,17 @@ func TestPutfile(t *testing.T) {
 	cur.w = w
 	f.SetCurText(cur)
 	increaseMtime := func(t *testing.T, duration time.Duration) {
-		tm := f.info.ModTime().Add(duration)
+		tm := f.Info().ModTime().Add(duration)
 		if err := os.Chtimes(filename, tm, tm); err != nil {
 			t.Fatalf("Chtimes failed: %v", err)
 		}
 	}
 
-	err = putfile(f, 0, f.Size(), filename)
+	err = putfile(f.(*File), 0, f.Size(), filename)
 	if err == nil || !strings.Contains(err.Error(), "file already exists") {
 		t.Fatalf("putfile returned error %v; expected 'file already exists'", err)
 	}
-	err = putfile(f, 0, f.Size(), filename)
+	err = putfile(f.(*File), 0, f.Size(), filename)
 	if err != nil {
 		t.Fatalf("putfile failed: %v", err)
 	}
@@ -147,7 +147,7 @@ func TestPutfile(t *testing.T) {
 
 	// mtime increased but hash is the same
 	increaseMtime(t, time.Second)
-	err = putfile(f, 0, f.Size(), filename)
+	err = putfile(f.(*File), 0, f.Size(), filename)
 	if err != nil {
 		t.Fatalf("putfile failed: %v", err)
 	}
@@ -160,7 +160,7 @@ func TestPutfile(t *testing.T) {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
 	increaseMtime(t, time.Second)
-	err = putfile(f, 0, f.Size(), filename)
+	err = putfile(f.(*File), 0, f.Size(), filename)
 	if err == nil || !strings.Contains(err.Error(), "modified since last read") {
 		t.Fatalf("putfile returned error %v; expected 'modified since last read'", err)
 	}
