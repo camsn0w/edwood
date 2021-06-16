@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/rjkroege/edwood/internal/file"
 )
 
 // File is an editable text buffer with undo. Many Text can share one
@@ -100,7 +99,7 @@ func (f *File) SetEditclean(editclean bool) {
 }
 
 func (f *File) Elog() interface{} {
-	return f.elog
+	return &f.elog
 }
 
 func (f *File) SetElog(i interface{}) {
@@ -339,6 +338,7 @@ func (f *File) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, e
 
 	// Would appear to require a commit operation.
 	// NB: Runs the observers.
+	f.InsertAt(q0, runes)
 
 	return len(runes), hasNulls, err
 }

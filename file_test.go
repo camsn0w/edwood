@@ -270,7 +270,12 @@ func TestFileLoadUndoHash(t *testing.T) {
 
 	buffy := bytes.NewBuffer([]byte(s2 + s2))
 
-	f.Load(0, buffy, true)
+	load, b, err := f.Load(0, buffy, true)
+	println(load)
+	println(b)
+	if err != nil {
+		return
+	}
 	// f.Load marks the file as modified.
 	f.Clean()
 
