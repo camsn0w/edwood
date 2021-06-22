@@ -34,7 +34,7 @@ func resetxec() {
 }
 
 func mkaddr(f *File) (a Address) {
-	cur := f.GetCurText()
+	cur := f.GetCurObserver()
 	a.r.q0 = cur.(*Text).q0
 	a.r.q1 = cur.(*Text).q1
 	a.f = f
@@ -59,7 +59,7 @@ func cmdexec(t *Text, cp *Cmd) bool {
 	if t != nil && t.w != nil {
 		t = &t.w.body
 		f = t.file
-		f.SetCurText(t)
+		f.SetCurObserver(t)
 	}
 	if i >= 0 && cmdtab[i].defaddr != aNo {
 		ap := cp.addr
@@ -85,7 +85,7 @@ func cmdexec(t *Text, cp *Cmd) bool {
 				addr = cmdaddress(ap, none, 0)
 			}
 			f = addr.f
-			t = f.GetCurText().(*Text)
+			t = f.GetCurObserver().(*Text)
 		}
 	}
 	switch cp.cmdc {
@@ -140,7 +140,7 @@ func filelist(t *Text, r string) string {
 	if r[0] != '<' {
 		return r
 	}
-	// use < command to collect text
+	// use < command to collect observers
 	clearcollection()
 	runpipe(t, '<', []rune(r[1:]), Collecting)
 	return string(collection)
@@ -155,7 +155,7 @@ func b_cmd(t *Text, cp *Cmd) bool {
 	if nest == 0 {
 		pfilename(f)
 	}
-	curtext = f.GetCurText().(*Text)
+	curtext = f.GetCurObserver().(*Text)
 	return true
 }
 
@@ -196,7 +196,7 @@ func d_cmd(t *Text, cp *Cmd) bool {
 }
 
 func D1(t *Text) {
-	if t.w.body.file.HasMultipleTexts() || t.w.Clean(false) {
+	if t.w.body.file.HasMultipleObservers() || t.w.Clean(false) {
 		t.col.Close(t.w, true)
 	}
 }
@@ -648,7 +648,7 @@ func appendx(f *File, cp *Cmd, p int) bool {
 	if len(cp.text) > 0 {
 		f.elog.Insert(p, []rune(cp.text))
 	}
-	cur := f.GetCurText().(*Text)
+	cur := f.GetCurObserver().(*Text)
 	cur.q0 = p
 	cur.q1 = p
 	return true
@@ -670,7 +670,7 @@ func pdisplay(f *File) bool {
 		warning(nil, "%s", string(buf[:np]))
 		p1 += np
 	}
-	cur := f.GetCurText().(*Text)
+	cur := f.GetCurObserver().(*Text)
 	cur.q0 = addr.r.q0
 	cur.q1 = addr.r.q1
 	return true
@@ -691,7 +691,7 @@ func pfilename(f *File) {
 
 func loopcmd(f *File, cp *Cmd, rp []Range) {
 	for _, r := range rp {
-		cur := f.GetCurText().(*Text)
+		cur := f.GetCurObserver().(*Text)
 		cur.q0 = r.q0
 		cur.q1 = r.q1
 		cmdexec(cur, cp)
@@ -712,7 +712,7 @@ func looper(f *File, cp *Cmd, isX bool) {
 	if isY {
 		op = r.q0
 	}
-	cur := f.GetCurText().(*Text)
+	cur := f.GetCurObserver().(*Text)
 	sels := are.rxexecute(cur, nil, r.q0, r.q1, -1)
 	if len(sels) == 0 {
 		if isY {
@@ -791,7 +791,7 @@ func alllooper(w *Window, lp *Looper) {
 	cp := lp.cp
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	curr := t.file.GetCurText()
+	curr := t.file.GetCurObserver()
 	if curr != t {
 		return
 	}
@@ -872,7 +872,7 @@ func nextmatch(f *File, r string, p int, sign int) {
 		editerror("bad regexp in command address")
 	}
 	sel = RangeSet{Range{0, 0}}
-	cur := f.GetCurText().(*Text)
+	cur := f.GetCurObserver().(*Text)
 	if sign >= 0 {
 		sels := are.rxexecute(cur, nil, p, -1, 2)
 		if len(sels) == 0 {
@@ -916,7 +916,7 @@ func nextmatch(f *File, r string, p int, sign int) {
 
 func cmdaddress(ap *Addr, a Address, sign int) Address {
 	f := a.f
-	cur := f.GetCurText().(*Text)
+	cur := f.GetCurObserver().(*Text)
 	var a1, a2 Address
 	var qbydir int
 	for {
@@ -1030,7 +1030,7 @@ func alltofile(w *Window, tp *Tofile) {
 	}
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	if t.file.GetCurText().(*Text) != t {
+	if t.file.GetCurObserver().(*Text) != t {
 		return
 	}
 	//	if w.nopen[QWevent] > 0   {
@@ -1058,7 +1058,7 @@ func allmatchfile(w *Window, tp *Tofile) {
 	}
 	t := &w.body
 	// only use this window if it's the current window for the file  {
-	if t.file.GetCurText().(*Text) != t {
+	if t.file.GetCurObserver().(*Text) != t {
 		return
 	}
 	//	if w.nopen[QWevent] > 0   {
@@ -1222,7 +1222,7 @@ func cmdname(f *File, str string, set bool) string {
 		return f.name
 	}
 	s = strings.TrimLeft(str, " \t")
-	cur := f.GetCurText().(*Text)
+	cur := f.GetCurObserver().(*Text)
 	if s == "" {
 		goto Return
 	}

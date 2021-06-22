@@ -165,7 +165,7 @@ func look3(t *Text, q0 int, q1 int, external bool) {
 	}
 }
 
-// look3Message generates a plumb message for the text in t at range [q0, q1).
+// look3Message generates a plumb message for the observers in t at range [q0, q1).
 // If q0 == q1, the range will be expanded to the current selection if q0/q1 falls
 // within the selection. Otherwise, it'll expand to a whitespace-delimited word.
 func look3Message(t *Text, q0, q1 int) (*plumb.Message, error) {
@@ -173,7 +173,7 @@ func look3Message(t *Text, q0, q1 int) (*plumb.Message, error) {
 		Src:  "acme",
 		Dst:  "",
 		Dir:  t.AbsDirName(""),
-		Type: "text",
+		Type: "observers",
 	}
 	if q1 == q0 {
 		if t.q1 > t.q0 && t.q0 <= q0 && q0 <= t.q1 {
@@ -514,7 +514,7 @@ func lookfile(s string) *Window {
 		for _, w := range c.w {
 			k := strings.TrimRight(w.body.file.name, "/")
 			if k == s {
-				cur, ok := w.body.file.GetCurText().(*Text)
+				cur, ok := w.body.file.GetCurObserver().(*Text)
 				if !ok {
 					return nil
 				}

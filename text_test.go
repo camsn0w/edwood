@@ -39,7 +39,7 @@ func TestLoadReader(t *testing.T) {
 		}
 		out := string(text.file.b)
 		if out != tc.out {
-			t.Errorf("loaded text %q; expected %q", out, tc.out)
+			t.Errorf("loaded observers %q; expected %q", out, tc.out)
 		}
 	}
 }
@@ -69,7 +69,7 @@ func TestLoad(t *testing.T) {
 		}
 		out := string(text.file.b)
 		if out != tc.out {
-			t.Errorf("loaded text %q; expected %q", out, tc.out)
+			t.Errorf("loaded observers %q; expected %q", out, tc.out)
 		}
 	}
 }
@@ -385,8 +385,8 @@ func TestTextBsInsert(t *testing.T) {
 		name          string   // Test name
 		what          TextKind // Body, Tag, etc.
 		q0, q         int      // Input and returned position
-		buf           string   // Initial text buffer
-		inbuf, outbuf []rune   // Inserted and modified text buffer
+		buf           string   // Initial observers buffer
+		inbuf, outbuf []rune   // Inserted and modified observers buffer
 		nr            int      // Returned number of runes
 	}{
 		{"Tag", Tag, 2, 2, "abc", []rune("xy\bz"), []rune("abxy\bzc"), 4},
@@ -413,7 +413,7 @@ func TestTextBsInsert(t *testing.T) {
 				t.Errorf("q = %v; want %v", q, tc.q)
 			}
 			if got, want := []rune(text.file.b), tc.outbuf; !cmp.Equal(got, want) {
-				t.Errorf("text.file.b = %q; want %q", got, want)
+				t.Errorf("observers.file.b = %q; want %q", got, want)
 			}
 		})
 	}
@@ -436,7 +436,7 @@ func checkTabexpand(t *testing.T, getText func(tabexpand bool, tabstop int) *Tex
 			text.Type(r)
 		}
 		if got := string(text.file.cache); got != tc.want {
-			t.Errorf("loaded text %q; expected %q", got, tc.want)
+			t.Errorf("loaded observers %q; expected %q", got, tc.want)
 		}
 	}
 }

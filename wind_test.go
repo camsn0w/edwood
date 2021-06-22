@@ -7,7 +7,7 @@ import (
 	"github.com/rjkroege/edwood/internal/edwoodtest"
 )
 
-// TestWindowUndoSelection checks text selection change after undo/redo.
+// TestWindowUndoSelection checks observers selection change after undo/redo.
 // It tests that selection doesn't change when undoing/redoing
 // using nil delta/epsilon, which fixes https://github.com/rjkroege/edwood/issues/230.
 func TestWindowUndoSelection(t *testing.T) {

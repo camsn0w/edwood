@@ -318,7 +318,7 @@ func mousethread(display draw.Display) {
 		case <-cwarn:
 			// Do nothing
 		case pm := <-cplumb:
-			if pm.Type == "text" {
+			if pm.Type == "observers" {
 				act := findattr(pm.Attr, "action")
 				if act == "" || act == "showfile" {
 					plumblook(pm)
@@ -487,8 +487,8 @@ func keyboardthread(display draw.Display) {
 					activecol = t.col
 				}
 				if t != nil && t.w != nil {
-					// In a set of zeroxes, the last typed-in body becomes the curtext.
-					t.w.body.file.SetCurText(&t.w.body)
+					// In a set of zeroxes, the last typed-in body becomes the currobserver.
+					t.w.body.file.SetCurObserver(&t.w.body)
 				}
 				if timer != nil {
 					timer.Stop()

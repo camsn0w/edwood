@@ -254,7 +254,7 @@ func del(et *Text, _0 *Text, _1 *Text, flag1 bool, _2 bool, _3 string) {
 	if et.col == nil || et.w == nil {
 		return
 	}
-	if flag1 || et.w.body.file.HasMultipleTexts() || et.w.Clean(false) {
+	if flag1 || et.w.body.file.HasMultipleObservers() || et.w.Clean(false) {
 		et.col.Close(et.w, true)
 	}
 }
@@ -449,7 +449,7 @@ func get(et *Text, _ *Text, argt *Text, flag1 bool, _ bool, arg string) {
 		return
 	}
 	newNameIsdir, _ := isDir(name)
-	if t.file.HasMultipleTexts() && newNameIsdir {
+	if t.file.HasMultipleObservers() && newNameIsdir {
 		warning(nil, "%s is a directory; can't read with multiple windows on it\n", name)
 		return
 	}
@@ -494,7 +494,7 @@ func local(et, _, argt *Text, _, _ bool, arg string) {
 //
 // TODO(flux): Write this in terms of the various cases.
 func putfile(f *File, q0 int, q1 int, name string) error {
-	w := f.GetCurText().(*Text).w
+	w := f.GetCurObserver().(*Text).w
 	d, err := os.Stat(name)
 
 	// Putting to the same file that we already read from.
@@ -652,7 +652,7 @@ func run(win *Window, s string, rdir string, newns bool, argaddr string, xarg st
 	go runwaittask(c, cpid)
 }
 
-// sendx appends selected text or snarf buffer to end of body.
+// sendx appends selected observers or snarf buffer to end of body.
 func sendx(et, _, _ *Text, _, _ bool, _ string) {
 	if et.w == nil {
 		return

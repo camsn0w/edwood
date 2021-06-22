@@ -9,18 +9,18 @@ import (
 	"github.com/rjkroege/edwood/internal/file"
 )
 
-// File is an editable text buffer with undo. Many Text can share one
+// File is an editable observers buffer with undo. Many Text can share one
 // File (to implement Zerox). The File is responsible for updating the
 // Text instances. File is a model in MVC parlance while Text is a
 // View-Controller.
 //
-// A File tracks several related concepts. First it is a text buffer with
+// A File tracks several related concepts. First it is a observers buffer with
 // undo/redo back to an initial state. Mark (undo.RuneArray.Commit) notes
 // an undo point.
 //
 // Next, a File might have a backing to a disk file.
 //
-// Lastly the text buffer might be clean/dirty. A clean buffer is possibly
+// Lastly the observers buffer might be clean/dirty. A clean buffer is possibly
 // the same as its disk backing. A specific point in the undo record is
 // considered clean.
 //
@@ -56,7 +56,7 @@ type File struct {
 	treatasclean bool // Window Clean tests should succeed if set. [private]
 
 	// Observer pattern: many Text instances can share a File.
-	buf Editbuf
+	buf Editor
 
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
 	isdir     bool // Used to track if this File is populated from a directory list. [private]
@@ -117,7 +117,7 @@ func (f *File) IsDirOrScratch() bool {
 // IsDir returns true if the File has a synthetic backing of
 // a directory.
 // TODO(rjk): File is a facade that subsumes the entire Model
-// of an Edwood MVC. As such, it should look like a text buffer for
+// of an Edwood MVC. As such, it should look like a observers buffer for
 // view/controller code. isdir is true for a specific kind of File innards
 // where we automatically alter the contents in various ways.
 // Automatically altering the contents should be expressed differently.
@@ -380,8 +380,8 @@ func NewTagFile() *File {
 		//	seq       int
 		mod: false,
 
-		//	curtext *Text
-		//	text    **Text
+		//	currobserver *Text
+		//	observers    **Text
 		//	ntext   int
 	}
 }

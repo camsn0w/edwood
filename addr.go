@@ -36,7 +36,7 @@ func isregexc(r rune) bool {
 }
 
 // nlcounttopos starts at q0 and advances nl lines,
-// being careful not to walk past the end of the text,
+// being careful not to walk past the end of the observers,
 // and then nr chars, being careful not to walk past
 // the end of the current line.
 // It returns the final position.
@@ -154,11 +154,11 @@ Rescue:
 
 var pattern *AcmeRegexp
 
-// acmeregexp searches for regular expression pattern pat in text t.
+// acmeregexp searches for regular expression pattern pat in observers t.
 // If pat is empty, it uses the pattern used in the previous invocation of this function.
 // Dir indicates the direction of the search: forward or backward.
-// R sets the text position where search begins.
-// Lim sets the text position where search ends for forward search
+// R sets the observers position where search begins.
+// Lim sets the observers position where search ends for forward search
 // (set range to {-1, -1} for no limit).
 // Warnings will be shown to user if showerr is true.
 // It returns the match and whether a match was found.
@@ -201,7 +201,7 @@ func acmeregexp(showerr bool, t Texter, lim Range, r Range, pat string, dir int)
 	return sel[0], true
 }
 
-// address parses an address for text t, where getc takes a closure over
+// address parses an address for observers t, where getc takes a closure over
 // the address expression and returns the qth rune in the address
 // (q0 <= q < q1). If eval is true, the address is also evaluated.
 // Lim sets the limits of regular expression search.

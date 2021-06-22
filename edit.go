@@ -88,7 +88,7 @@ const (
 )
 
 var cmdtab = []Cmdtab{
-	// cmdc	text	regexp	addr	defcmd	defaddr	count	token	 fn
+	// cmdc	observers	regexp	addr	defcmd	defaddr	count	token	 fn
 	{'\n', false, false, false, 0, aDot, cNo, "", nl_cmd},
 	{'a', true, false, false, 0, aDot, cNo, "", a_cmd},
 	{'b', false, false, false, 0, aNo, cNo, linex, b_cmd},

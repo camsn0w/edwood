@@ -28,75 +28,75 @@ func TestEdit(t *testing.T) {
 
 	testtab := []teststimulus{
 		// 0
-		{Range{0, 0}, "test", "a/junk", "junkThis is a\nshort text\nto try addressing\n", []string{}},
-		{Range{7, 12}, "test", "a/junk", "This is a\nshjunkort text\nto try addressing\n", []string{}},
-		{Range{0, 0}, "test", "/This/a/junk", "Thisjunk is a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 0}, "test", "/^/a/junk", "This is a\njunkshort text\nto try addressing\n", []string{}},
-		{Range{0, 0}, "test", "/$/a/junk", "This is ajunk\nshort text\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "a/junk", "junkThis is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{7, 12}, "test", "a/junk", "This is a\nshjunkort observers\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "/This/a/junk", "Thisjunk is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "/^/a/junk", "This is a\njunkshort observers\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "/$/a/junk", "This is ajunk\nshort observers\nto try addressing\n", []string{}},
 
 		// 4
-		{Range{0, 0}, "test", "i/junk", "junkThis is a\nshort text\nto try addressing\n", []string{}},
-		{Range{2, 6}, "test", "i/junk", "Thjunkis is a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 0}, "test", "/text/i/junk", "This is a\nshort junktext\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "i/junk", "junkThis is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{2, 6}, "test", "i/junk", "Thjunkis is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "/observers/i/junk", "This is a\nshort junktext\nto try addressing\n", []string{}},
 
 		// Don't know how to automate testing of 'b'
 
 		// c
 		// 7
-		{Range{0, 0}, "test", "c/junk", "junkThis is a\nshort text\nto try addressing\n", []string{}},
-		{Range{2, 6}, "test", "c/junk", "Thjunks a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 0}, "test", "/text/c/junk", "This is a\nshort junk\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "c/junk", "junkThis is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{2, 6}, "test", "c/junk", "Thjunks a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "/observers/c/junk", "This is a\nshort junk\nto try addressing\n", []string{}},
 
 		// d
 		// 10
-		{Range{0, 0}, "test", "d", "This is a\nshort text\nto try addressing\n", []string{}},
-		{Range{2, 6}, "test", "d", "Ths a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 0}, "test", "/text/d", "This is a\nshort \nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "d", "This is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{2, 6}, "test", "d", "Ths a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "/observers/d", "This is a\nshort \nto try addressing\n", []string{}},
 
 		// f - Don't know how to test f
 
 		// g/v
-		{Range{0, 0}, "test", "g/This/d", "This is a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 12}, "test", "g/This/d", "ort text\nto try addressing\n", []string{}},
-		{Range{0, 3}, "test", "v/This/d", "s is a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 12}, "test", "v/This/d", "This is a\nshort text\nto try addressing\n", []string{}},
+		{Range{0, 0}, "test", "g/This/d", "This is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 12}, "test", "g/This/d", "ort observers\nto try addressing\n", []string{}},
+		{Range{0, 3}, "test", "v/This/d", "s is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 12}, "test", "v/This/d", "This is a\nshort observers\nto try addressing\n", []string{}},
 
 		// m/t
 		// 17
-		{Range{0, 4}, "test", "m/try", " is a\nshort text\nto tryThis addressing\n", []string{}},
-		{Range{0, 3}, "test", "t/try", "This is a\nshort text\nto tryThi addressing\n", []string{}},
-		{Range{1, 3}, "test", "m0", "hiTs is a\nshort text\nto try addressing\n", []string{}},
-		{Range{4, 8}, "test", "m.", "This is a\nshort text\nto try addressing\n", []string{}},
+		{Range{0, 4}, "test", "m/try", " is a\nshort observers\nto tryThis addressing\n", []string{}},
+		{Range{0, 3}, "test", "t/try", "This is a\nshort observers\nto tryThi addressing\n", []string{}},
+		{Range{1, 3}, "test", "m0", "hiTs is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{4, 8}, "test", "m.", "This is a\nshort observers\nto try addressing\n", []string{}},
 
 		// s
 		// 21
-		{Range{0, len(contents)}, "test", "s/short/long/", "This is a\nlong text\nto try addressing\n", []string{}},
-		{Range{0, len(contents)}, "test", "s/(i.)/!\\1!/g", "Th!is! !is! a\nshort text\nto try address!in!g\n", []string{}},
+		{Range{0, len(contents)}, "test", "s/short/long/", "This is a\nlong observers\nto try addressing\n", []string{}},
+		{Range{0, len(contents)}, "test", "s/(i.)/!\\1!/g", "Th!is! !is! a\nshort observers\nto try address!in!g\n", []string{}},
 
 		// =
 		// 23
-		{Range{1, 3}, "test", "=", "This is a\nshort text\nto try addressing\n", []string{"test:1\n"}},
-		{Range{1, 3}, "test", "=+", "This is a\nshort text\nto try addressing\n", []string{"test:1+#1\n"}},
-		{Range{1, 3}, "test", "=#", "This is a\nshort text\nto try addressing\n", []string{"test:#1,#3\n"}},
+		{Range{1, 3}, "test", "=", "This is a\nshort observers\nto try addressing\n", []string{"test:1\n"}},
+		{Range{1, 3}, "test", "=+", "This is a\nshort observers\nto try addressing\n", []string{"test:1+#1\n"}},
+		{Range{1, 3}, "test", "=#", "This is a\nshort observers\nto try addressing\n", []string{"test:#1,#3\n"}},
 
 		// p
-		{Range{0, 4}, "test", "p", "This is a\nshort text\nto try addressing\n", []string{"This"}},
+		{Range{0, 4}, "test", "p", "This is a\nshort observers\nto try addressing\n", []string{"This"}},
 
 		// x
-		{Range{0, 4}, "test", ",x/$/ a/@/", "This is a@\nshort text@\nto try addressing@\n@", []string{}},
-		{Range{0, 4}, "test", ",x a/@/", "This is a@\nshort text@\nto try addressing@\n", []string{}},
+		{Range{0, 4}, "test", ",x/$/ a/@/", "This is a@\nshort observers@\nto try addressing@\n@", []string{}},
+		{Range{0, 4}, "test", ",x a/@/", "This is a@\nshort observers@\nto try addressing@\n", []string{}},
 
 		// \n is missing because we have no way to determine if the result is correct.
 
 		// | > <
 		// 30
-		{Range{0, 4}, "test", "|pipe", "{\"|pipe\" \".\" true \"\" \"\" true} is a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 4}, "test", ">greater", "This is a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 4}, "test", "<less", "{\"<less\" \".\" true \"\" \"\" true} is a\nshort text\nto try addressing\n", []string{}},
-		{Range{0, 4}, "test", "<error", "This is a\nshort text\nto try addressing\n", []string{"Edit: mockrun failed!\n"}},
+		{Range{0, 4}, "test", "|pipe", "{\"|pipe\" \".\" true \"\" \"\" true} is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 4}, "test", ">greater", "This is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 4}, "test", "<less", "{\"<less\" \".\" true \"\" \"\" true} is a\nshort observers\nto try addressing\n", []string{}},
+		{Range{0, 4}, "test", "<error", "This is a\nshort observers\nto try addressing\n", []string{"Edit: mockrun failed!\n"}},
 
 		// { } NB: grouping requires newlines. And sets . the same for each of the commands.
-		{Range{0, 0}, "test", ",x {\n i/@/ \n a/%/\n }", "@This is a%\n@short text%\n@to try addressing%\n", []string{}},
+		{Range{0, 0}, "test", ",x {\n i/@/ \n a/%/\n }", "@This is a%\n@short observers%\n@to try addressing%\n", []string{}},
 		// TODO(rjk): { has a number of constraints not being exercised in this test.
 	}
 
@@ -125,7 +125,7 @@ func TestEdit(t *testing.T) {
 
 		warningsMu.Lock()
 		if got, want := len(warnings), len(test.expectedwarns); got != want {
-			t.Errorf("text %d: expected %d warnings but got %d warnings", i, want, got)
+			t.Errorf("observers %d: expected %d warnings but got %d warnings", i, want, got)
 			break
 		}
 
@@ -140,8 +140,8 @@ func TestEdit(t *testing.T) {
 	}
 }
 
-const contents = "This is a\nshort text\nto try addressing\n"
-const alt_contents = "A different text\nWith other contents\nSo there!\n"
+const contents = "This is a\nshort observers\nto try addressing\n"
+const alt_contents = "A different observers\nWith other contents\nSo there!\n"
 
 func makeSkeletonWindowModel(dot Range, filename string) *Window {
 	MakeWindowScaffold(&dumpfile.Content{
@@ -283,8 +283,8 @@ func TestEditMultipleWindows(t *testing.T) {
 	}{
 		// X
 		{Range{0, 0}, "test", "X/.*/ ,x i/@/", []string{
-			"@This is a\n@short text\n@to try addressing\n",
-			"@A different text\n@With other contents\n@So there!\n",
+			"@This is a\n@short observers\n@to try addressing\n",
+			"@A different observers\n@With other contents\n@So there!\n",
 		}, []string{}},
 
 		{Range{0, 6}, "test", "X/.*/=", []string{
@@ -316,7 +316,7 @@ func TestEditMultipleWindows(t *testing.T) {
 		}, []string{"Edit: no file name given\n"}},
 
 		// b does the same thing in Acme and Edwood (fails)
-		// Maybe this sets curtext?
+		// Maybe this sets currobserver?
 
 		// w
 		// backing file is newer than file.
@@ -333,7 +333,7 @@ func TestEditMultipleWindows(t *testing.T) {
 		}},
 		{Range{0, 0}, "test", "b alt_example_2\n1 i/1/\n2 i/2/\n", []string{
 			contents,
-			"1A different text\n2With other contents\nSo there!\n",
+			"1A different observers\n2With other contents\nSo there!\n",
 		}, []string{
 			"'+  alt_example_2\n",
 		}},
@@ -354,11 +354,11 @@ func TestEditMultipleWindows(t *testing.T) {
 		{Range{0, 0}, "test", "1,$p\nu", []string{
 			contents,
 			alt_contents,
-		}, []string{"helloThis is a\nshort text\nto try addressing\n"}},
+		}, []string{"helloThis is a\nshort observers\nto try addressing\n"}},
 		{Range{0, 0}, "test", "1,$p\nu-1\n", []string{
 			"hello" + contents,
 			alt_contents,
-		}, []string{"This is a\nshort text\nto try addressing\n"}},
+		}, []string{"This is a\nshort observers\nto try addressing\n"}},
 	}
 
 	buf := make([]rune, 8192)
@@ -624,7 +624,7 @@ func (c *Cmd) String() string {
 	if c == nil {
 		return "nil"
 	}
-	return fmt.Sprintf("Cmd{addr: %v, re: %q, cmd: %v, text: %q, mtaddr: %v, next: %v, num: %v, flag: %v, cmdc: %q}",
+	return fmt.Sprintf("Cmd{addr: %v, re: %q, cmd: %v, observers: %q, mtaddr: %v, next: %v, num: %v, flag: %v, cmdc: %q}",
 		c.addr, c.re, c.cmd, c.text, c.mtaddr, c.next, c.num, c.flag, c.cmdc)
 }
 

@@ -164,8 +164,8 @@ func TestXfidreadQWrdsel(t *testing.T) {
 		col: new(Column),
 	}
 	textSetSelection(&w.body, "This is an «"+wantSel+"» sentence.\n")
-	w.body.file.AddText(&w.body)
-	w.tag.file.AddText(&w.tag)
+	w.body.file.AddObserver(&w.body)
+	w.tag.file.AddObserver(&w.tag)
 	w.body.w = w
 	w.tag.w = w
 	w.ref.Inc()
@@ -998,7 +998,7 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 		fr:      &MockFrame{},
 		display: d,
 	}
-	w.tag.file.AddText(&w.tag)
+	w.tag.file.AddObserver(&w.tag)
 	w.body = Text{
 		w: w,
 		file: &File{
@@ -1007,7 +1007,7 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 		fr:      &MockFrame{},
 		display: d,
 	}
-	w.body.file.AddText(&w.body)
+	w.body.file.AddObserver(&w.body)
 
 	// Put something in the snarf buffer.
 	const snarfbuf = "Hello, 世界\n"

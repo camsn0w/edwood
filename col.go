@@ -51,7 +51,7 @@ func (c *Column) Init(r image.Rectangle, dis draw.Display) *Column {
 
 	// TODO(rjk) better code: making tag should be split out.
 	tagfile := NewFile("")
-	tagfile.AddText(&c.tag)
+	tagfile.AddObserver(&c.tag)
 	c.tag.file = tagfile
 	c.tag.Init(r1, tagfont, tagcolors, c.display)
 	c.tag.what = Columntag
@@ -380,7 +380,7 @@ func (c *Column) Grow(w *Window, but int) {
 	}
 
 	// Observation: before I can support lines of arbitrary height, I need to change
-	// Frame to paint partial lines of text.
+	// Frame to paint partial lines of observers.
 	// TODO(rjk): Rewrite this logic for computing heights when font heights vary.
 	// store old #lines for each window
 	onl := w.body.fr.GetFrameFillStatus().Maxlines

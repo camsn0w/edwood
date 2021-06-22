@@ -394,7 +394,7 @@ func xfidwrite(x *Xfid) {
 	}
 	x.fcall.Count = uint32(len(x.fcall.Data))
 
-	// updateText writes x.fcall.Data to text buffer t and sends the 9P response.
+	// updateText writes x.fcall.Data to observers buffer t and sends the 9P response.
 	updateText := func(t *Text) {
 		r := fullrunewrite(x)
 		if len(r) != 0 {
@@ -729,11 +729,11 @@ func xfideventwrite(x *Xfid, w *Window) {
 	// The messages have a fixed format: a character indicating the
 	// origin or cause of the action, a character indicating
 	// the type of the action, four free-format blank-terminated
-	// decimal numbers, optional text, and a newline.
+	// decimal numbers, optional observers, and a newline.
 	// The first and second numbers are the character
 	// addresses of the action, the third is a flag, and the
 	// final is a count of the characters in the optional
-	// text, which may itself contain newlines.
+	// observers, which may itself contain newlines.
 	// %c%c%d %d %d %d %s\n
 	lines := strings.Split(string(x.fcall.Data), "\n")
 forloop:
@@ -805,7 +805,7 @@ forloop:
 }
 
 // xfidutfread reads x.fcall.Count bytes from offset x.fcall.Offset in
-// text t and sends the data to the client. It only sends full runes,
+// observers t and sends the data to the client. It only sends full runes,
 // and optimizes for sequential reads by keeping track of (byte offset,
 // rune offset) pair of the last read from buffer for a matching qid
 // (QWbody or QWtag). No data past rune offset q1 is sent to client.
@@ -970,7 +970,7 @@ func xfidindexread(x *Xfid) {
 	for _, c := range row.col {
 		for _, w := range c.w {
 			// only show the currently active window of a set
-			if w.body.file.GetCurText().(*Text) != &w.body {
+			if w.body.file.GetCurObserver().(*Text) != &w.body {
 				continue
 			}
 			sb.WriteString(w.CtlPrint(false))

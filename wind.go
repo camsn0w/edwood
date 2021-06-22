@@ -80,7 +80,7 @@ func (w *Window) initHeadless(clone *Window) *Window {
 	w.utflastqid = -1
 
 	f := NewTagFile()
-	f.AddText(&w.tag)
+	f.AddObserver(&w.tag)
 	w.tag.file = f
 
 	// Body setup.
@@ -89,7 +89,7 @@ func (w *Window) initHeadless(clone *Window) *Window {
 		f = clone.body.file
 		w.body.org = clone.body.org
 	}
-	f.AddText(&w.body)
+	f.AddObserver(&w.body)
 	w.body.file = f
 	w.filemenu = true
 	w.autoindent = *globalAutoIndent
@@ -314,13 +314,13 @@ func (w *Window) lock1(owner int) {
 	w.owner = owner
 }
 
-// Lock locks every text/clone of w
+// Lock locks every observers/clone of w
 func (w *Window) Lock(owner int) {
 	w.lk.Lock()
 	w.ref.Inc()
 	w.owner = owner
 	f := w.body.file
-	f.AllText(func(i interface{}) {
+	f.AllObservers(func(i interface{}) {
 		t := i.(*Text)
 		if t.w != w {
 			t.w.lock1(owner)
@@ -337,7 +337,7 @@ func (w *Window) unlock1() {
 
 // Unlock releases the lock on each clone of w
 func (w *Window) Unlock() {
-	w.body.file.AllText(func(i interface{}) {
+	w.body.file.AllObservers(func(i interface{}) {
 		t := i.(*Text)
 		if t.w != w {
 			t.w.unlock1()
@@ -456,7 +456,7 @@ func (w *Window) ParseTag() string {
 // SetTag updates the tag for this Window and all of its clones.
 func (w *Window) SetTag() {
 	f := w.body.file
-	f.AllText(func(i interface{}) {
+	f.AllObservers(func(i interface{}) {
 		u := i.(*Text)
 		if u.w.col.safe || u.fr.GetFrameFillStatus().Maxlines > 0 {
 			u.w.setTag1()
@@ -478,7 +478,7 @@ func (w *Window) setTag1() {
 	)
 
 	// (flux) The C implemtation does a lot of work to avoid
-	// re-setting the tag text if unchanged.  That's probably not
+	// re-setting the tag observers if unchanged.  That's probably not
 	// relevant in the modern world.  We can build a new tag trivially
 	// and put up with the traffic implied for a tag line.
 

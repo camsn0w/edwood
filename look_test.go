@@ -144,7 +144,7 @@ func TestLook3Message(t *testing.T) {
 				Src:  "acme",
 				Dst:  "",
 				Dir:  tc.dir,
-				Type: "text",
+				Type: "observers",
 				Data: []byte("hello.go"),
 			}
 			if tc.hasClickAttr {

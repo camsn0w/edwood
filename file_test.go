@@ -12,9 +12,9 @@ import (
 
 func TestDelText(t *testing.T) {
 	f := &File{
-		buf: Editbuf{
-			curtext: nil,
-			text:    nil,
+		buf: Editor{
+			currobserver: nil,
+			observers:    nil,
 		},
 	}
 
@@ -24,31 +24,31 @@ func TestDelText(t *testing.T) {
 	}
 
 	t.Run("Nonexistent", func(t *testing.T) {
-		err := f.DelText(&Text{
+		err := f.DelObserver(&Text{
 			file: NewFile("HowToExitVim.txt"),
 		})
 		if err == nil {
-			t.Errorf("expected panic when deleting nonexistent text")
+			t.Errorf("expected panic when deleting nonexistent observers")
 		}
 	})
 	for _, text := range testData {
-		f.AddText(text)
+		f.AddObserver(text)
 	}
-	println("Size is now: ", f.GetTextSize())
+	println("Size is now: ", f.GetObserverSize())
 	for i, text := range testData {
-		err := f.DelText(text)
+		err := f.DelObserver(text)
 		if err != nil {
-			t.Errorf("DelText of text at index %d failed: %v", i, err)
+			t.Errorf("DelObserver of observers at index %d failed: %v", i, err)
 			continue
 		}
-		if got, want := f.GetTextSize(), len(testData)-(i+1); got != want {
+		if got, want := f.GetObserverSize(), len(testData)-(i+1); got != want {
 			println("On test #", i)
-			t.Fatalf("DelText resulted in text of length %v; expected %v", got, want)
+			t.Fatalf("DelObserver resulted in observers of length %v; expected %v", got, want)
 		}
-		f.AllText(func(i interface{}) {
+		f.AllObservers(func(i interface{}) {
 			inText := i.(*Text)
 			if inText == text {
-				t.Fatalf("DelText did not delete correctly at index %v", i)
+				t.Fatalf("DelObserver did not delete correctly at index %v", i)
 			}
 
 		})

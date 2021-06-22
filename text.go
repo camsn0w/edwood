@@ -83,7 +83,7 @@ type Text struct {
 }
 
 // getfont is a convenience accessor that gets the draw.Font from the font
-// used in this text.
+// used in this observers.
 func (t *Text) getfont() draw.Font {
 	return fontget(t.font, t.display)
 }
@@ -187,7 +187,7 @@ func (t *Text) Resize(r image.Rectangle, keepextra, noredraw bool) int {
 
 func (t *Text) Close() {
 	t.fr.Clear(true)
-	if err := t.file.DelText(t); err != nil {
+	if err := t.file.DelObserver(t); err != nil {
 		acmeerror(err.Error(), nil)
 	}
 	t.file = nil
@@ -214,7 +214,7 @@ func (t *Text) Columnate(names []string, widths []int) {
 	Lnl := []rune("\n")
 	Ltab := []rune("\t")
 
-	if t.file.HasMultipleTexts() {
+	if t.file.HasMultipleObservers() {
 		panic("Text.Columnate is only for directories that can't have zerox")
 	}
 
@@ -271,7 +271,7 @@ func (t *Text) Columnate(names []string, widths []int) {
 
 func (t *Text) checkSafeToLoad(filename string) error {
 	if t.file.HasUncommitedChanges() || t.file.Size() > 0 || t.w == nil || t != &t.w.body {
-		panic("text.load")
+		panic("observers.load")
 	}
 
 	if t.file.IsDir() && t.file.name == "" {
@@ -325,7 +325,7 @@ func (t *Text) Load(q0 int, filename string, setqid bool) (nread int, err error)
 
 	if d.IsDir() {
 		// this is checked in get() but it's possible the file changed underfoot
-		if t.file.HasMultipleTexts() {
+		if t.file.HasMultipleObservers() {
 			return 0, warnError(nil, "%s is a directory; can't read with multiple windows on it", filename)
 		}
 		t.file.SetDir(true)
@@ -369,9 +369,9 @@ func getDirNames(f *os.File) ([]string, error) {
 	return names, nil
 }
 
-// BsInsert inserts runes r at text position q0. If r contains backspaces ('\b'),
+// BsInsert inserts runes r at observers position q0. If r contains backspaces ('\b'),
 // they are interpreted, removing the runes preceding them.
-// The final text position where r is inserted and the number of runes inserted
+// The final observers position where r is inserted and the number of runes inserted
 // after interpreting backspaces is returned.
 func (t *Text) BsInsert(q0 int, r []rune, tofile bool) (q, nr int) {
 	n := len(r)
@@ -472,10 +472,10 @@ func (t *Text) logInsert(q0 int, r []rune) {
 // updated appropriately.
 func (t *Text) Insert(q0 int, r []rune, tofile bool) {
 	if !tofile {
-		panic("text.insert")
+		panic("observers.insert")
 	}
 	if tofile && t.file.HasUncommitedChanges() {
-		panic("text.insert")
+		panic("observers.insert")
 	}
 	if len(r) == 0 {
 		return
@@ -495,7 +495,7 @@ func (t *Text) inSelection(q0 int) bool {
 	return t.q1 > t.q0 && t.q0 <= q0 && q0 <= t.q1
 }
 
-// Fill inserts additional text from t into the Frame object until the Frame object is full.
+// Fill inserts additional observers from t into the Frame object until the Frame object is full.
 func (t *Text) fill(fr frame.SelectScrollUpdater) error {
 	// log.Println("Text.Fill Start", t.what)
 	// defer log.Println("Text.Fill End")
@@ -553,7 +553,7 @@ func (t *Text) fill(fr frame.SelectScrollUpdater) error {
 // updated appropriately.
 func (t *Text) Delete(q0, q1 int, _ bool) {
 	if t.file.HasUncommitedChanges() {
-		panic("text.delete")
+		panic("observers.delete")
 	}
 	n := q1 - q0
 	if n == 0 {
@@ -562,7 +562,7 @@ func (t *Text) Delete(q0, q1 int, _ bool) {
 	t.file.DeleteAt(q0, q1)
 }
 
-// deleted implements the single-text deletion observer for this Text's
+// deleted implements the single-observers deletion observer for this Text's
 // backing File. It updates the Text (i.e. the view) for the removal of
 // runes [q0, q1).
 func (t *Text) deleted(q0, q1 int) {
@@ -742,7 +742,7 @@ func (t *Text) Type(r rune) {
 	rp := []rune{r}
 
 	Tagdown := func() {
-		// expand tag to show all text
+		// expand tag to show all observers
 		if !t.w.tagexpand {
 			t.w.tagexpand = true
 			t.w.Resize(t.w.r, false, true)
@@ -925,7 +925,7 @@ func (t *Text) Type(r rune) {
 	wasrange := t.q0 != t.q1
 	if t.q1 > t.q0 {
 		if t.file.HasUncommitedChanges() {
-			acmeerror("text.type", nil)
+			acmeerror("observers.type", nil)
 		}
 		cut(t, t, nil, true, true, "")
 		t.eq0 = ^0
@@ -977,7 +977,7 @@ func (t *Text) Type(r rune) {
 		nnb = t.BsWidth(r)
 		q1 = t.q0
 		q0 = q1 - nnb
-		// if selection is at beginning of window, avoid deleting invisible text
+		// if selection is at beginning of window, avoid deleting invisible observers
 		if q0 < t.org {
 			q0 = t.org
 			nnb = q1 - q0
@@ -1059,7 +1059,7 @@ func (t *Text) FrameScroll(fr frame.SelectScrollUpdater, dl int) {
 		}
 		q0 = t.org + fr.Charofpt(image.Pt(fr.Rect().Min.X, fr.Rect().Min.Y+dl*fr.DefaultFontHeight()))
 	}
-	// Insert text into the frame.
+	// Insert observers into the frame.
 	t.setorigin(fr, q0, true, true)
 }
 
@@ -1406,7 +1406,7 @@ func (t *Text) ClickMatch(cl, cr rune, dir int, inq int) (q int, r bool) {
 	return inq, cl == '\n' && nest == 1
 }
 
-// ishtmlstart checks whether the text starting at location q an html tag.
+// ishtmlstart checks whether the observers starting at location q an html tag.
 // Returned stat is 1 for <a>, -1 for </a>, 0 for no tag or <a />.
 // Returned q1 is the location after the tag.
 func (t *Text) ishtmlstart(q int) (q1 int, stat int) {
@@ -1438,7 +1438,7 @@ func (t *Text) ishtmlstart(q int) (q1 int, stat int) {
 	return q, 1
 }
 
-// ishtmlend checks whether the text ending at location q an html tag.
+// ishtmlend checks whether the observers ending at location q an html tag.
 // Returned stat is 1 for <a>, -1 for </a>, 0 for no tag or <a />.
 // Returned q0 is the start of the tag.
 func (t *Text) ishtmlend(q int) (q1 int, stat int) {
