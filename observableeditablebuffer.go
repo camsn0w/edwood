@@ -2,17 +2,6 @@ package main
 
 import "fmt"
 
-type ObservableEditableBuffer interface {
-	AddObserver(observer BufferObserver)
-	DelObserver(observer BufferObserver) error
-	SetCurObserver(observer BufferObserver)
-	GetCurObserver() interface{}
-	GetObserverSize() int
-	AllObservers(tf func(i interface{}))
-	HasMultipleObservers() bool
-	Undo(isundo bool) (q0, q1 int, ok bool)
-}
-
 type Editor struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
