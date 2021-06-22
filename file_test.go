@@ -2,11 +2,9 @@ package main
 
 import (
 	"bytes"
-	"image"
 	"io/ioutil"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/rjkroege/edwood/internal/file"
@@ -27,27 +25,7 @@ func TestDelText(t *testing.T) {
 
 	t.Run("Nonexistent", func(t *testing.T) {
 		err := f.DelText(&Text{
-			display:   nil,
-			file:      NewFile("HowToExitVim.txt"),
-			fr:        nil,
-			font:      "",
-			org:       0,
-			q0:        0,
-			q1:        0,
-			what:      0,
-			tabstop:   0,
-			tabexpand: false,
-			w:         nil,
-			scrollr:   image.Rectangle{},
-			lastsr:    image.Rectangle{},
-			all:       image.Rectangle{},
-			row:       nil,
-			col:       nil,
-			iq1:       0,
-			eq0:       0,
-			nofill:    false,
-			needundo:  false,
-			lk:        sync.Mutex{},
+			file: NewFile("HowToExitVim.txt"),
 		})
 		if err == nil {
 			t.Errorf("expected panic when deleting nonexistent text")
