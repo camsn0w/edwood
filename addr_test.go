@@ -34,7 +34,7 @@ func TestAddr(t *testing.T) {
 
 		{Range{0, 0}, "/addressing", Range{28, 38}, true, 11},
 		{Range{0, 0}, "/addressing\n", Range{28, 38}, true, 11},
-		{Range{0, 0}, "/observers\\nto", Range{16, 23}, true, 9},
+		{Range{0, 0}, "/text\\nto", Range{16, 23}, true, 9},
 		{Range{0, 0}, "/addressing/+-", Range{21, 39}, true, 14},
 		{Range{0, 0}, "/d+", Range{29, 31}, true, 3},
 		{Range{0, 0}, "/d+/,/ss/", Range{29, 35}, true, 9},
@@ -49,7 +49,7 @@ func TestAddr(t *testing.T) {
 		{Range{0, 0}, "#X", Range{0, 0}, true, 1},
 	}
 
-	text := &TextBuffer{0, 0, []rune("This is a\nshort observers\nto try addressing\n")}
+	text := &TextBuffer{0, 0, []rune("This is a\nshort text\nto try addressing\n")}
 
 	for i, test := range testtab {
 		t.Run(fmt.Sprintf("test-%02d", i), func(t *testing.T) {
