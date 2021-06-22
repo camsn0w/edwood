@@ -8,48 +8,48 @@ type Editor struct {
 }
 
 func (f *File) AddObserver(observer BufferObserver) {
-	if f.buf.observers == nil {
-		f.buf.observers = make(map[BufferObserver]struct{})
+	if f.editor.observers == nil {
+		f.editor.observers = make(map[BufferObserver]struct{})
 	}
-	f.buf.observers[observer] = struct{}{}
-	f.buf.currobserver = observer
+	f.editor.observers[observer] = struct{}{}
+	f.editor.currobserver = observer
 
 }
 
 func (f *File) DelObserver(observer BufferObserver) error {
-	if _, exists := f.buf.observers[observer]; exists {
-		delete(f.buf.observers, observer)
-		if observer == f.buf.currobserver {
-			for k := range f.buf.observers {
-				f.buf.currobserver = k
+	if _, exists := f.editor.observers[observer]; exists {
+		delete(f.editor.observers, observer)
+		if observer == f.editor.currobserver {
+			for k := range f.editor.observers {
+				f.editor.currobserver = k
 				break
 			}
 		}
 		return nil
 	}
-	return fmt.Errorf("can't find observers in File.DelObserver")
+	return fmt.Errorf("can't find editor in File.DelObserver")
 }
 
 func (f *File) SetCurObserver(observer BufferObserver) {
-	f.buf.currobserver = observer
+	f.editor.currobserver = observer
 }
 
 func (f *File) GetCurObserver() interface{} {
-	return f.buf.currobserver
+	return f.editor.currobserver
 }
 
 func (f *File) AllObservers(tf func(i interface{})) {
-	for t := range f.buf.observers {
+	for t := range f.editor.observers {
 		tf(t)
 	}
 }
 
 func (f *File) GetObserverSize() int {
-	return len(f.buf.observers)
+	return len(f.editor.observers)
 }
 
 func (f *File) HasMultipleObservers() bool {
-	return len(f.buf.observers) > 1
+	return len(f.editor.observers) > 1
 }
 
 func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {

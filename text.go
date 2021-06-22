@@ -271,7 +271,7 @@ func (t *Text) Columnate(names []string, widths []int) {
 
 func (t *Text) checkSafeToLoad(filename string) error {
 	if t.file.HasUncommitedChanges() || t.file.Size() > 0 || t.w == nil || t != &t.w.body {
-		panic("observers.load")
+		panic("editor.load")
 	}
 
 	if t.file.IsDir() && t.file.name == "" {
@@ -472,10 +472,10 @@ func (t *Text) logInsert(q0 int, r []rune) {
 // updated appropriately.
 func (t *Text) Insert(q0 int, r []rune, tofile bool) {
 	if !tofile {
-		panic("observers.insert")
+		panic("editor.insert")
 	}
 	if tofile && t.file.HasUncommitedChanges() {
-		panic("observers.insert")
+		panic("editor.insert")
 	}
 	if len(r) == 0 {
 		return
@@ -553,7 +553,7 @@ func (t *Text) fill(fr frame.SelectScrollUpdater) error {
 // updated appropriately.
 func (t *Text) Delete(q0, q1 int, _ bool) {
 	if t.file.HasUncommitedChanges() {
-		panic("observers.delete")
+		panic("editor.delete")
 	}
 	n := q1 - q0
 	if n == 0 {
@@ -925,7 +925,7 @@ func (t *Text) Type(r rune) {
 	wasrange := t.q0 != t.q1
 	if t.q1 > t.q0 {
 		if t.file.HasUncommitedChanges() {
-			acmeerror("observers.type", nil)
+			acmeerror("editor.type", nil)
 		}
 		cut(t, t, nil, true, true, "")
 		t.eq0 = ^0

@@ -39,7 +39,7 @@ func TestLoadReader(t *testing.T) {
 		}
 		out := string(text.file.b)
 		if out != tc.out {
-			t.Errorf("loaded observers %q; expected %q", out, tc.out)
+			t.Errorf("loaded editor %q; expected %q", out, tc.out)
 		}
 	}
 }
@@ -69,7 +69,7 @@ func TestLoad(t *testing.T) {
 		}
 		out := string(text.file.b)
 		if out != tc.out {
-			t.Errorf("loaded observers %q; expected %q", out, tc.out)
+			t.Errorf("loaded editor %q; expected %q", out, tc.out)
 		}
 	}
 }
@@ -413,7 +413,7 @@ func TestTextBsInsert(t *testing.T) {
 				t.Errorf("q = %v; want %v", q, tc.q)
 			}
 			if got, want := []rune(text.file.b), tc.outbuf; !cmp.Equal(got, want) {
-				t.Errorf("observers.file.b = %q; want %q", got, want)
+				t.Errorf("editor.file.b = %q; want %q", got, want)
 			}
 		})
 	}
@@ -436,7 +436,7 @@ func checkTabexpand(t *testing.T, getText func(tabexpand bool, tabstop int) *Tex
 			text.Type(r)
 		}
 		if got := string(text.file.cache); got != tc.want {
-			t.Errorf("loaded observers %q; expected %q", got, tc.want)
+			t.Errorf("loaded editor %q; expected %q", got, tc.want)
 		}
 	}
 }
