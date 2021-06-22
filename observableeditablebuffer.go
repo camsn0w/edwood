@@ -10,11 +10,7 @@ type ObservableEditableBuffer interface {
 	GetObserverSize() int
 	AllObservers(tf func(i interface{}))
 	HasMultipleObservers() bool
-	InsertAt(p0 int, s []rune)
-	InsertAtWithoutCommit(p0 int, s []rune)
-	DeleteAt(p0, p1 int)
 	Undo(isundo bool) (q0, q1 int, ok bool)
-	New() *Editor
 }
 
 type Editor struct {
@@ -65,63 +61,6 @@ func (f *File) GetObserverSize() int {
 
 func (f *File) HasMultipleObservers() bool {
 	return len(f.buf.observers) > 1
-}
-
-func (f *File) InsertAt(p0 int, s []rune) {
-	f.treatasclean = false
-	if p0 > f.b.nc() {
-		panic("internal error: fileinsert")
-	}
-	if f.seq > 0 {
-		f.Uninsert(&f.delta, p0, len(s))
-	}
-	f.b.Insert(p0, s)
-	if len(s) != 0 {
-		f.Modded()
-	}
-	f.AllObservers(func(i interface{}) {
-		i.(BufferObserver).inserted(p0, s)
-	})
-}
-
-func (f *File) InsertAtWithoutCommit(p0 int, s []rune) {
-	f.treatasclean = false
-	if p0 > f.b.nc()+len(f.cache) {
-		panic("File.InsertAtWithoutCommit insertion off the end")
-	}
-
-	if len(f.cache) == 0 {
-		f.cq0 = p0
-	} else {
-		if p0 != f.cq0+len(f.cache) {
-			// TODO(rjk): actually print something useful here
-			acmeerror("File.InsertAtWithoutCommit cq0", nil)
-		}
-	}
-	f.cache = append(f.cache, s...)
-}
-
-func (f *File) DeleteAt(p0, p1 int) {
-	f.treatasclean = false
-	if !(p0 <= p1 && p0 <= f.b.nc() && p1 <= f.b.nc()) {
-		acmeerror("internal error: DeleteAt", nil)
-	}
-	if len(f.cache) > 0 {
-		acmeerror("internal error: DeleteAt", nil)
-	}
-
-	if f.seq > 0 {
-		f.Undelete(&f.delta, p0, p1)
-	}
-	f.b.Delete(p0, p1)
-
-	// Validate if this is right.
-	if p1 > p0 {
-		f.Modded()
-	}
-	f.AllObservers(func(i interface{}) {
-		i.(BufferObserver).deleted(p0, p1)
-	})
 }
 
 func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
@@ -200,10 +139,4 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 		f.seq = 0
 	}
 	return q0, q1, ok
-}
-func (f *File) New() *Editor {
-	return &Editor{
-		currobserver: nil,
-		observers:    nil,
-	}
 }

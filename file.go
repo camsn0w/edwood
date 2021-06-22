@@ -219,6 +219,63 @@ type Undo struct {
 	buf []rune
 }
 
+func (f *File) InsertAt(p0 int, s []rune) {
+	f.treatasclean = false
+	if p0 > f.b.nc() {
+		panic("internal error: fileinsert")
+	}
+	if f.seq > 0 {
+		f.Uninsert(&f.delta, p0, len(s))
+	}
+	f.b.Insert(p0, s)
+	if len(s) != 0 {
+		f.Modded()
+	}
+	f.AllObservers(func(i interface{}) {
+		i.(BufferObserver).inserted(p0, s)
+	})
+}
+
+func (f *File) InsertAtWithoutCommit(p0 int, s []rune) {
+	f.treatasclean = false
+	if p0 > f.b.nc()+len(f.cache) {
+		panic("File.InsertAtWithoutCommit insertion off the end")
+	}
+
+	if len(f.cache) == 0 {
+		f.cq0 = p0
+	} else {
+		if p0 != f.cq0+len(f.cache) {
+			// TODO(rjk): actually print something useful here
+			acmeerror("File.InsertAtWithoutCommit cq0", nil)
+		}
+	}
+	f.cache = append(f.cache, s...)
+}
+
+func (f *File) DeleteAt(p0, p1 int) {
+	f.treatasclean = false
+	if !(p0 <= p1 && p0 <= f.b.nc() && p1 <= f.b.nc()) {
+		acmeerror("internal error: DeleteAt", nil)
+	}
+	if len(f.cache) > 0 {
+		acmeerror("internal error: DeleteAt", nil)
+	}
+
+	if f.seq > 0 {
+		f.Undelete(&f.delta, p0, p1)
+	}
+	f.b.Delete(p0, p1)
+
+	// Validate if this is right.
+	if p1 > p0 {
+		f.Modded()
+	}
+	f.AllObservers(func(i interface{}) {
+		i.(BufferObserver).deleted(p0, p1)
+	})
+}
+
 // Load inserts fd's contents into File at location q0. Load will always
 // mark the file as modified so follow this up with a call to f.Clean() to
 // indicate that the file corresponds to its disk file backing.
@@ -286,7 +343,7 @@ func (f *File) Uninsert(delta *[]*Undo, q0, ns int) {
 	u.seq = f.seq
 	u.p0 = q0
 	u.n = ns
-	(*delta) = append(*delta, &u)
+	*delta = append(*delta, &u)
 }
 
 // Undelete generates an action record that inserts runes into the File
@@ -301,7 +358,7 @@ func (f *File) Undelete(delta *[]*Undo, p0, p1 int) {
 	u.n = p1 - p0
 	u.buf = make([]rune, u.n)
 	f.b.Read(p0, u.buf)
-	(*delta) = append(*delta, &u)
+	*delta = append(*delta, &u)
 }
 
 // A File can have a spcific name that permit it to be persisted to disk
@@ -346,7 +403,7 @@ func (f *File) UnsetName(delta *[]*Undo) {
 	u.p0 = 0 // unused
 	u.n = len(f.name)
 	u.buf = []rune(f.name)
-	(*delta) = append(*delta, &u)
+	*delta = append(*delta, &u)
 }
 
 func NewFile(filename string) *File {
