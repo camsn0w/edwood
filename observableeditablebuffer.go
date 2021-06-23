@@ -7,21 +7,21 @@ type Editor struct {
 	observers    map[BufferObserver]struct{} // [private I think]
 }
 
-func (f *File) AddObserver(observer BufferObserver) {
-	if f.editor.observers == nil {
-		f.editor.observers = make(map[BufferObserver]struct{})
+func (e *Editor) AddObserver(observer BufferObserver) {
+	if e.observers == nil {
+		e.observers = make(map[BufferObserver]struct{})
 	}
-	f.editor.observers[observer] = struct{}{}
-	f.editor.currobserver = observer
+	e.observers[observer] = struct{}{}
+	e.currobserver = observer
 
 }
 
-func (f *File) DelObserver(observer BufferObserver) error {
-	if _, exists := f.editor.observers[observer]; exists {
-		delete(f.editor.observers, observer)
-		if observer == f.editor.currobserver {
-			for k := range f.editor.observers {
-				f.editor.currobserver = k
+func (e *Editor) DelObserver(observer BufferObserver) error {
+	if _, exists := e.observers[observer]; exists {
+		delete(e.observers, observer)
+		if observer == e.currobserver {
+			for k := range e.observers {
+				e.currobserver = k
 				break
 			}
 		}
@@ -30,24 +30,24 @@ func (f *File) DelObserver(observer BufferObserver) error {
 	return fmt.Errorf("can't find editor in File.DelObserver")
 }
 
-func (f *File) SetCurObserver(observer BufferObserver) {
-	f.editor.currobserver = observer
+func (e *Editor) SetCurObserver(observer BufferObserver) {
+	e.currobserver = observer
 }
 
-func (f *File) GetCurObserver() interface{} {
-	return f.editor.currobserver
+func (e *Editor) GetCurObserver() interface{} {
+	return e.currobserver
 }
 
-func (f *File) AllObservers(tf func(i interface{})) {
-	for t := range f.editor.observers {
+func (e *Editor) AllObservers(tf func(i interface{})) {
+	for t := range e.observers {
 		tf(t)
 	}
 }
 
-func (f *File) GetObserverSize() int {
-	return len(f.editor.observers)
+func (e *Editor) GetObserverSize() int {
+	return len(e.observers)
 }
 
-func (f *File) HasMultipleObservers() bool {
-	return len(f.editor.observers) > 1
+func (e *Editor) HasMultipleObservers() bool {
+	return len(e.observers) > 1
 }
