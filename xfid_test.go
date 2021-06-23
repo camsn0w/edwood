@@ -993,7 +993,8 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 	w.tag = Text{
 		w: w,
 		file: &File{
-			b: RuneArray("Send"),
+			b:                        RuneArray("Send"),
+			observableeditablebuffer: &observableeditablebuffer{},
 		},
 		fr:      &MockFrame{},
 		display: d,
@@ -1002,7 +1003,8 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 	w.body = Text{
 		w: w,
 		file: &File{
-			b: RuneArray(""),
+			b:                        RuneArray(""),
+			observableeditablebuffer: &observableeditablebuffer{},
 		},
 		fr:      &MockFrame{},
 		display: d,
