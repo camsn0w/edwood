@@ -186,5 +186,5 @@ func textSetSelection(t *Text, buf string) {
 
 	t.q0 = popRune('«')
 	t.q1 = popRune('»')
-	t.file = &File{b: RuneArray(b)}
+	t.file.b = RuneArray(b)
 }

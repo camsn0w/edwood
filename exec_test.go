@@ -119,8 +119,9 @@ func TestPutfile(t *testing.T) {
 	w := &Window{
 		body: Text{
 			file: &File{
-				b:    RuneArray(want),
-				name: filename,
+				b:                        RuneArray(want),
+				name:                     filename,
+				observableeditablebuffer: &observableeditablebuffer{},
 			},
 		},
 	}

@@ -12,7 +12,7 @@ import (
 
 func TestDelText(t *testing.T) {
 	f := &File{
-		Editor: Editor{
+		observableeditablebuffer: &observableeditablebuffer{
 			currobserver: nil,
 			observers:    nil,
 		},
