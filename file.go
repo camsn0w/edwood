@@ -57,7 +57,7 @@ type File struct {
 	treatasclean bool // Window Clean tests should succeed if set. [private]
 
 	// Observer pattern: many Text instances can share a File.
-	Editor
+	*observableeditablebuffer //make this a pointer
 
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
 	isdir     bool // Used to track if this File is populated from a directory list. [private]
@@ -417,6 +417,10 @@ func NewFile(filename string) *File {
 		editclean: true,
 		//	seq       int
 		mod: false,
+		observableeditablebuffer: &observableeditablebuffer{
+			currobserver: nil,
+			observers:    nil,
+		},
 
 		//	ntext   int
 	}
@@ -436,7 +440,8 @@ func NewTagFile() *File {
 		//	dev       int
 		editclean: true,
 		//	seq       int
-		mod: false,
+		mod:                      false,
+		observableeditablebuffer: &observableeditablebuffer{},
 
 		//	currobserver *Text
 		//	observers    **Text
@@ -556,7 +561,6 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.b.Delete(u.p0, u.p0+u.n)
 			f.AllObservers(func(i interface{}) {
 				i.(BufferObserver).deleted(u.p0, u.p0+u.n)
-
 			})
 			q0 = u.p0
 			q1 = u.p0
