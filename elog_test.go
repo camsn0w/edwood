@@ -55,9 +55,9 @@ func TestElogInsertDelete(t *testing.T) {
 
 	e := MakeElog()
 
-	e.Insert(0, t0)
-	e.Insert(0, t1)
-	e.Insert(0, t2)
+	e.inserted(0, t0)
+	e.inserted(0, t1)
+	e.inserted(0, t2)
 
 	if len(e.log) != 2 {
 		t.Errorf("Insertions should have catenated")
@@ -70,9 +70,9 @@ func TestElogInsertDelete(t *testing.T) {
 	}
 
 	e.Reset()
-	e.Insert(0, t0)
-	e.Insert(0, t1)
-	e.Insert(1, t2)
+	e.inserted(0, t0)
+	e.inserted(0, t1)
+	e.inserted(1, t2)
 	if len(e.log) != 3 {
 		t.Errorf("Expected 3 elements, have %d", len(e.log))
 	}
@@ -82,16 +82,16 @@ func TestElogInsertDelete(t *testing.T) {
 	if string(e.log[2].r) != " a test" {
 		t.Errorf("Failed to catenate properly")
 	}
-	e.Insert(1, t2)
+	e.inserted(1, t2)
 	if string(e.log[2].r) != " a test a test" {
 		t.Errorf("Failed to catenate properly.  Expected ' a test a test', got '%s'", string(e.log[1].r))
 	}
 
-	e.Delete(1, 5)
+	e.deleted(1, 5)
 	if len(e.log) != 4 {
 		t.Errorf("Expected 4 elements, have %d", len(e.log))
 	}
-	e.Delete(5, 5)
+	e.deleted(5, 5)
 	if len(e.log) != 4 {
 		fmt.Println(e)
 		t.Errorf("Expected 4 elements, have %d", len(e.log))
