@@ -156,10 +156,10 @@ func TestXfidreadQWrdsel(t *testing.T) {
 	const wantSel = "εxαmple"
 
 	w := &Window{
-		body: Text{fr: &MockFrame{}},
+		body: Text{fr: &MockFrame{}, file: NewFile("")},
 		tag: Text{
 			fr:   &MockFrame{},
-			file: &File{},
+			file: NewFile(""),
 		},
 		col: new(Column),
 	}

@@ -17,7 +17,7 @@ import (
 func emptyText() *Text {
 	w := &Window{
 		body: Text{
-			file: &File{},
+			file: NewFile(""),
 		},
 	}
 	t := &w.body
@@ -402,7 +402,8 @@ func TestTextBsInsert(t *testing.T) {
 			text := &Text{
 				what: tc.what,
 				file: &File{
-					b: RuneArray(tc.buf),
+					b:                        RuneArray(tc.buf),
+					observableeditablebuffer: &observableeditablebuffer{},
 				},
 			}
 			q, nr := text.BsInsert(tc.q0, []rune(tc.inbuf), true)
