@@ -38,9 +38,10 @@ func TestWindowUndoSelection(t *testing.T) {
 				q0: tc.q0,
 				q1: tc.q1,
 				file: &File{
-					b:       RuneArray("This is an example sentence.\n"),
-					delta:   tc.delta,
-					epsilon: tc.epsilon,
+					b:                        RuneArray("This is an example sentence.\n"),
+					delta:                    tc.delta,
+					epsilon:                  tc.epsilon,
+					observableeditablebuffer: new(observableeditablebuffer),
 				},
 			},
 		}
@@ -76,7 +77,7 @@ func TestSetTag1(t *testing.T) {
 		w.tag = Text{
 			display: display,
 			fr:      &MockFrame{},
-			file:    &File{},
+			file:    NewFile(""),
 		}
 
 		w.setTag1()
@@ -150,7 +151,8 @@ func TestWindowClearTag(t *testing.T) {
 	w := &Window{
 		tag: Text{
 			file: &File{
-				b: RuneArray(tag),
+				b:                        RuneArray(tag),
+				observableeditablebuffer: new(observableeditablebuffer),
 			},
 		},
 	}
