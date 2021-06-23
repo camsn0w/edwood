@@ -2,12 +2,12 @@ package main
 
 import "fmt"
 
-type Editor struct {
+type observableeditablebuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
 }
 
-func (e *Editor) AddObserver(observer BufferObserver) {
+func (e *observableeditablebuffer) AddObserver(observer BufferObserver) {
 	if e.observers == nil {
 		e.observers = make(map[BufferObserver]struct{})
 	}
@@ -16,7 +16,7 @@ func (e *Editor) AddObserver(observer BufferObserver) {
 
 }
 
-func (e *Editor) DelObserver(observer BufferObserver) error {
+func (e *observableeditablebuffer) DelObserver(observer BufferObserver) error {
 	if _, exists := e.observers[observer]; exists {
 		delete(e.observers, observer)
 		if observer == e.currobserver {
@@ -30,24 +30,24 @@ func (e *Editor) DelObserver(observer BufferObserver) error {
 	return fmt.Errorf("can't find editor in File.DelObserver")
 }
 
-func (e *Editor) SetCurObserver(observer BufferObserver) {
+func (e *observableeditablebuffer) SetCurObserver(observer BufferObserver) {
 	e.currobserver = observer
 }
 
-func (e *Editor) GetCurObserver() interface{} {
+func (e *observableeditablebuffer) GetCurObserver() interface{} {
 	return e.currobserver
 }
 
-func (e *Editor) AllObservers(tf func(i interface{})) {
+func (e *observableeditablebuffer) AllObservers(tf func(i interface{})) {
 	for t := range e.observers {
 		tf(t)
 	}
 }
 
-func (e *Editor) GetObserverSize() int {
+func (e *observableeditablebuffer) GetObserverSize() int {
 	return len(e.observers)
 }
 
-func (e *Editor) HasMultipleObservers() bool {
+func (e *observableeditablebuffer) HasMultipleObservers() bool {
 	return len(e.observers) > 1
 }
