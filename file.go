@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/rjkroege/edwood/internal/file"
@@ -39,8 +38,7 @@ type File struct {
 	delta   []*Undo // [private]
 	epsilon []*Undo // [private]
 	elog    Elog
-	name    string
-	info    os.FileInfo
+	*filedetails
 
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -61,8 +59,6 @@ type File struct {
 
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
 	isdir     bool // Used to track if this File is populated from a directory list. [private]
-
-	hash file.Hash // Used to check if the file has changed on disk since loaded.
 
 	// cache holds  that are not yet part of an undo record.
 	cache []rune // [private]
@@ -305,18 +301,6 @@ func (f *File) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, e
 	return len(runes), hasNulls, err
 }
 
-// UpdateInfo updates File's info to d if file hash hasn't changed.
-func (f *File) UpdateInfo(filename string, d os.FileInfo) error {
-	h, err := file.HashFor(filename)
-	if err != nil {
-		return warnError(nil, "failed to compute hash for %v: %v", filename, err)
-	}
-	if h.Eq(f.hash) {
-		f.info = d
-	}
-	return nil
-}
-
 // SnapshotSeq saves the current seq to putseq. Call this on Put actions.
 // TODO(rjk): switching to undo.RuneArray will require removing use of seq
 // TODO(rjk): This function maps to undo.RuneArray.Clean()
@@ -409,11 +393,15 @@ func (f *File) UnsetName(delta *[]*Undo) {
 
 func NewFile(filename string) *File {
 	return &File{
-		b:         NewBuffer(),
-		delta:     []*Undo{},
-		epsilon:   []*Undo{},
-		elog:      MakeElog(),
-		name:      filename,
+		b:       NewBuffer(),
+		delta:   []*Undo{},
+		epsilon: []*Undo{},
+		elog:    MakeElog(),
+		filedetails: &filedetails{
+			name: filename,
+			info: nil,
+			hash: file.Hash{},
+		},
 		editclean: true,
 		//	seq       int
 		mod: false,
@@ -434,7 +422,11 @@ func NewTagFile() *File {
 		epsilon: []*Undo{},
 
 		elog: MakeElog(),
-		name: "",
+		filedetails: &filedetails{
+			name: "",
+			info: nil,
+			hash: file.Hash{},
+		},
 		//	qidpath   uint64
 		//	mtime     uint64
 		//	dev       int
