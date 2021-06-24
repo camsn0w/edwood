@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/rjkroege/edwood/internal/constants"
+	undo2 "github.com/rjkroege/edwood/internal/undo"
 	"math"
 	"os"
 	"unicode/utf8"
@@ -41,36 +43,6 @@ const (
 
 const XXX = false
 
-const (
-	NRange = 10 // TODO(flux): No reason for this static limit anymore; should we remove?
-	//	Infinity  = 0x7FFFFFFF
-
-	EVENTSIZE = 256
-	BUFSIZE   = MaxBlock + plan9.IOHDRSZ
-	RBUFSIZE  = BUFSIZE / utf8.UTFMax
-
-	Empty    = 0
-	Null     = '-'
-	Delete   = 'd'
-	Insert   = 'i'
-	Replace  = 'r'
-	Filename = 'f'
-
-	Inactive   = 0
-	Inserting  = 1
-	Collecting = 2
-
-	// Always apply display scalesize to these.
-	Border       = 2
-	ButtonBorder = 2
-	Scrollwid    = 12
-	Scrollgap    = 8
-
-	KF             = 0xF000 // Start of private unicode space
-	Kscrolloneup   = KF | 0x20
-	Kscrollonedown = KF | 0x21
-)
-
 var (
 	globalincref bool
 	seq          int
@@ -99,13 +71,13 @@ var (
 
 	activewin  *Window
 	activecol  *Column
-	snarfbuf   RuneArray
+	snarfbuf   undo2.RuneArray
 	home       string
 	acmeshell  string
 	tagcolors  [frame.NumColours]draw.Image
 	textcolors [frame.NumColours]draw.Image
 	wdir       string
-	editing    = Inactive
+	editing    = runes.Inactive
 
 	cplumb     chan *plumb.Message
 	cwait      chan ProcessState
