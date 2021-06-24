@@ -991,21 +991,16 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 	w.nopen[QWevent]++
 	defer func() { w.nopen[QWevent]-- }()
 	w.tag = Text{
-		w: w,
-		file: &File{
-			b:                        RuneArray("Send"),
-			observableeditablebuffer: &observableeditablebuffer{},
-		},
+		w:       w,
+		file:    NewFile(""),
 		fr:      &MockFrame{},
 		display: d,
 	}
+	w.tag.file.b = RuneArray("Send")
 	w.tag.file.AddObserver(&w.tag)
 	w.body = Text{
-		w: w,
-		file: &File{
-			b:                        RuneArray(""),
-			observableeditablebuffer: &observableeditablebuffer{},
-		},
+		w:       w,
+		file:    NewFile(""),
 		fr:      &MockFrame{},
 		display: d,
 	}

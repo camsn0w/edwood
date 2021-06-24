@@ -118,13 +118,10 @@ func TestPutfile(t *testing.T) {
 	want := "Hello, 世界\n"
 	w := &Window{
 		body: Text{
-			file: &File{
-				b:                        RuneArray(want),
-				name:                     filename,
-				observableeditablebuffer: &observableeditablebuffer{},
-			},
+			file: NewFile(filename),
 		},
 	}
+	w.body.file.b = RuneArray(want)
 	f := w.body.file
 	cur := &w.body
 	cur.w = w
@@ -171,7 +168,7 @@ func TestExpandtabToggle(t *testing.T) {
 	want := true
 	w := &Window{
 		body: Text{
-			file:      &File{},
+			file:      NewFile(""),
 			tabexpand: false,
 			tabstop:   4,
 		},

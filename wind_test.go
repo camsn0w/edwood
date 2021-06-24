@@ -72,7 +72,7 @@ func TestSetTag1(t *testing.T) {
 		w.body = Text{
 			display: display,
 			fr:      &MockFrame{},
-			file:    &File{name: name},
+			file:    NewFile(name),
 		}
 		w.tag = Text{
 			display: display,
