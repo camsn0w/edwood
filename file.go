@@ -551,9 +551,7 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.mod = u.mod
 			f.treatasclean = false
 			f.b.Delete(u.p0, u.p0+u.n)
-			f.AllObservers(func(i interface{}) {
-				i.(BufferObserver).deleted(u.p0, u.p0+u.n)
-			})
+			f.deleteOnAll(u.p0, u.p0+u.n)
 			q0 = u.p0
 			q1 = u.p0
 			ok = true
@@ -563,9 +561,7 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.mod = u.mod
 			f.treatasclean = false
 			f.b.Insert(u.p0, u.buf)
-			f.AllObservers(func(i interface{}) {
-				i.(BufferObserver).inserted(u.p0, u.buf)
-			})
+			f.insertOnAll(u.p0, u.buf)
 			q0 = u.p0
 			q1 = u.p0 + u.n
 			ok = true

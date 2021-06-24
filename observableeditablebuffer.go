@@ -51,3 +51,15 @@ func (e *observableeditablebuffer) GetObserverSize() int {
 func (e *observableeditablebuffer) HasMultipleObservers() bool {
 	return len(e.observers) > 1
 }
+
+func (e *observableeditablebuffer) insertOnAll(q0 int, r []rune) {
+	e.AllObservers(func(i interface{}) {
+		i.(BufferObserver).inserted(q0, r)
+	})
+}
+
+func (e *observableeditablebuffer) deleteOnAll(q0 int, q1 int) {
+	e.AllObservers(func(i interface{}) {
+		i.(BufferObserver).deleted(q0, q1)
+	})
+}
