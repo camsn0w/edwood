@@ -120,7 +120,7 @@ func (e *Elog) Replace(q0, q1 int, r []rune) {
 	}
 }
 
-func (e *Elog) inserted(q0 int, r []rune) {
+func (e *Elog) Insert(q0 int, r []rune) {
 	if len(r) == 0 {
 		return
 	}
@@ -155,7 +155,7 @@ func (e *Elog) inserted(q0 int, r []rune) {
 	}
 }
 
-func (e *Elog) deleted(q0, q1 int) {
+func (e *Elog) Delete(q0, q1 int) {
 	if q0 == q1 {
 		return
 	}

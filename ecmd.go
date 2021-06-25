@@ -118,7 +118,7 @@ func edittext(w *Window, q int, r []rune) error {
 		return ErrPermission
 	case Inserting:
 		f := w.body.file
-		f.elog.inserted(q, r)
+		f.elog.Insert(q, r)
 		return nil
 	case Collecting:
 		collection = append(collection, r...)
@@ -188,7 +188,7 @@ func c_cmd(t *Text, cp *Cmd) bool {
 
 func d_cmd(t *Text, cp *Cmd) bool {
 	if addr.r.q1 > addr.r.q0 {
-		t.file.elog.deleted(addr.r.q0, addr.r.q1)
+		t.file.elog.Delete(addr.r.q0, addr.r.q1)
 	}
 	t.q0 = addr.r.q0
 	t.q1 = addr.r.q0
@@ -307,17 +307,17 @@ func copyx(f *File, addr2 Address) {
 			ni = RBUFSIZE
 		}
 		f.b.Read(p, buf[:ni])
-		addr2.f.elog.inserted(addr2.r.q1, buf[:ni])
+		addr2.f.elog.Insert(addr2.r.q1, buf[:ni])
 	}
 }
 
 func move(f *File, addr2 Address) {
 	if addr.f != addr2.f || addr.r.q1 <= addr2.r.q0 {
-		f.elog.deleted(addr.r.q0, addr.r.q1)
+		f.elog.Delete(addr.r.q0, addr.r.q1)
 		copyx(f, addr2)
 	} else if addr.r.q0 >= addr2.r.q1 {
 		copyx(f, addr2)
-		f.elog.deleted(addr.r.q0, addr.r.q1)
+		f.elog.Delete(addr.r.q0, addr.r.q1)
 	} else if addr.r.q0 == addr2.r.q0 && addr.r.q1 == addr2.r.q1 {
 		// move to self; no-op
 	} else {
@@ -487,7 +487,7 @@ func runpipe(t *Text, cmd rune, cr []rune, state int) {
 		t.q0 = addr.r.q0
 		t.q1 = addr.r.q1
 		if cmd == '<' || cmd == '|' {
-			t.file.elog.deleted(t.q0, t.q1)
+			t.file.elog.Delete(t.q0, t.q1)
 		}
 	}
 	s = append([]rune{cmd}, r...)
@@ -646,7 +646,7 @@ func nl_cmd(t *Text, cp *Cmd) bool {
 
 func appendx(f *File, cp *Cmd, p int) bool {
 	if len(cp.text) > 0 {
-		f.elog.inserted(p, []rune(cp.text))
+		f.elog.Insert(p, []rune(cp.text))
 	}
 	cur := f.GetCurObserver().(*Text)
 	cur.q0 = p
