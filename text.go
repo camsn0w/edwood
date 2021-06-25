@@ -41,6 +41,8 @@ var (
 		left2,
 		left3,
 	}
+
+	_ BufferObserver = (*Text)(nil) // Enforce at compile time that Text implements BufferObserver
 )
 
 type TextKind byte
@@ -210,7 +212,7 @@ func (t *Text) Close() {
 
 func (t *Text) Columnate(names []string, widths []int) {
 	var colw, mint, maxt, ncol, nrow int
-	q1 := (0)
+	q1 := 0
 	Lnl := []rune("\n")
 	Ltab := []rune("\t")
 
@@ -584,7 +586,7 @@ func (t *Text) deleted(q0, q1 int) {
 	} else if t.fr != nil && q0 < t.org+(t.fr.GetFrameFillStatus().Nchars) {
 		p1 := q1 - t.org
 		if p1 > (t.fr.GetFrameFillStatus().Nchars) {
-			p1 = (t.fr.GetFrameFillStatus().Nchars)
+			p1 = t.fr.GetFrameFillStatus().Nchars
 		}
 		p0 := 0
 		if q0 < t.org {
@@ -593,7 +595,7 @@ func (t *Text) deleted(q0, q1 int) {
 		} else {
 			p0 = q0 - t.org
 		}
-		t.fr.Delete((p0), (p1))
+		t.fr.Delete(p0, p1)
 		t.fill(t.fr)
 	}
 
@@ -1052,7 +1054,7 @@ func (t *Text) FrameScroll(fr frame.SelectScrollUpdater, dl int) {
 	}
 	var q0 int
 	if dl < 0 {
-		q0 = t.BackNL(t.org, (-dl))
+		q0 = t.BackNL(t.org, -dl)
 	} else {
 		if t.org+(fr.GetFrameFillStatus().Nchars) == t.file.Size() {
 			return
@@ -1271,10 +1273,10 @@ func (t *Text) SetSelect(q0, q1 int) {
 	}
 	if p0 > (t.fr.GetFrameFillStatus().Nchars) {
 		ticked = false
-		p0 = (t.fr.GetFrameFillStatus().Nchars)
+		p0 = t.fr.GetFrameFillStatus().Nchars
 	}
 	if p1 > (t.fr.GetFrameFillStatus().Nchars) {
-		p1 = (t.fr.GetFrameFillStatus().Nchars)
+		p1 = t.fr.GetFrameFillStatus().Nchars
 	}
 	if p0 > p1 {
 		panic(fmt.Sprintf("acme: textsetselect p0=%d p1=%d q0=%v q1=%v t.org=%d nchars=%d", p0, p1, q0, q1, t.org, t.fr.GetFrameFillStatus().Nchars))
@@ -1384,12 +1386,12 @@ func (t *Text) ClickMatch(cl, cr rune, dir int, inq int) (q int, r bool) {
 				break
 			}
 			c = t.file.ReadC(inq)
-			(inq)++
+			inq++
 		} else {
 			if inq == 0 {
 				break
 			}
-			(inq)--
+			inq--
 			c = t.file.ReadC(inq)
 		}
 		if c == cr {
