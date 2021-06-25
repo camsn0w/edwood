@@ -203,7 +203,7 @@ type Expand struct {
 	q1    int            // end of expansion
 	name  string         // filename, if it exists
 	jump  bool           // move cursor?
-	at    *Text          // address observers
+	at    *Text          // address text
 	agetc func(int) rune // input: used to evaluate address
 	a0    int            // start of address
 	a1    int            // end of address
