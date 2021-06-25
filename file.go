@@ -391,7 +391,7 @@ func (f *File) UnsetName(delta *[]*Undo) {
 	*delta = append(*delta, &u)
 }
 
-func NewFile(filename string) *File {
+func NewFile(filename string) *File { //Todo: Make a friend function that takes the backing RuneArray as input for b and rename function MakeObservableTextBuffer
 	return &File{
 		b:       NewBuffer(),
 		delta:   []*Undo{},
