@@ -38,7 +38,7 @@ type File struct {
 	delta   []*Undo // [private]
 	epsilon []*Undo // [private]
 	elog    Elog
-	*filedetails
+	details *filedetails
 
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -181,7 +181,7 @@ func (f *File) ReadAtRune(r []rune, off int) (n int, err error) {
 // as clean and is this File writable to a backing. They are combined in this
 // this method.
 func (f *File) SaveableAndDirty() bool {
-	return f.name != "" && (f.mod || f.Dirty() || len(f.cache) > 0) && !f.IsDirOrScratch()
+	return f.details.name != "" && (f.mod || f.Dirty() || len(f.cache) > 0) && !f.IsDirOrScratch()
 }
 
 // Commit writes the in-progress edits to the real buffer instead of
@@ -291,7 +291,7 @@ func (f *File) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, e
 	runes, _, hasNulls := cvttorunes(d, len(d))
 
 	if sethash {
-		f.hash = file.CalcHash(d)
+		f.details.hash = file.CalcHash(d)
 	}
 
 	// Would appear to require a commit operation.
@@ -358,7 +358,7 @@ const (
 // Some backings that opt them out of typically being persisted.
 // Resetting a file name to a new value does not have any effect.
 func (f *File) SetName(name string) {
-	if f.name == name {
+	if f.details.name == name {
 		return
 	}
 
@@ -371,7 +371,7 @@ func (f *File) SetName(name string) {
 // setnameandisscratch updates the File.name and isscratch bit
 // at the same time.
 func (f *File) setnameandisscratch(name string) {
-	f.name = name
+	f.details.name = name
 	if strings.HasSuffix(name, slashguide) || strings.HasSuffix(name, plusErrors) {
 		f.isscratch = true
 	} else {
@@ -386,8 +386,8 @@ func (f *File) UnsetName(delta *[]*Undo) {
 	u.mod = f.mod
 	u.seq = f.seq
 	u.p0 = 0 // unused
-	u.n = len(f.name)
-	u.buf = []rune(f.name)
+	u.n = len(f.details.name)
+	u.buf = []rune(f.details.name)
 	*delta = append(*delta, &u)
 }
 
@@ -397,7 +397,7 @@ func NewFile(filename string) *File { //Todo: Make a friend function that takes 
 		delta:   []*Undo{},
 		epsilon: []*Undo{},
 		elog:    MakeElog(),
-		filedetails: &filedetails{
+		details: &filedetails{
 			name: filename,
 			info: nil,
 			hash: file.Hash{},
@@ -422,7 +422,7 @@ func NewTagFile() *File {
 		epsilon: []*Undo{},
 
 		elog: MakeElog(),
-		filedetails: &filedetails{
+		details: &filedetails{
 			name: "",
 			info: nil,
 			hash: file.Hash{},
