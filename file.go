@@ -216,63 +216,6 @@ type Undo struct {
 	buf []rune
 }
 
-func (f *File) InsertAt(p0 int, s []rune) {
-	f.treatasclean = false
-	if p0 > f.b.nc() {
-		panic("internal error: fileinsert")
-	}
-	if f.seq > 0 {
-		f.Uninsert(&f.delta, p0, len(s))
-	}
-	f.b.Insert(p0, s)
-	if len(s) != 0 {
-		f.Modded()
-	}
-	f.AllObservers(func(i interface{}) {
-		i.(BufferObserver).inserted(p0, s)
-	})
-}
-
-func (f *File) InsertAtWithoutCommit(p0 int, s []rune) {
-	f.treatasclean = false
-	if p0 > f.b.nc()+len(f.cache) {
-		panic("File.InsertAtWithoutCommit insertion off the end")
-	}
-
-	if len(f.cache) == 0 {
-		f.cq0 = p0
-	} else {
-		if p0 != f.cq0+len(f.cache) {
-			// TODO(rjk): actually print something useful here
-			acmeerror("File.InsertAtWithoutCommit cq0", nil)
-		}
-	}
-	f.cache = append(f.cache, s...)
-}
-
-func (f *File) DeleteAt(p0, p1 int) {
-	f.treatasclean = false
-	if !(p0 <= p1 && p0 <= f.b.nc() && p1 <= f.b.nc()) {
-		acmeerror("internal error: DeleteAt", nil)
-	}
-	if len(f.cache) > 0 {
-		acmeerror("internal error: DeleteAt", nil)
-	}
-
-	if f.seq > 0 {
-		f.Undelete(&f.delta, p0, p1)
-	}
-	f.b.Delete(p0, p1)
-
-	// Validate if this is right.
-	if p1 > p0 {
-		f.Modded()
-	}
-	f.AllObservers(func(i interface{}) {
-		i.(BufferObserver).deleted(p0, p1)
-	})
-}
-
 // Load inserts fd's contents into File at location q0. Load will always
 // mark the file as modified so follow this up with a call to f.Clean() to
 // indicate that the file corresponds to its disk file backing.
@@ -317,6 +260,51 @@ func (f *File) Dirty() bool {
 	return f.seq != f.putseq
 }
 
+// InsertAt inserts s runes at rune address p0.
+// TODO(rjk): run the observers here to simplify the Text code.
+// TODO(rjk): In terms of the undo.RuneArray conversion, this correponds
+// to undo.RuneArray.Insert.
+// NB: At suffix is to correspond to utf8string.String.At().
+func (f *File) InsertAt(p0 int, s []rune) {
+	f.treatasclean = false
+	if p0 > f.b.nc() {
+		panic("internal error: fileinsert")
+	}
+	if f.seq > 0 {
+		f.Uninsert(&f.delta, p0, len(s))
+	}
+	f.b.Insert(p0, s)
+	if len(s) != 0 {
+		f.Modded()
+	}
+	f.AllObservers(func(i interface{}) {
+		i.(BufferObserver).inserted(p0, s)
+	})
+}
+
+// InsertAtWithoutCommit inserts s at p0 without creating
+// an undo record.
+// TODO(rjk): Remove this as a prelude to converting to undo.RuneArray
+// But preserve the cache. Every "small" insert should go into the cache.
+// It almost certainly greatly improves performance for a series of single
+// character insertions.
+func (f *File) InsertAtWithoutCommit(p0 int, s []rune) {
+	f.treatasclean = false
+	if p0 > f.b.nc()+len(f.cache) {
+		panic("File.InsertAtWithoutCommit insertion off the end")
+	}
+
+	if len(f.cache) == 0 {
+		f.cq0 = p0
+	} else {
+		if p0 != f.cq0+len(f.cache) {
+			// TODO(rjk): actually print something useful here
+			acmeerror("File.InsertAtWithoutCommit cq0", nil)
+		}
+	}
+	f.cache = append(f.cache, s...)
+}
+
 // Uninsert generates an action record that deletes runes from the File
 // to undo an insertion.
 func (f *File) Uninsert(delta *[]*Undo, q0, ns int) {
@@ -329,6 +317,34 @@ func (f *File) Uninsert(delta *[]*Undo, q0, ns int) {
 	u.p0 = q0
 	u.n = ns
 	*delta = append(*delta, &u)
+}
+
+// DeleteAt removes the rune range [p0,p1) from File.
+// TODO(rjk): Currently, adds an Undo record. It shouldn't
+// TODO(rjk): should map onto undo.RuneArray.Delete
+// TODO(rjk): DeleteAt has an implied Commit operation
+// that makes it not match with undo.RuneArray.Delete
+func (f *File) DeleteAt(p0, p1 int) {
+	f.treatasclean = false
+	if !(p0 <= p1 && p0 <= f.b.nc() && p1 <= f.b.nc()) {
+		acmeerror("internal error: DeleteAt", nil)
+	}
+	if len(f.cache) > 0 {
+		acmeerror("internal error: DeleteAt", nil)
+	}
+
+	if f.seq > 0 {
+		f.Undelete(&f.delta, p0, p1)
+	}
+	f.b.Delete(p0, p1)
+
+	// Validate if this is right.
+	if p1 > p0 {
+		f.Modded()
+	}
+	f.AllObservers(func(i interface{}) {
+		i.(BufferObserver).deleted(p0, p1)
+	})
 }
 
 // Undelete generates an action record that inserts runes into the File
@@ -455,61 +471,16 @@ func (f *File) RedoSeq() int {
 	return u.seq
 }
 
-// Seq returns the current value of seq.
-func (f *File) Seq() int {
-	return f.seq
-}
-
-// Reset removes all Undo records for this File.
-// TODO(rjk): This concept doesn't particularly exist in undo.RuneArray.
-// Why can't I just create a new File?
-func (f *File) Reset() {
-	f.delta = f.delta[0:0]
-	f.epsilon = f.epsilon[0:0]
-	f.seq = 0
-}
-
-// Mark sets an Undo point and
-// and discards Redo records. Call this at the beginning
-// of a set of edits that ought to be undo-able as a unit. This
-// is equivalent to undo.RuneArray.Commit()
-// NB: current implementation permits calling Mark on an empty
-// file to indicate that one can undo to the file state at the time of
-// calling Mark.
-// TODO(rjk): Consider renaming to SetUndoPoint
-// TODO(rjk): Don't pass in seq. (Remove seq entirely?)
-func (f *File) Mark(seq int) {
-	f.epsilon = f.epsilon[0:0]
-	f.seq = seq
-}
-
-// TreatAsDirty returns true if the File should be considered modified
-// for the purpose of warning the user if Del-ing a Dirty() file.
-func (f *File) TreatAsDirty() bool {
-	return !f.treatasclean && f.Dirty()
-}
-
-// TreatAsClean notes that the File should be considered as not Dirty
-// until its next modification.
-func (f *File) TreatAsClean() {
-	f.treatasclean = true
-}
-
-// Modded marks the File if we know that its backing is different from
-// its contents. This is needed to track when Edwood has modified the
-// backing without changing the File (e.g. via the Edit w command.
-func (f *File) Modded() {
-	f.mod = true
-	f.treatasclean = false
-}
-
-// Clean marks File as being non-dirty: the backing is the same as File.
-func (f *File) Clean() {
-	f.mod = false
-	f.treatasclean = false
-	f.SnapshotSeq()
-}
-
+// Undo undoes edits if isundo is true or redoes edits if isundo is false.
+// It returns the new selection q0, q1 and a bool indicating if the
+// returned selection is meaningful.
+//
+// TODO(rjk): Separate Undo and Redo for better alignment with undo.RuneArray
+// TODO(rjk): This Undo implementation may Undo/Redo multiple changes.
+// The number actually processed is controlled by mutations to File.seq.
+// This does not align with the semantics of undo.RuneArray.
+// Each "Mark" needs to have a seq value provided.
+// TODO(rjk): Consider providing the target seq value as an argument.
 func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 	var (
 		stop           int
@@ -581,4 +552,59 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 		f.seq = 0
 	}
 	return q0, q1, ok
+}
+
+// Reset removes all Undo records for this File.
+// TODO(rjk): This concept doesn't particularly exist in undo.RuneArray.
+// Why can't I just create a new File?
+func (f *File) Reset() {
+	f.delta = f.delta[0:0]
+	f.epsilon = f.epsilon[0:0]
+	f.seq = 0
+}
+
+// Mark sets an Undo point and
+// and discards Redo records. Call this at the beginning
+// of a set of edits that ought to be undo-able as a unit. This
+// is equivalent to undo.RuneArray.Commit()
+// NB: current implementation permits calling Mark on an empty
+// file to indicate that one can undo to the file state at the time of
+// calling Mark.
+// TODO(rjk): Consider renaming to SetUndoPoint
+// TODO(rjk): Don't pass in seq. (Remove seq entirely?)
+func (f *File) Mark(seq int) {
+	f.epsilon = f.epsilon[0:0]
+	f.seq = seq
+}
+
+// TreatAsDirty returns true if the File should be considered modified
+// for the purpose of warning the user if Del-ing a Dirty() file.
+func (f *File) TreatAsDirty() bool {
+	return !f.treatasclean && f.Dirty()
+}
+
+// TreatAsClean notes that the File should be considered as not Dirty
+// until its next modification.
+func (f *File) TreatAsClean() {
+	f.treatasclean = true
+}
+
+// Modded marks the File if we know that its backing is different from
+// its contents. This is needed to track when Edwood has modified the
+// backing without changing the File (e.g. via the Edit w command.
+func (f *File) Modded() {
+	f.mod = true
+	f.treatasclean = false
+}
+
+// Clean marks File as being non-dirty: the backing is the same as File.
+func (f *File) Clean() {
+	f.mod = false
+	f.treatasclean = false
+	f.SnapshotSeq()
+}
+
+// Seq returns the current value of seq.
+func (f *File) Seq() int {
+	return f.seq
 }
