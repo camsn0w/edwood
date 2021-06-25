@@ -34,9 +34,9 @@ func resetxec() {
 }
 
 func mkaddr(f *File) (a Address) {
-	cur := f.GetCurObserver()
-	a.r.q0 = cur.(*Text).q0
-	a.r.q1 = cur.(*Text).q1
+	cur := f.GetCurObserver().(*Text)
+	a.r.q0 = cur.q0
+	a.r.q1 = cur.q1
 	a.f = f
 	return a
 }
