@@ -318,7 +318,7 @@ func mousethread(display draw.Display) {
 		case <-cwarn:
 			// Do nothing
 		case pm := <-cplumb:
-			if pm.Type == "observers" {
+			if pm.Type == "text" {
 				act := findattr(pm.Attr, "action")
 				if act == "" || act == "showfile" {
 					plumblook(pm)
