@@ -85,7 +85,7 @@ func TestLoadError(t *testing.T) {
 	text = emptyText()
 	text.file.SetDir(true)
 
-	text.file.name = ""
+	text.file.details.name = ""
 	wantErr = "empty directory name"
 	_, err = text.Load(0, "/", true)
 	if err == nil || err.Error() != wantErr {
@@ -100,7 +100,7 @@ func TestLoadError(t *testing.T) {
 	defer func() {
 		*mtpt = ""
 	}()
-	text.file.name = *mtpt
+	text.file.details.name = *mtpt
 	wantErr = "will not open self mount point /mnt/acme"
 	_, err = text.Load(0, *mtpt, true)
 	if err == nil || err.Error() != wantErr {

@@ -512,7 +512,7 @@ func lookfile(s string) *Window {
 	s = strings.TrimRight(s, "/")
 	for _, c := range row.col {
 		for _, w := range c.w {
-			k := strings.TrimRight(w.body.file.name, "/")
+			k := strings.TrimRight(w.body.file.details.name, "/")
 			if k == s {
 				cur, ok := w.body.file.GetCurObserver().(*Text)
 				if !ok {

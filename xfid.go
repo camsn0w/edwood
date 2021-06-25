@@ -571,7 +571,7 @@ forloop:
 		case "unlock": // release exclusive use
 			//w.ctlfid = math.MaxUint32
 			//w.ctrllock.Unlock() // This will crash if the lock isn't already locked.
-			log.Printf("%v ctl message received for window %v (%v)\n", words[0], w.id, w.body.file.name)
+			log.Printf("%v ctl message received for window %v (%v)\n", words[0], w.id, w.body.file.details.name)
 			err = ErrBadCtl
 			break forloop
 

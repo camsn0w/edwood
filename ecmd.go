@@ -238,7 +238,7 @@ func e_cmd(t *Text, cp *Cmd) bool {
 	if name == "" {
 		editerror(Enoname)
 	}
-	samename := name == t.file.name
+	samename := name == t.file.details.name
 	fd, err := os.Open(name)
 	if err != nil {
 		editerror("can't open %v: %v", name, err)
@@ -566,8 +566,8 @@ const (
 
 func printposn(t *Text, mode int) {
 	var l1, l2 int
-	if t != nil && t.file != nil && t.file.name != "" {
-		warning(nil, "%s:", t.file.name)
+	if t != nil && t.file != nil && t.file.details.name != "" {
+		warning(nil, "%s:", t.file.details.name)
 	}
 	switch mode {
 	case PosnChars:
@@ -686,7 +686,7 @@ func pfilename(f *File) {
 		fc = '.'
 	}
 	warning(nil, "%c%c%c %s\n", dirtychar,
-		'+', fc, f.name)
+		'+', fc, f.details.name)
 }
 
 func loopcmd(f *File, cp *Cmd, rp []Range) {
@@ -796,7 +796,7 @@ func alllooper(w *Window, lp *Looper) {
 		return
 	}
 	// no auto-execute on files without names
-	if cp.re == "" && t.file.name == "" {
+	if cp.re == "" && t.file.details.name == "" {
 		return
 	}
 	if cp.re == "" || filematch(t.file, cp.re) == lp.XY {
@@ -1035,7 +1035,7 @@ func alltofile(w *Window, tp *Tofile) {
 	}
 	//	if w.nopen[QWevent] > 0   {
 	//		return;
-	if tp.r == t.file.name {
+	if tp.r == t.file.details.name {
 		tp.f = t.file
 	}
 }
@@ -1098,7 +1098,7 @@ func filematch(f *File, r string) bool {
 	if curtext != nil && curtext.file == f {
 		fmark = '.'
 	}
-	buf := fmt.Sprintf("%c%c%c %s\n", dmark, '+', fmark, f.name)
+	buf := fmt.Sprintf("%c%c%c %s\n", dmark, '+', fmark, f.details.name)
 
 	s := are.rxexecute(nil, []rune(buf), 0, len([]rune(buf)), 1)
 	return len(s) > 0
@@ -1205,7 +1205,7 @@ func allfilecheck(w *Window, fp *Filecheck) {
 	if w.body.file == fp.f {
 		return
 	}
-	if fp.r == f.name {
+	if fp.r == f.details.name {
 		warning(nil, "warning: duplicate file name \"%s\"\n", fp.r)
 	}
 }
@@ -1216,10 +1216,10 @@ func cmdname(f *File, str string, set bool) string {
 	s := ""
 	if str == "" {
 		// no name; use existing
-		if f.name == "" {
+		if f.details.name == "" {
 			return ""
 		}
-		return f.name
+		return f.details.name
 	}
 	s = strings.TrimLeft(str, " \t")
 	cur := f.GetCurObserver().(*Text)
@@ -1234,12 +1234,12 @@ func cmdname(f *File, str string, set bool) string {
 	fc.f = f
 	fc.r = r
 	row.AllWindows(func(w *Window) { allfilecheck(w, &fc) })
-	if f.name == "" {
+	if f.details.name == "" {
 		set = true
 	}
 
 Return:
-	if set && !(r == f.name) {
+	if set && !(r == f.details.name) {
 		f.Mark(seq)
 		f.Modded()
 		cur.w.SetName(r)

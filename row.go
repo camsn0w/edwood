@@ -412,7 +412,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 				dw.ExecDir = w.dumpdir
 				dw.ExecCommand = w.dumpstr
 
-			case !w.body.file.Dirty() && access(t.file.name) || w.body.file.IsDir():
+			case !w.body.file.Dirty() && access(t.file.details.name) || w.body.file.IsDir():
 				dumpid[t.file] = w.id
 				dw.Type = dumpfile.Saved
 

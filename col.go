@@ -313,7 +313,7 @@ func (c *Column) Resize(r image.Rectangle) {
 }
 
 func (c *Column) Sort() {
-	sort.Slice(c.w, func(i, j int) bool { return c.w[i].body.file.name < c.w[j].body.file.name })
+	sort.Slice(c.w, func(i, j int) bool { return c.w[i].body.file.details.name < c.w[j].body.file.details.name })
 
 	r := c.r
 	r.Min.Y = c.tag.fr.Rect().Max.Y

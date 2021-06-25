@@ -276,7 +276,7 @@ func (t *Text) checkSafeToLoad(filename string) error {
 		panic("editor.load")
 	}
 
-	if t.file.IsDir() && t.file.name == "" {
+	if t.file.IsDir() && t.file.details.name == "" {
 		return warnError(nil, "empty directory name")
 	}
 	if ismtpt(filename) {
@@ -322,7 +322,7 @@ func (t *Text) Load(q0 int, filename string, setqid bool) (nread int, err error)
 		return 0, warnError(nil, "can't fstat %s: %v", filename, err)
 	}
 	if setqid {
-		t.file.info = d
+		t.file.details.info = d
 	}
 
 	if d.IsDir() {
@@ -332,9 +332,9 @@ func (t *Text) Load(q0 int, filename string, setqid bool) (nread int, err error)
 		}
 		t.file.SetDir(true)
 		t.w.filemenu = false
-		if len(t.file.name) > 0 && !strings.HasSuffix(t.file.name, string(filepath.Separator)) {
-			t.file.name = t.file.name + string(filepath.Separator)
-			t.w.SetName(t.file.name)
+		if len(t.file.details.name) > 0 && !strings.HasSuffix(t.file.details.name, string(filepath.Separator)) {
+			t.file.details.name = t.file.details.name + string(filepath.Separator)
+			t.w.SetName(t.file.details.name)
 		}
 		dirNames, err := getDirNames(fd)
 		if err != nil {
@@ -993,7 +993,7 @@ func (t *Text) Type(r rune) {
 		t.file.Commit()
 		t.Delete(q0, q0+nnb, true)
 
-		// Run through the code that will update the t.w.body.file.name.
+		// Run through the code that will update the t.w.body.file.details.name.
 		t.TypeCommit()
 
 		t.iq1 = t.q0

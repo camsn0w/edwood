@@ -483,7 +483,7 @@ func (w *Window) setTag1() {
 	// and put up with the traffic implied for a tag line.
 
 	var sb strings.Builder
-	sb.WriteString(w.body.file.name)
+	sb.WriteString(w.body.file.details.name)
 	sb.WriteString(Ldelsnarf)
 
 	if w.filemenu {
@@ -562,7 +562,7 @@ func (w *Window) Commit(t *Text) {
 		return
 	}
 	filename := w.ParseTag()
-	if filename != w.body.file.name {
+	if filename != w.body.file.details.name {
 		seq++
 		w.body.file.Mark(seq)
 		w.body.file.Modded()
@@ -620,8 +620,8 @@ func (w *Window) Clean(conservative bool) bool {
 		return true
 	}
 	if w.body.file.TreatAsDirty() {
-		if len(w.body.file.name) != 0 {
-			warning(nil, "%v modified\n", w.body.file.name)
+		if len(w.body.file.details.name) != 0 {
+			warning(nil, "%v modified\n", w.body.file.details.name)
 		} else {
 			if w.body.Nc() < 100 { // don't whine if it's too small
 				return true

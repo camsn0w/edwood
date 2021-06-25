@@ -82,13 +82,13 @@ func isexecc(c rune) bool {
 }
 
 func printarg(argt *Text, q0 int, q1 int) string {
-	if argt.what != Body || argt.file.name == "" {
+	if argt.what != Body || argt.file.details.name == "" {
 		return ""
 	}
 	if q0 == q1 {
-		return fmt.Sprintf("%s:#%d", argt.file.name, q0)
+		return fmt.Sprintf("%s:#%d", argt.file.details.name, q0)
 	}
-	return fmt.Sprintf("%s:#%d,#%d", argt.file.name, q0, q1)
+	return fmt.Sprintf("%s:#%d,#%d", argt.file.details.name, q0, q1)
 }
 
 // TODO(rjk): use a tokenizer on the results of getarg
@@ -343,7 +343,7 @@ func delcol(et *Text, _ *Text, _ *Text, _, _ bool, _ string) {
 	for i := 0; i < len(c.w); i++ {
 		w := c.w[i]
 		if w.nopen[QWevent]+w.nopen[QWaddr]+w.nopen[QWdata]+w.nopen[QWxdata] > 0 {
-			warning(nil, "can't delete column; %s is running an external command\n", w.body.file.name)
+			warning(nil, "can't delete column; %s is running an external command\n", w.body.file.details.name)
 			return
 		}
 	}
@@ -422,7 +422,7 @@ func getname(t *Text, argt *Text, arg string, isput bool) string {
 	}
 	if promote {
 		if arg == "" {
-			return t.file.name
+			return t.file.details.name
 		}
 		// prefix with directory name if necessary
 		r = filepath.Join(t.DirName(""), arg)
@@ -455,7 +455,7 @@ func get(et *Text, _ *Text, argt *Text, flag1 bool, _ bool, arg string) {
 	}
 
 	t.Delete(0, t.file.Nr(), true)
-	samename := name == t.file.name
+	samename := name == t.file.details.name
 	t.Load(0, name, samename)
 
 	// Text.Delete followed by Text.Load will always mark the File as
@@ -498,22 +498,22 @@ func putfile(f *File, q0 int, q1 int, name string) error {
 	d, err := os.Stat(name)
 
 	// Putting to the same file that we already read from.
-	if err == nil && name == f.name {
-		if !os.SameFile(f.info, d) || d.ModTime().Sub(f.info.ModTime()) > time.Millisecond {
-			f.UpdateInfo(name, d)
+	if err == nil && name == f.details.name {
+		if !os.SameFile(f.details.info, d) || d.ModTime().Sub(f.details.info.ModTime()) > time.Millisecond {
+			f.details.UpdateInfo(name, d)
 		}
-		if !os.SameFile(f.info, d) || d.ModTime().Sub(f.info.ModTime()) > time.Millisecond {
+		if !os.SameFile(f.details.info, d) || d.ModTime().Sub(f.details.info.ModTime()) > time.Millisecond {
 			// By setting File.info here, a subsequent Put will ignore that
 			// the disk file was mutated and will write File to the disk file.
-			f.info = d
+			f.details.info = d
 
-			if f.hash == file.EmptyHash {
+			if f.details.hash == file.EmptyHash {
 				// Edwood created the File but a disk file with the same name exists.
 				return warnError(nil, "%s not written; file already exists", name)
 			}
 
 			// Edwood loaded the disk file to File but the disk file has been modified since.
-			return warnError(nil, "%s modified since last read\n\twas %v; now %v", name, f.info.ModTime(), d.ModTime())
+			return warnError(nil, "%s modified since last read\n\twas %v; now %v", name, f.details.info.ModTime(), d.ModTime())
 		}
 	}
 
@@ -537,7 +537,7 @@ func putfile(f *File, q0 int, q1 int, name string) error {
 	}
 
 	// Putting to the same file as the one that we originally read from.
-	if name == f.name {
+	if name == f.details.name {
 		if q0 != 0 || q1 != f.Size() {
 			// The backing disk file contents now differ from File because
 			// we've over-written the disk file with part of File.
@@ -548,8 +548,8 @@ func putfile(f *File, q0 int, q1 int, name string) error {
 			if d1, err := fd.Stat(); err == nil {
 				d = d1
 			}
-			f.info = d
-			f.hash.Set(h.Sum(nil))
+			f.details.info = d
+			f.details.hash.Set(h.Sum(nil))
 			f.Clean()
 		}
 	}
@@ -578,7 +578,7 @@ func putall(et, _, _ *Text, _, _ bool, arg string) {
 			if w.nopen[QWevent] > 0 {
 				continue
 			}
-			a := w.body.file.name
+			a := w.body.file.details.name
 			if w.body.file.SaveableAndDirty() {
 				if _, err := os.Stat(a); err != nil {
 					warning(nil, "no auto-Put of %s: %v\n", a, err)
@@ -719,7 +719,7 @@ func tab(et *Text, _ *Text, argt *Text, _, _ bool, arg string) {
 			w.Resize(w.r, false, true)
 		}
 	} else {
-		warning(nil, "%s: Tab %d\n", w.body.file.name, w.body.tabstop)
+		warning(nil, "%s: Tab %d\n", w.body.file.details.name, w.body.tabstop)
 	}
 }
 
@@ -730,10 +730,10 @@ func expandtab(et *Text, _ *Text, argt *Text, _, _ bool, arg string) {
 	w := et.w
 	if w.body.tabexpand {
 		w.body.tabexpand = false
-		warning(nil, "%s: Tab: %d, Tabexpand OFF\n", w.body.file.name, w.body.tabstop)
+		warning(nil, "%s: Tab: %d, Tabexpand OFF\n", w.body.file.details.name, w.body.tabstop)
 	} else {
 		w.body.tabexpand = true
-		warning(nil, "%s: Tab: %d, Tabexpand ON\n", w.body.file.name, w.body.tabstop)
+		warning(nil, "%s: Tab: %d, Tabexpand ON\n", w.body.file.details.name, w.body.tabstop)
 	}
 }
 
@@ -801,7 +801,7 @@ func zeroxx(et *Text, t *Text, _ *Text, _, _ bool, _4 string) {
 	t = &t.w.body
 	if t.w.body.file.IsDir() {
 		// TODO(rjk): Why?
-		warning(nil, "%s is a directory; Zerox illegal\n", t.file.name)
+		warning(nil, "%s is a directory; Zerox illegal\n", t.file.details.name)
 	} else {
 		nw := t.w.col.Add(nil, t.w, -1)
 		// ugly: fix locks so w.unlock works
@@ -908,7 +908,7 @@ func runproc(win *Window, s string, dir string, newns bool, argaddr string, arg 
 		if win != nil {
 			// Access possibly mutable Window state inside a lock.
 			win.lk.Lock()
-			filename = win.body.file.name
+			filename = win.body.file.details.name
 			winid = win.id
 			incl = append([]string{}, win.incl...)
 			win.lk.Unlock()
