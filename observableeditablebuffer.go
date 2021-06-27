@@ -2,6 +2,9 @@ package main
 
 import "fmt"
 
+// observableeditablebuffer has a file that and is a
+// type through which the main program will add, remove and check
+// on the current observer(s) for a Text
 type observableeditablebuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
