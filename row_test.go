@@ -147,7 +147,6 @@ func TestRowLoad(t *testing.T) {
 	}{
 		{"empty-two-cols", "testdata/empty-two-cols.dump"},
 		{"multi-line-tag", "testdata/multi-line-tag.dump"},
-		{"example", "testdata/example.dump"},
 	}
 
 	for _, tc := range tt {
