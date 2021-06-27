@@ -1,7 +1,11 @@
 package main
 
 // BufferObserver separates observer functionality out of file
+// A BufferObserver something that can be kept track
+// of through the observableeditablebuffer
 type BufferObserver interface {
-	inserted(q0 int, r []rune) // Callback function to update the observer's texts
-	deleted(q0, q1 int)        // Callback function to delete the observer's texts
+	// inserted is a callback function which updates the observer's texts
+	inserted(q0 int, r []rune)
+	// deleted is a callback function which deletes the observer's texts
+	deleted(q0, q1 int)
 }
