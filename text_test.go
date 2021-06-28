@@ -403,7 +403,7 @@ func TestTextBsInsert(t *testing.T) {
 				what: tc.what,
 				file: &File{
 					b:                        RuneArray(tc.buf),
-					observableeditablebuffer: &observableeditablebuffer{},
+					ObservableEditableBuffer: &ObservableEditableBuffer{},
 				},
 			}
 			q, nr := text.BsInsert(tc.q0, []rune(tc.inbuf), true)

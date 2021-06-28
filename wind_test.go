@@ -41,7 +41,7 @@ func TestWindowUndoSelection(t *testing.T) {
 					b:                        RuneArray("This is an example sentence.\n"),
 					delta:                    tc.delta,
 					epsilon:                  tc.epsilon,
-					observableeditablebuffer: new(observableeditablebuffer),
+					ObservableEditableBuffer: new(ObservableEditableBuffer),
 				},
 			},
 		}
@@ -152,7 +152,7 @@ func TestWindowClearTag(t *testing.T) {
 		tag: Text{
 			file: &File{
 				b:                        RuneArray(tag),
-				observableeditablebuffer: new(observableeditablebuffer),
+				ObservableEditableBuffer: new(ObservableEditableBuffer),
 			},
 		},
 	}
