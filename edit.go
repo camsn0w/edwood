@@ -39,7 +39,7 @@ type Addr struct {
 
 type Address struct {
 	r Range
-	f *File
+	f *ObservableEditableBuffer
 }
 
 type Cmd struct {
