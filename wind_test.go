@@ -72,12 +72,12 @@ func TestSetTag1(t *testing.T) {
 		w.body = Text{
 			display: display,
 			fr:      &MockFrame{},
-			file:    NewFile(name),
+			file:    MakeObservableEditableBuffer(name),
 		}
 		w.tag = Text{
 			display: display,
 			fr:      &MockFrame{},
-			file:    NewFile(""),
+			file:    MakeObservableEditableBuffer(""),
 		}
 
 		w.setTag1()

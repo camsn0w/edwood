@@ -8,6 +8,7 @@ import "fmt"
 type ObservableEditableBuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
+	*File
 }
 
 // AddObserver adds e as an observer for edits to this File.
@@ -74,4 +75,26 @@ func (e *ObservableEditableBuffer) deleteOnAll(q0 int, q1 int) {
 	e.AllObservers(func(i interface{}) {
 		i.(BufferObserver).deleted(q0, q1)
 	})
+}
+
+func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEditableBuffer {
+	f := NewFile(filename)
+	f.b = b
+	return &ObservableEditableBuffer{
+		currobserver: nil,
+		observers:    nil,
+		File:         f,
+	}
+
+}
+
+func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
+	f := NewTagFile()
+	f.b = b
+	return &ObservableEditableBuffer{
+		currobserver: nil,
+		observers:    nil,
+		File:         f,
+	}
+
 }

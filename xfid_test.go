@@ -126,9 +126,9 @@ func (mr *mockResponder) msize() int { return 8192 }
 func TestXfidflush(t *testing.T) {
 	mr := new(mockResponder)
 	w1 := NewWindow().initHeadless(nil)
-	w1.body.file = NewFile("")
+	w1.body.file = MakeObservableEditableBuffer("")
 	w2 := NewWindow().initHeadless(nil)
-	w2.body.file = NewFile("")
+	w2.body.file = MakeObservableEditableBuffer("")
 	row.col = []*Column{
 		{
 			w: []*Window{w1, w2},
@@ -156,10 +156,10 @@ func TestXfidreadQWrdsel(t *testing.T) {
 	const wantSel = "εxαmple"
 
 	w := &Window{
-		body: Text{fr: &MockFrame{}, file: NewFile("")},
+		body: Text{fr: &MockFrame{}, file: MakeObservableEditableBuffer("")},
 		tag: Text{
 			fr:   &MockFrame{},
-			file: NewFile(""),
+			file: MakeObservableEditableBuffer(""),
 		},
 		col: new(Column),
 	}
@@ -628,8 +628,8 @@ func TestXfidwriteQWtag(t *testing.T) {
 	mr := new(mockResponder)
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.body.file = NewFile("")
-	w.tag.file = NewFile("")
+	w.body.file = MakeObservableEditableBuffer("")
+	w.tag.file = MakeObservableEditableBuffer("")
 	w.tag.file.b = RuneArray(prevTag)
 	x := &Xfid{
 		fcall: plan9.Fcall{
@@ -657,8 +657,8 @@ func TestXfidwriteQWtag(t *testing.T) {
 func TestXfidwriteQWwrsel(t *testing.T) {
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.body.file = NewFile("")
-	w.tag.file = NewFile("")
+	w.body.file = MakeObservableEditableBuffer("")
+	w.tag.file = MakeObservableEditableBuffer("")
 	w.body.fr = &MockFrame{}
 
 	for _, tc := range []struct {
@@ -992,7 +992,7 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 	defer func() { w.nopen[QWevent]-- }()
 	w.tag = Text{
 		w:       w,
-		file:    NewFile(""),
+		file:    MakeObservableEditableBuffer(""),
 		fr:      &MockFrame{},
 		display: d,
 	}
@@ -1000,7 +1000,7 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 	w.tag.file.AddObserver(&w.tag)
 	w.body = Text{
 		w:       w,
-		file:    NewFile(""),
+		file:    MakeObservableEditableBuffer(""),
 		fr:      &MockFrame{},
 		display: d,
 	}

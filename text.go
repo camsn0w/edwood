@@ -58,7 +58,7 @@ const (
 // Files have possible multiple texts corresponding to clones.
 type Text struct {
 	display draw.Display
-	file    *File
+	file    *ObservableEditableBuffer
 	fr      frame.Frame
 	font    string
 
@@ -447,6 +447,9 @@ func (t *Text) inserted(q0 int, r []rune) {
 	if t.fr != nil && t.display != nil {
 		t.ScrDraw(t.fr.GetFrameFillStatus().Nchars)
 	}
+	t.file.AllObservers(func(i interface{}) {
+		i.(BufferObserver).inserted(q0, r)
+	})
 
 }
 
@@ -605,6 +608,9 @@ func (t *Text) deleted(q0, q1 int) {
 	if t.fr != nil && t.display != nil {
 		t.ScrDraw(t.fr.GetFrameFillStatus().Nchars)
 	}
+	t.file.AllObservers(func(i interface{}) {
+		i.(BufferObserver).deleted(q0, q1)
+	})
 }
 
 // TODO(rjk): Fold this into logInsert is a nice way.

@@ -17,7 +17,7 @@ import (
 func emptyText() *Text {
 	w := &Window{
 		body: Text{
-			file: NewFile(""),
+			file: MakeObservableEditableBuffer(""),
 		},
 	}
 	t := &w.body

@@ -55,7 +55,7 @@ type File struct {
 	treatasclean bool // Window Clean tests should succeed if set. [private]
 
 	// Observer pattern: many Text instances can share a File.
-	*ObservableEditableBuffer //make this a pointer
+	//*ObservableEditableBuffer //make this a pointer
 
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
 	isdir     bool // Used to track if this File is populated from a directory list. [private]
@@ -277,9 +277,6 @@ func (f *File) InsertAt(p0 int, s []rune) {
 	if len(s) != 0 {
 		f.Modded()
 	}
-	f.AllObservers(func(i interface{}) {
-		i.(BufferObserver).inserted(p0, s)
-	})
 }
 
 // InsertAtWithoutCommit inserts s at p0 without creating
@@ -342,9 +339,6 @@ func (f *File) DeleteAt(p0, p1 int) {
 	if p1 > p0 {
 		f.Modded()
 	}
-	f.AllObservers(func(i interface{}) {
-		i.(BufferObserver).deleted(p0, p1)
-	})
 }
 
 // Undelete generates an action record that inserts runes into the File
@@ -422,10 +416,6 @@ func NewFile(filename string) *File {
 		editclean: true,
 		//	seq       int
 		mod: false,
-		ObservableEditableBuffer: &ObservableEditableBuffer{
-			currobserver: nil,
-			observers:    nil,
-		},
 
 		//	ntext   int
 	}
@@ -449,8 +439,7 @@ func NewTagFile() *File {
 		//	dev       int
 		editclean: true,
 		//	seq       int
-		mod:                      false,
-		ObservableEditableBuffer: &ObservableEditableBuffer{},
+		mod: false,
 
 		//	currobserver *Text
 		//	observers    **Text
@@ -523,7 +512,6 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.mod = u.mod
 			f.treatasclean = false
 			f.b.Delete(u.p0, u.p0+u.n)
-			f.deleteOnAll(u.p0, u.p0+u.n)
 			q0 = u.p0
 			q1 = u.p0
 			ok = true
@@ -533,7 +521,6 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.mod = u.mod
 			f.treatasclean = false
 			f.b.Insert(u.p0, u.buf)
-			f.insertOnAll(u.p0, u.buf)
 			q0 = u.p0
 			q1 = u.p0 + u.n
 			ok = true

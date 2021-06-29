@@ -18,14 +18,14 @@ func TestDelText(t *testing.T) {
 		},
 	}
 
-	testData := []*Text{{file: NewFile("World sourdoughs from antiquity")},
-		{file: NewFile("Willowbrook Association Handbook: 2011")},
-		{file: NewFile("Weakest in the Nation")},
+	testData := []*Text{{file: MakeObservableEditableBuffer("World sourdoughs from antiquity")},
+		{file: MakeObservableEditableBuffer("Willowbrook Association Handbook: 2011")},
+		{file: MakeObservableEditableBuffer("Weakest in the Nation")},
 	}
 
 	t.Run("Nonexistent", func(t *testing.T) {
 		err := f.DelObserver(&Text{
-			file: NewFile("HowToExitVim.txt"),
+			file: MakeObservableEditableBuffer("HowToExitVim.txt"),
 		})
 		if err == nil {
 			t.Errorf("expected panic when deleting nonexistent observers")
@@ -56,7 +56,7 @@ func TestDelText(t *testing.T) {
 }
 
 func TestFileInsertAtWithoutCommit(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 
 	f.InsertAtWithoutCommit(0, []rune(s1))
 
@@ -80,7 +80,7 @@ const s1 = "hi 海老麺"
 const s2 = "bye"
 
 func TestFileInsertAt(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 
 	// Force Undo.
 	f.seq = 1
@@ -129,7 +129,7 @@ func readwholefile(t *testing.T, f *File) string {
 }
 
 func TestFileUndoRedo(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 
 	// Validate before.
 	check(t, "TestFileUndoRedo on an empty buffer", f,
@@ -185,7 +185,7 @@ func check(t *testing.T, testname string, f *File, fss *fileStateSummary) {
 }
 
 func TestFileUndoRedoWithMark(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 
 	// Force Undo to operate.
 	f.Mark(1)
@@ -211,7 +211,7 @@ func TestFileUndoRedoWithMark(t *testing.T) {
 }
 
 func TestFileLoadNoUndo(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 
 	// Insert some pre-existing content.
 	f.InsertAt(0, []rune(s1))
@@ -241,7 +241,7 @@ func TestFileLoadUndoHash(t *testing.T) {
 	hashOfS2nS2 :=
 		file.Hash{0xf0, 0x21, 0xb5, 0x73, 0x6a, 0xb5, 0x21, 0x6d, 0x29, 0x1b, 0x19, 0xfb, 0xe, 0xa8, 0x53, 0x4a, 0x59, 0x7e, 0xb3, 0xfa}
 
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 	if got, want := f.details.name, "edwood"; got != want {
 		t.Errorf("TestFileLoadUndoHash bad initial name. got %v want %v", got, want)
 	}
@@ -289,7 +289,7 @@ func TestFileLoadUndoHash(t *testing.T) {
 
 // Multiple interleaved actions do the right thing.
 func TestFileInsertDeleteUndo(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 
 	// Empty File is an Undo point and considered clean.
 	f.Mark(1)
@@ -324,7 +324,7 @@ func TestFileInsertDeleteUndo(t *testing.T) {
 }
 
 func TestFileRedoSeq(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 	// Empty File is an Undo point and considered clean
 
 	f.Mark(1)
@@ -365,7 +365,7 @@ func TestFileUpdateInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stat failed: %v", err)
 	}
-	f := NewFile(filename)
+	f := MakeObservableEditableBuffer(filename)
 	f.details.hash = file.EmptyHash
 	f.details.info = nil
 	f.details.UpdateInfo(filename, d)
@@ -387,7 +387,7 @@ func TestFileUpdateInfo(t *testing.T) {
 
 func TestFileUpdateInfoError(t *testing.T) {
 	filename := "/non-existent-file"
-	f := NewFile(filename)
+	f := MakeObservableEditableBuffer(filename)
 	err := f.details.UpdateInfo(filename, nil)
 	want := "failed to compute hash for"
 	if err == nil || !strings.HasPrefix(err.Error(), want) {
@@ -396,7 +396,7 @@ func TestFileUpdateInfoError(t *testing.T) {
 }
 
 func TestFileNameSettingWithScratch(t *testing.T) {
-	f := NewFile("edwood")
+	f := MakeObservableEditableBuffer("edwood")
 	// Empty File is an Undo point and considered clean
 
 	if got, want := f.details.name, "edwood"; got != want {

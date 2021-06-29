@@ -79,12 +79,12 @@ func (w *Window) initHeadless(clone *Window) *Window {
 	w.ctlfid = MaxFid
 	w.utflastqid = -1
 
-	f := NewTagFile()
+	f := MakeObservableEditableBufferTag()
 	f.AddObserver(&w.tag)
 	w.tag.file = f
 
 	// Body setup.
-	f = NewFile("")
+	f = MakeObservableEditableBuffer("")
 	if clone != nil {
 		f = clone.body.file
 		w.body.org = clone.body.org

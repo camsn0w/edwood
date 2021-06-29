@@ -34,7 +34,7 @@ func (row *Row) Init(r image.Rectangle, dis draw.Display) *Row {
 	r1 := r
 	r1.Max.Y = r1.Min.Y + fontget(tagfont, row.display).Height()
 	t := &row.tag
-	f := NewFile("")
+	f := MakeObservableEditableBuffer("", RuneArray{})
 	f.AddObserver(t)
 	t.file = f
 	t.Init(r1, tagfont, tagcolors, row.display)
@@ -365,7 +365,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 		for _, w := range c.w {
 			if w.nopen[QWevent] != 0 {
 				// Mark zeroxes of external windows specially.
-				dumpid[w.body.file] = -1
+				dumpid[w.body.file.File] = -1
 			}
 		}
 	}
@@ -384,7 +384,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 			}
 
 			// zeroxes of external windows are tossed
-			if dumpid[t.file] < 0 && w.nopen[QWevent] == 0 {
+			if dumpid[t.file.File] < 0 && w.nopen[QWevent] == 0 {
 				continue
 			}
 
@@ -404,7 +404,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 			dw := dump.Windows[len(dump.Windows)-1]
 
 			switch {
-			case dumpid[t.file] > 0:
+			case dumpid[t.file.File] > 0:
 				dw.Type = dumpfile.Zerox
 
 			case w.dumpstr != "":
@@ -413,11 +413,11 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 				dw.ExecCommand = w.dumpstr
 
 			case !w.body.file.Dirty() && access(t.file.details.name) || w.body.file.IsDir():
-				dumpid[t.file] = w.id
+				dumpid[t.file.File] = w.id
 				dw.Type = dumpfile.Saved
 
 			default:
-				dumpid[t.file] = w.id
+				dumpid[t.file.File] = w.id
 				// TODO(rjk): Conceivably this is a bit of a layering violation?
 				dw.Type = dumpfile.Unsaved
 				dw.Body.Buffer = string(t.file.b)

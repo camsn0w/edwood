@@ -12,11 +12,11 @@ func TestXCmdPipeMultipleWindows(t *testing.T) {
 
 	newWindow := func(name string) *Window {
 		w := NewWindow()
-		w.body.file = NewFile(name)
+		w.body.file = MakeObservableEditableBuffer(name)
 		w.body.w = w
 		w.body.fr = &MockFrame{}
 		w.body.file.AddObserver(&w.body)
-		w.tag.file = NewFile("")
+		w.tag.file = MakeObservableEditableBuffer("")
 		w.tag.w = w
 		w.tag.fr = &MockFrame{}
 		w.tag.file.AddObserver(&w.tag)
