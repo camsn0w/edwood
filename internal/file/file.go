@@ -1,13 +1,11 @@
-package main
+package file
 
 import (
 	"fmt"
-	runes2 "github.com/rjkroege/edwood/internal/runes"
+	"github.com/rjkroege/edwood/internal/runes"
 	"io"
 	"io/ioutil"
 	"strings"
-
-	"github.com/rjkroege/edwood/internal/file"
 )
 
 // File is an editable text buffer with undo. Many Text can share one
@@ -39,7 +37,7 @@ type File struct {
 	delta   []*Undo // [private]
 	epsilon []*Undo // [private]
 	elog    Elog
-	details *file.DiskDetails
+	details *DiskDetails
 
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -229,19 +227,19 @@ type Undo struct {
 func (f *File) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, err error) {
 	d, err := ioutil.ReadAll(fd)
 	if err != nil {
-		warning(nil, "read error in RuneArray.Load")
+		//warning(nil, "read error in RuneArray.Load")
 	}
-	runes, _, hasNulls := runes2.Cvttorunes(d, len(d))
+	runeslice, _, hasNulls := runes.Cvttorunes(d, len(d))
 
 	if sethash {
-		f.details.Hash = file.CalcHash(d)
+		f.details.Hash = CalcHash(d)
 	}
 
 	// Would appear to require a commit operation.
 	// NB: Runs the observers.
-	f.InsertAt(q0, runes)
+	f.InsertAt(q0, runeslice)
 
-	return len(runes), hasNulls, err
+	return len(runeslice), hasNulls, err
 }
 
 // SnapshotSeq saves the current seq to putseq. Call this on Put actions.
@@ -296,7 +294,7 @@ func (f *File) InsertAtWithoutCommit(p0 int, s []rune) {
 	} else {
 		if p0 != f.cq0+len(f.cache) {
 			// TODO(rjk): actually print something useful here
-			acmeerror("File.InsertAtWithoutCommit cq0", nil)
+			//acmeerror("File.InsertAtWithoutCommit cq0", nil)
 		}
 	}
 	f.cache = append(f.cache, s...)
@@ -324,10 +322,10 @@ func (f *File) Uninsert(delta *[]*Undo, q0, ns int) {
 func (f *File) DeleteAt(p0, p1 int) {
 	f.treatasclean = false
 	if !(p0 <= p1 && p0 <= f.b.nc() && p1 <= f.b.nc()) {
-		acmeerror("internal error: DeleteAt", nil)
+		//acmeerror("internal error: DeleteAt", nil)
 	}
 	if len(f.cache) > 0 {
-		acmeerror("internal error: DeleteAt", nil)
+		//acmeerror("internal error: DeleteAt", nil)
 	}
 
 	if f.seq > 0 {
@@ -407,10 +405,10 @@ func NewFile(filename string) *File {
 		delta:   []*Undo{},
 		epsilon: []*Undo{},
 		elog:    MakeElog(),
-		details: &file.DiskDetails{
+		details: &DiskDetails{
 			Name: filename,
 			Info: nil,
-			Hash: file.Hash{},
+			Hash: Hash{},
 		},
 		editclean: true,
 		//	seq       int
@@ -427,10 +425,10 @@ func NewTagFile() *File {
 		epsilon: []*Undo{},
 
 		elog: MakeElog(),
-		details: &file.DiskDetails{
+		details: &DiskDetails{
 			Name: "",
 			Info: nil,
-			Hash: file.Hash{},
+			Hash: Hash{},
 		},
 		//	qidpath   uint64
 		//	mtime     uint64
