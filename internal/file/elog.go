@@ -12,6 +12,11 @@ const (
 	FilenameType
 	Wsequence     = "warning: changes out of sequence\n"
 	WsequenceDire = "warning: changes out of sequence, edit result probably wrong\n"
+	Null          = '-'
+	Delete        = 'd'
+	Insert        = 'i'
+	Replace       = 'r'
+	Filename      = 'f'
 )
 
 // Elog is a log of changes made by editing commands.  Three reasons for this:
@@ -49,7 +54,7 @@ func (e *Elog) Reset() {
 	// array here, as it will hog memory after a fine-grained edit.  But don't worry about
 	// that until there's a memory issue.
 	(*e).log = (*e).log[0:1] // Just the sentinel
-	(*e).log[0].t = main.Null
+	(*e).log[0].t = Null
 }
 
 func (e *Elog) Term() {
@@ -58,7 +63,7 @@ func (e *Elog) Term() {
 }
 
 func (eo *ElogOperation) reset() {
-	eo.t = main.Null
+	eo.t = Null
 	eo.nd = 0
 	eo.r = eo.r[0:0]
 }
@@ -103,20 +108,20 @@ func (e *Elog) Replace(q0, q1 int, r []rune) {
 	// Check for out-of-order
 	if q0 < eo.q0 && !e.warned {
 		e.warned = true
-		main.warning(nil, Wsequence)
+		warning(nil, Wsequence)
 	}
 
 	// TODO(flux): try to merge with previous
 
 	e.extend()
 	eo = e.last()
-	eo.t = main.Replace
+	eo.t = Replace
 	eo.q0 = q0
 	eo.nd = q1 - q0
 	eo.setr(r)
 	if eo.q0 < e.secondlast().q0 {
 		e.warned = true
-		main.warning(nil, WsequenceDire)
+		warning(nil, WsequenceDire)
 	}
 }
 
@@ -133,10 +138,10 @@ func (e *Elog) Insert(q0 int, r []rune) {
 	// Check for out-of-order
 	if (q0 < eo.q0) && !e.warned {
 		e.warned = true
-		main.warning(nil, Wsequence)
+		warning(nil, Wsequence)
 	}
 
-	if eo.t == main.Insert && q0 == eo.q0 {
+	if eo.t == Insert && q0 == eo.q0 {
 		eo.r = append(eo.r, r...)
 		return
 	}
@@ -144,7 +149,7 @@ func (e *Elog) Insert(q0 int, r []rune) {
 	e.extend()
 
 	eo = e.last()
-	eo.t = main.Insert
+	eo.t = Insert
 	eo.q0 = q0
 	eo.nd = 0
 	eo.setr(r)
@@ -216,7 +221,7 @@ func (e *Elog) Apply(t interface{}) {
 			if t.Q0() == eo.q0 && t.Q1() == eo.q0 {
 				t.SetQ1(t.Q1() + len(eo.r))
 			}
-		case main.Insert:
+		case Insert:
 			if tracelog {
 				fmt.Printf("elog insert %d %d (%d %d)\n",
 					eo.q0, eo.q0+len(eo.r), t.Q0(), t.Q1())
@@ -226,7 +231,7 @@ func (e *Elog) Apply(t interface{}) {
 			if t.Q0() == eo.q0 && t.Q1() == eo.q0 {
 				t.SetQ1(t.Q1() + len(eo.r))
 			}
-		case main.Delete:
+		case Delete:
 			if tracelog {
 				fmt.Printf("elog delete %d %d (%d %d)\n",
 					eo.q0, eo.q0+len(eo.r), t.Q0(), t.Q1())
