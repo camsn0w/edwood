@@ -246,7 +246,7 @@ func (t *Text) Columnate(names []string, widths []int) {
 	q1 = 0
 	for i := 0; i < nrow; i++ {
 		for j := i; j < len(names); j += nrow {
-			dl := bytetorune([]byte(names[j]))
+			dl := runes.Bytetorune([]byte(names[j]))
 			t.oeb.InsertAt(q1, dl)
 			q1 += len(dl)
 			if j+nrow >= len(names) {
@@ -323,7 +323,8 @@ func (t *Text) Load(q0 int, filename string, setqid bool) (nread int, err error)
 		return 0, warnError(nil, "can't fstat %s: %v", filename, err)
 	}
 	if setqid {
-		t.oeb.f.details.Info = d
+		t.oeb.
+			t.oeb.f.details.Info = d
 	}
 
 	if d.IsDir() {

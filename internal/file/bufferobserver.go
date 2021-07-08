@@ -5,9 +5,9 @@ package file
 // of through the ObservableEditableBuffer.
 type BufferObserver interface {
 
-	// inserted is a callback function which updates the observer's texts.
-	inserted(q0 int, r []rune)
+	// Inserted is a callback function which updates the observer's texts.
+	Inserted(q0 int, r []rune)
 
-	// deleted is a callback function which deletes the observer's texts.
-	deleted(q0, q1 int)
+	// Deleted is a callback function which deletes the observer's texts.
+	Deleted(q0, q1 int)
 }
