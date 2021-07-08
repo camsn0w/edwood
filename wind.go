@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/runes"
 	"image"
 	"os"
@@ -80,12 +81,12 @@ func (w *Window) initHeadless(clone *Window) *Window {
 	w.ctlfid = MaxFid
 	w.utflastqid = -1
 
-	f := MakeObservableEditableBufferTag(nil)
+	f := file.MakeObservableEditableBufferTag(nil)
 	f.AddObserver(&w.tag)
 	w.tag.oeb = f
 
 	// Body setup.
-	f = MakeObservableEditableBuffer("", nil)
+	f = file.MakeObservableEditableBuffer("", nil)
 	if clone != nil {
 		f = clone.body.oeb
 		w.body.org = clone.body.org
@@ -513,7 +514,7 @@ func (w *Window) setTag1() {
 		sb.WriteString(" ")
 	}
 
-	new := RuneArray([]rune(sb.String()))
+	new := file.RuneArray([]rune(sb.String()))
 
 	// replace tag if the new one is different
 	resize := false

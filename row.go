@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"image"
 	"os"
 	"path/filepath"
@@ -34,7 +35,7 @@ func (row *Row) Init(r image.Rectangle, dis draw.Display) *Row {
 	r1 := r
 	r1.Max.Y = r1.Min.Y + fontget(tagfont, row.display).Height()
 	t := &row.tag
-	f := MakeObservableEditableBuffer("", nil)
+	f := file.MakeObservableEditableBuffer("", nil)
 	f.AddObserver(t)
 	t.oeb = f
 	t.Init(r1, tagfont, tagcolors, row.display)
@@ -351,7 +352,7 @@ func (r *Row) dump() (*dumpfile.Content, error) {
 		Windows: nil,
 	}
 
-	dumpid := make(map[*File]int)
+	dumpid := make(map[*file.File]int)
 
 	for i, c := range r.col {
 		dump.Columns[i] = dumpfile.Column{

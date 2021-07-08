@@ -1,4 +1,4 @@
-package main
+package file
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ type ElogOperation struct {
 
 func MakeElog() Elog {
 	return Elog{[]ElogOperation{
-		{Null, 0, 0, []rune{}}, // Sentinel
+		{main.Null, 0, 0, []rune{}}, // Sentinel
 	}, false,
 	}
 }
@@ -49,7 +49,7 @@ func (e *Elog) Reset() {
 	// array here, as it will hog memory after a fine-grained edit.  But don't worry about
 	// that until there's a memory issue.
 	(*e).log = (*e).log[0:1] // Just the sentinel
-	(*e).log[0].t = Null
+	(*e).log[0].t = main.Null
 }
 
 func (e *Elog) Term() {
@@ -58,7 +58,7 @@ func (e *Elog) Term() {
 }
 
 func (eo *ElogOperation) reset() {
-	eo.t = Null
+	eo.t = main.Null
 	eo.nd = 0
 	eo.r = eo.r[0:0]
 }
@@ -103,20 +103,20 @@ func (e *Elog) Replace(q0, q1 int, r []rune) {
 	// Check for out-of-order
 	if q0 < eo.q0 && !e.warned {
 		e.warned = true
-		warning(nil, Wsequence)
+		main.warning(nil, Wsequence)
 	}
 
 	// TODO(flux): try to merge with previous
 
 	e.extend()
 	eo = e.last()
-	eo.t = Replace
+	eo.t = main.Replace
 	eo.q0 = q0
 	eo.nd = q1 - q0
 	eo.setr(r)
 	if eo.q0 < e.secondlast().q0 {
 		e.warned = true
-		warning(nil, WsequenceDire)
+		main.warning(nil, WsequenceDire)
 	}
 }
 
@@ -133,10 +133,10 @@ func (e *Elog) Insert(q0 int, r []rune) {
 	// Check for out-of-order
 	if (q0 < eo.q0) && !e.warned {
 		e.warned = true
-		warning(nil, Wsequence)
+		main.warning(nil, Wsequence)
 	}
 
-	if eo.t == Insert && q0 == eo.q0 {
+	if eo.t == main.Insert && q0 == eo.q0 {
 		eo.r = append(eo.r, r...)
 		return
 	}
@@ -144,14 +144,14 @@ func (e *Elog) Insert(q0 int, r []rune) {
 	e.extend()
 
 	eo = e.last()
-	eo.t = Insert
+	eo.t = main.Insert
 	eo.q0 = q0
 	eo.nd = 0
 	eo.setr(r)
 
 	if eo.q0 < e.secondlast().q0 {
 		e.warned = true
-		warning(nil, WsequenceDire)
+		main.warning(nil, WsequenceDire)
 	}
 }
 
@@ -166,10 +166,10 @@ func (e *Elog) Delete(q0, q1 int) {
 	// Check for out-of-order
 	if (q0 < eo.q0+eo.nd) && !e.warned {
 		e.warned = true
-		warning(nil, Wsequence)
+		main.warning(nil, Wsequence)
 	}
 
-	if eo.t == Delete && (eo.q0+eo.nd == q0) {
+	if eo.t == main.Delete && (eo.q0+eo.nd == q0) {
 		eo.nd += q1 - q0
 		return
 	}
@@ -177,12 +177,12 @@ func (e *Elog) Delete(q0, q1 int) {
 	e.extend()
 
 	eo = e.last()
-	eo.t = Delete
+	eo.t = main.Delete
 	eo.q0 = q0
 	eo.nd = q1 - q0
 	if eo.q0 < e.secondlast().q0 {
 		e.warned = true
-		warning(nil, WsequenceDire)
+		main.warning(nil, WsequenceDire)
 	}
 }
 
@@ -195,13 +195,13 @@ func (e *Elog) Empty() bool {
 // Apply plays back the log, from back to front onto the given observers.
 // Unlike the C version, this does not mark the file - that should happen at a higher
 // level.
-func (e *Elog) Apply(t Texter) {
+func (e *Elog) Apply(t main.Texter) {
 	// The log is applied back-to-front - this avoids disturbing the observers ahead of the
 	// current application point.
 	for i := len((*e).log) - 1; i >= 1; i-- {
 		eo := (*e).log[i]
 		switch eo.t {
-		case Replace:
+		case main.Replace:
 			if tracelog {
 				fmt.Printf("elog replace %d %d (%d %d)\n",
 					eo.q0, eo.q0+eo.nd, t.Q0(), t.Q1())
@@ -213,7 +213,7 @@ func (e *Elog) Apply(t Texter) {
 			if t.Q0() == eo.q0 && t.Q1() == eo.q0 {
 				t.SetQ1(t.Q1() + len(eo.r))
 			}
-		case Insert:
+		case main.Insert:
 			if tracelog {
 				fmt.Printf("elog insert %d %d (%d %d)\n",
 					eo.q0, eo.q0+len(eo.r), t.Q0(), t.Q1())
@@ -223,7 +223,7 @@ func (e *Elog) Apply(t Texter) {
 			if t.Q0() == eo.q0 && t.Q1() == eo.q0 {
 				t.SetQ1(t.Q1() + len(eo.r))
 			}
-		case Delete:
+		case main.Delete:
 			if tracelog {
 				fmt.Printf("elog delete %d %d (%d %d)\n",
 					eo.q0, eo.q0+len(eo.r), t.Q0(), t.Q1())

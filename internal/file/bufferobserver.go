@@ -1,4 +1,4 @@
-package main
+package file
 
 // BufferObserver separates observer functionality out of file.
 // A BufferObserver is something that can be kept track

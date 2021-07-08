@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"testing"
 )
 
@@ -53,7 +54,7 @@ func TestElogInsertDelete(t *testing.T) {
 	t1 := []rune(" is")
 	t2 := []rune(" a test")
 
-	e := MakeElog()
+	e := file.MakeElog()
 
 	e.Insert(0, t0)
 	e.Insert(0, t1)
@@ -101,25 +102,25 @@ func TestElogInsertDelete(t *testing.T) {
 func TestApply(t *testing.T) {
 	tab := []struct {
 		tb       TextBuffer
-		elog     Elog
+		elog     file.Elog
 		expected string
 	}{
 		{TextBuffer{0, 0, []rune{}},
-			Elog{[]ElogOperation{
+			file.Elog{[]file.ElogOperation{
 				{Null, 0, 0, []rune{}},
 				{Insert, 0, 0, []rune("0123456789")},
 			}, false},
 			"0123456789"},
 
 		{TextBuffer{0, 0, []rune("0123456789")},
-			Elog{[]ElogOperation{
+			file.Elog{[]file.ElogOperation{
 				{Null, 0, 0, []rune{}},
 				{Delete, 0, 5, []rune{}},
 			}, false},
 			"56789"},
 
 		{TextBuffer{0, 0, []rune("XXX56789")},
-			Elog{[]ElogOperation{
+			file.Elog{[]file.ElogOperation{
 				{Null, 0, 0, []rune{}},
 				{Insert, 0, 0, []rune("01234")},
 				{Delete, 0, 3, []rune{}},
@@ -127,7 +128,7 @@ func TestApply(t *testing.T) {
 			"0123456789"},
 
 		{TextBuffer{0, 0, []rune("XXX56789")},
-			Elog{[]ElogOperation{
+			file.Elog{[]file.ElogOperation{
 				{Null, 0, 0, []rune{}},
 				{Replace, 0, 3, []rune("01234")},
 			}, false},

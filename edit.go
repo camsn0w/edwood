@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -39,7 +40,7 @@ type Addr struct {
 
 type Address struct {
 	r   Range
-	oeb *ObservableEditableBuffer
+	oeb *file.ObservableEditableBuffer
 }
 
 type Cmd struct {

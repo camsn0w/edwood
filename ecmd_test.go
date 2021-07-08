@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rjkroege/edwood/internal/file"
 	"testing"
 )
 
@@ -12,11 +13,11 @@ func TestXCmdPipeMultipleWindows(t *testing.T) {
 
 	newWindow := func(name string) *Window {
 		w := NewWindow()
-		w.body.oeb = MakeObservableEditableBuffer(name, nil)
+		w.body.oeb = file.MakeObservableEditableBuffer(name, nil)
 		w.body.w = w
 		w.body.fr = &MockFrame{}
 		w.body.oeb.AddObserver(&w.body)
-		w.tag.oeb = MakeObservableEditableBuffer("", nil)
+		w.tag.oeb = file.MakeObservableEditableBuffer("", nil)
 		w.tag.w = w
 		w.tag.fr = &MockFrame{}
 		w.tag.oeb.AddObserver(&w.tag)

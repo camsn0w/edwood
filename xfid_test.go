@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"image"
 	"io/ioutil"
 	"os"
@@ -126,9 +127,9 @@ func (mr *mockResponder) msize() int { return 8192 }
 func TestXfidflush(t *testing.T) {
 	mr := new(mockResponder)
 	w1 := NewWindow().initHeadless(nil)
-	w1.body.oeb = MakeObservableEditableBuffer("", nil)
+	w1.body.oeb = file.MakeObservableEditableBuffer("", nil)
 	w2 := NewWindow().initHeadless(nil)
-	w2.body.oeb = MakeObservableEditableBuffer("", nil)
+	w2.body.oeb = file.MakeObservableEditableBuffer("", nil)
 	row.col = []*Column{
 		{
 			w: []*Window{w1, w2},
@@ -156,10 +157,10 @@ func TestXfidreadQWrdsel(t *testing.T) {
 	const wantSel = "εxαmple"
 
 	w := &Window{
-		body: Text{fr: &MockFrame{}, oeb: MakeObservableEditableBuffer("", NewBuffer())},
+		body: Text{fr: &MockFrame{}, oeb: file.MakeObservableEditableBuffer("", file.NewBuffer())},
 		tag: Text{
 			fr:  &MockFrame{},
-			oeb: MakeObservableEditableBuffer("", NewBuffer()),
+			oeb: file.MakeObservableEditableBuffer("", file.NewBuffer()),
 		},
 		col: new(Column),
 	}
@@ -219,7 +220,7 @@ func TestXfidwriteQWaddr(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mr := new(mockResponder)
 			w := NewWindow().initHeadless(nil)
-			w.body.oeb.f.b = RuneArray([]rune("abcαβξ\n"))
+			w.body.oeb.f.b = file.RuneArray([]rune("abcαβξ\n"))
 			w.col = new(Column)
 			w.limit = Range{0, w.body.oeb.Nr()}
 			x := &Xfid{
@@ -628,8 +629,8 @@ func TestXfidwriteQWtag(t *testing.T) {
 	mr := new(mockResponder)
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.body.oeb = MakeObservableEditableBuffer("", nil)
-	w.tag.oeb = MakeObservableEditableBuffer("", RuneArray(prevTag))
+	w.body.oeb = file.MakeObservableEditableBuffer("", nil)
+	w.tag.oeb = file.MakeObservableEditableBuffer("", file.RuneArray(prevTag))
 	x := &Xfid{
 		fcall: plan9.Fcall{
 			Data:  []byte(extra),
@@ -656,8 +657,8 @@ func TestXfidwriteQWtag(t *testing.T) {
 func TestXfidwriteQWwrsel(t *testing.T) {
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.body.oeb = MakeObservableEditableBuffer("", nil)
-	w.tag.oeb = MakeObservableEditableBuffer("", nil)
+	w.body.oeb = file.MakeObservableEditableBuffer("", nil)
+	w.tag.oeb = file.MakeObservableEditableBuffer("", nil)
 	w.body.fr = &MockFrame{}
 
 	for _, tc := range []struct {
@@ -757,7 +758,7 @@ func TestXfidwriteQWerrors(t *testing.T) {
 	mr := new(mockResponder)
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.tag.oeb.f.b = RuneArray("/home/gopher/edwood/row.go Del Snarf | Look ")
+	w.tag.oeb.f.b = file.RuneArray("/home/gopher/edwood/row.go Del Snarf | Look ")
 	w.tag.fr = &MockFrame{}
 	w.body.fr = &MockFrame{}
 	x := &Xfid{
@@ -991,14 +992,14 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 	defer func() { w.nopen[QWevent]-- }()
 	w.tag = Text{
 		w:       w,
-		oeb:     MakeObservableEditableBuffer("", RuneArray("Send")),
+		oeb:     file.MakeObservableEditableBuffer("", file.RuneArray("Send")),
 		fr:      &MockFrame{},
 		display: d,
 	}
 	w.tag.oeb.AddObserver(&w.tag)
 	w.body = Text{
 		w:       w,
-		oeb:     MakeObservableEditableBuffer("", nil),
+		oeb:     file.MakeObservableEditableBuffer("", nil),
 		fr:      &MockFrame{},
 		display: d,
 	}
@@ -1079,9 +1080,9 @@ func TestXfidreadQWbodyQWtag(t *testing.T) {
 			w.body.fr = &MockFrame{}
 			switch tc.q {
 			case QWbody:
-				w.body.oeb.f.b = RuneArray(data)
+				w.body.oeb.f.b = file.RuneArray(data)
 			case QWtag:
-				w.tag.oeb.f.b = RuneArray(data)
+				w.tag.oeb.f.b = file.RuneArray(data)
 			}
 
 			x := &Xfid{
@@ -1140,7 +1141,7 @@ func TestXfidruneread(t *testing.T) {
 			fs: mr,
 		}
 		w := NewWindow().initHeadless(nil)
-		w.body.oeb.f.b = RuneArray(tc.body)
+		w.body.oeb.f.b = file.RuneArray(tc.body)
 		nr := xfidruneread(x, &w.body, tc.q0, tc.q1)
 		if got, want := nr, tc.nr; got != want {
 			t.Errorf("read %v runes from %q (q0=%v, q1=%v); should read %v runes",
@@ -1182,7 +1183,7 @@ func TestXfidreadQWxdataQWdata(t *testing.T) {
 			mr := new(mockResponder)
 			w := NewWindow().initHeadless(nil)
 			w.col = new(Column)
-			w.body.oeb.f.b = RuneArray(body)
+			w.body.oeb.f.b = file.RuneArray(body)
 			w.addr = tc.inAddr
 			xfidread(&Xfid{
 				f: &Fid{
@@ -1216,7 +1217,7 @@ func TestXfidreadQWaddr(t *testing.T) {
 	)
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.body.oeb.f.b = RuneArray(body)
+	w.body.oeb.f.b = file.RuneArray(body)
 	w.addr.q0 = 5
 	w.addr.q1 = 12
 
@@ -1245,8 +1246,8 @@ func TestXfidreadQWctl(t *testing.T) {
 	w.col = new(Column)
 	w.display = edwoodtest.NewDisplay()
 	w.body.fr = &MockFrame{}
-	w.tag.oeb.f.b = RuneArray("/etc/hosts Del Snarf | Look Get ")
-	w.body.oeb.f.b = RuneArray("Hello, world!\n")
+	w.tag.oeb.f.b = file.RuneArray("/etc/hosts Del Snarf | Look Get ")
+	w.body.oeb.f.b = file.RuneArray("Hello, world!\n")
 
 	mr := new(mockResponder)
 	xfidread(&Xfid{

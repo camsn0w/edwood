@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rjkroege/edwood/internal/file"
 	"testing"
 )
 
@@ -8,14 +9,14 @@ import (
 func TestBufferDelete(t *testing.T) {
 	tab := []struct {
 		q0, q1   int
-		tb       RuneArray
+		tb       file.RuneArray
 		expected string
 	}{
-		{0, 5, RuneArray([]rune("0123456789")), "56789"},
-		{0, 0, RuneArray([]rune("0123456789")), "0123456789"},
-		{0, 10, RuneArray([]rune("0123456789")), ""},
-		{1, 5, RuneArray([]rune("0123456789")), "056789"},
-		{8, 10, RuneArray([]rune("0123456789")), "01234567"},
+		{0, 5, file.RuneArray([]rune("0123456789")), "56789"},
+		{0, 0, file.RuneArray([]rune("0123456789")), "0123456789"},
+		{0, 10, file.RuneArray([]rune("0123456789")), ""},
+		{1, 5, file.RuneArray([]rune("0123456789")), "056789"},
+		{8, 10, file.RuneArray([]rune("0123456789")), "01234567"},
 	}
 	for _, test := range tab {
 		tb := test.tb
@@ -29,14 +30,14 @@ func TestBufferDelete(t *testing.T) {
 func TestBufferInsert(t *testing.T) {
 	tab := []struct {
 		q0       int
-		tb       RuneArray
+		tb       file.RuneArray
 		insert   string
 		expected string
 	}{
-		{5, RuneArray([]rune("01234")), "56789", "0123456789"},
-		{0, RuneArray([]rune("56789")), "01234", "0123456789"},
-		{1, RuneArray([]rune("06789")), "12345", "0123456789"},
-		{5, RuneArray([]rune("01234")), "56789", "0123456789"},
+		{5, file.RuneArray([]rune("01234")), "56789", "0123456789"},
+		{0, file.RuneArray([]rune("56789")), "01234", "0123456789"},
+		{1, file.RuneArray([]rune("06789")), "12345", "0123456789"},
+		{5, file.RuneArray([]rune("01234")), "56789", "0123456789"},
 	}
 	for _, test := range tab {
 		tb := test.tb
@@ -49,15 +50,15 @@ func TestBufferInsert(t *testing.T) {
 
 func TestBufferIndexRune(t *testing.T) {
 	tt := []struct {
-		b RuneArray
+		b file.RuneArray
 		r rune
 		n int
 	}{
-		{RuneArray(nil), '0', -1},
-		{RuneArray([]rune("01234")), '0', 0},
-		{RuneArray([]rune("01234")), '3', 3},
-		{RuneArray([]rune("αβγ")), 'α', 0},
-		{RuneArray([]rune("αβγ")), 'γ', 2},
+		{file.RuneArray(nil), '0', -1},
+		{file.RuneArray([]rune("01234")), '0', 0},
+		{file.RuneArray([]rune("01234")), '3', 3},
+		{file.RuneArray([]rune("αβγ")), 'α', 0},
+		{file.RuneArray([]rune("αβγ")), 'γ', 2},
 	}
 	for _, tc := range tt {
 		n := tc.b.IndexRune(tc.r)
@@ -70,16 +71,16 @@ func TestBufferIndexRune(t *testing.T) {
 
 func TestBufferEqual(t *testing.T) {
 	tt := []struct {
-		a, b RuneArray
+		a, b file.RuneArray
 		ok   bool
 	}{
-		{RuneArray(nil), RuneArray(nil), true},
-		{RuneArray(nil), RuneArray([]rune{}), true},
-		{RuneArray([]rune{}), RuneArray(nil), true},
-		{RuneArray([]rune("01234")), RuneArray([]rune("01234")), true},
-		{RuneArray([]rune("01234")), RuneArray([]rune("01x34")), false},
-		{RuneArray([]rune("αβγ")), RuneArray([]rune("αβγ")), true},
-		{RuneArray([]rune("αβγ")), RuneArray([]rune("αλγ")), false},
+		{file.RuneArray(nil), file.RuneArray(nil), true},
+		{file.RuneArray(nil), file.RuneArray([]rune{}), true},
+		{file.RuneArray([]rune{}), file.RuneArray(nil), true},
+		{file.RuneArray([]rune("01234")), file.RuneArray([]rune("01234")), true},
+		{file.RuneArray([]rune("01234")), file.RuneArray([]rune("01x34")), false},
+		{file.RuneArray([]rune("αβγ")), file.RuneArray([]rune("αβγ")), true},
+		{file.RuneArray([]rune("αβγ")), file.RuneArray([]rune("αλγ")), false},
 	}
 	for _, tc := range tt {
 		ok := tc.a.Equal(tc.b)

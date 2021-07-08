@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -17,7 +18,7 @@ import (
 func emptyText() *Text {
 	w := &Window{
 		body: Text{
-			oeb: MakeObservableEditableBuffer("", nil),
+			oeb: file.MakeObservableEditableBuffer("", nil),
 		},
 	}
 	t := &w.body
@@ -133,7 +134,7 @@ func TestClickHTMLMatch(t *testing.T) {
 		t.Run(fmt.Sprintf("test-%02d", i), func(t *testing.T) {
 			r := []rune(tc.s)
 			text := &Text{
-				oeb: MakeObservableEditableBufferTag(r),
+				oeb: file.MakeObservableEditableBufferTag(r),
 			}
 			q0, q1, ok := text.ClickHTMLMatch(tc.inq0)
 			switch {
@@ -254,7 +255,7 @@ func (fr *textFillMockFrame) GetFrameFillStatus() frame.FrameFillStatus {
 
 func TestTextFill(t *testing.T) {
 	text := &Text{
-		oeb: MakeObservableEditableBufferTag(RuneArray{}),
+		oeb: file.MakeObservableEditableBufferTag(file.RuneArray{}),
 	}
 	err := text.fill(&textFillMockFrame{})
 	wantErr := "fill: negative slice length -100"
@@ -336,7 +337,7 @@ func TestTextAbsDirName(t *testing.T) {
 func windowWithTag(tag string) *Window {
 	return &Window{
 		tag: Text{
-			oeb: MakeObservableEditableBufferTag(RuneArray([]rune(tag))),
+			oeb: file.MakeObservableEditableBufferTag(file.RuneArray([]rune(tag))),
 		},
 	}
 }
@@ -364,7 +365,7 @@ func TestBackNL(t *testing.T) {
 
 	for _, tc := range tt {
 		text := &Text{
-			oeb: MakeObservableEditableBufferTag(RuneArray(tc.buf)),
+			oeb: file.MakeObservableEditableBufferTag(file.RuneArray(tc.buf)),
 		}
 		q := text.BackNL(tc.p, tc.n)
 		if got, want := q, tc.q; got != want {
@@ -395,7 +396,7 @@ func TestTextBsInsert(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			text := &Text{
 				what: tc.what,
-				oeb:  MakeObservableEditableBufferTag(RuneArray(tc.buf)),
+				oeb:  file.MakeObservableEditableBufferTag(file.RuneArray(tc.buf)),
 			}
 			q, nr := text.BsInsert(tc.q0, []rune(tc.inbuf), true)
 			if nr != tc.nr {
@@ -437,7 +438,7 @@ func TestTextTypeTabInBody(t *testing.T) {
 	checkTabexpand(t, func(tabexpand bool, tabstop int) *Text {
 		w := &Window{
 			body: Text{
-				oeb:       MakeObservableEditableBufferTag(RuneArray{}),
+				oeb:       file.MakeObservableEditableBufferTag(file.RuneArray{}),
 				tabexpand: tabexpand,
 				tabstop:   tabstop,
 			},
@@ -451,7 +452,7 @@ func TestTextTypeTabInBody(t *testing.T) {
 func TestTextTypeTabInTag(t *testing.T) {
 	checkTabexpand(t, func(tabexpand bool, tabstop int) *Text {
 		return &Text{
-			oeb:       MakeObservableEditableBufferTag(RuneArray{}),
+			oeb:       file.MakeObservableEditableBufferTag(file.RuneArray{}),
 			tabexpand: tabexpand,
 			tabstop:   tabstop,
 		}

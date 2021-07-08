@@ -493,7 +493,7 @@ func local(et, _, argt *Text, _, _ bool, arg string) {
 // putfile writes File to disk, if it's safe to do so.
 //
 // TODO(flux): Write this in terms of the various cases.
-func putfile(oeb *ObservableEditableBuffer, q0 int, q1 int, name string) error {
+func putfile(oeb *file.ObservableEditableBuffer, q0 int, q1 int, name string) error {
 	w := oeb.GetCurObserver().(*Text).w
 	d, err := os.Stat(name)
 

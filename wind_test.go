@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rjkroege/edwood/internal/file"
 	"reflect"
 	"testing"
 
@@ -12,9 +13,9 @@ import (
 // using nil delta/epsilon, which fixes https://github.com/rjkroege/edwood/issues/230.
 func TestWindowUndoSelection(t *testing.T) {
 	var (
-		word = RuneArray("hello")
+		word = file.RuneArray("hello")
 		p0   = 3
-		undo = &Undo{
+		undo = &file.Undo{
 			t:   Insert,
 			buf: word,
 			p0:  p0,
@@ -26,10 +27,10 @@ func TestWindowUndoSelection(t *testing.T) {
 		isundo         bool
 		q0, q1         int
 		wantQ0, wantQ1 int
-		delta, epsilon []*Undo
+		delta, epsilon []*file.Undo
 	}{
-		{"undo", true, 14, 17, p0, p0 + word.nc(), []*Undo{undo}, nil},
-		{"redo", false, 14, 17, p0, p0 + word.nc(), nil, []*Undo{undo}},
+		{"undo", true, 14, 17, p0, p0 + word.nc(), []*file.Undo{undo}, nil},
+		{"redo", false, 14, 17, p0, p0 + word.nc(), nil, []*file.Undo{undo}},
 		{"undo (nil delta)", true, 14, 17, 14, 17, nil, nil},
 		{"redo (nil epsilon)", false, 14, 17, 14, 17, nil, nil},
 	} {
@@ -37,7 +38,7 @@ func TestWindowUndoSelection(t *testing.T) {
 			body: Text{
 				q0:  tc.q0,
 				q1:  tc.q1,
-				oeb: MakeObservableEditableBufferTag(RuneArray("This is an example sentence.\n")),
+				oeb: file.MakeObservableEditableBufferTag(file.RuneArray("This is an example sentence.\n")),
 			},
 		}
 		w.body.oeb.f.delta = tc.delta
@@ -69,12 +70,12 @@ func TestSetTag1(t *testing.T) {
 		w.body = Text{
 			display: display,
 			fr:      &MockFrame{},
-			oeb:     MakeObservableEditableBuffer(name, nil),
+			oeb:     file.MakeObservableEditableBuffer(name, nil),
 		}
 		w.tag = Text{
 			display: display,
 			fr:      &MockFrame{},
-			oeb:     MakeObservableEditableBuffer("", nil),
+			oeb:     file.MakeObservableEditableBuffer("", nil),
 		}
 
 		w.setTag1()
@@ -95,7 +96,7 @@ func TestSetTag1(t *testing.T) {
 }
 
 func TestWindowClampAddr(t *testing.T) {
-	buf := RuneArray("Hello, 世界")
+	buf := file.RuneArray("Hello, 世界")
 
 	for _, tc := range []struct {
 		addr, want Range
@@ -106,7 +107,7 @@ func TestWindowClampAddr(t *testing.T) {
 		w := &Window{
 			addr: tc.addr,
 			body: Text{
-				oeb: MakeObservableEditableBufferTag(buf),
+				oeb: file.MakeObservableEditableBufferTag(buf),
 			},
 		}
 		w.ClampAddr()
@@ -129,7 +130,7 @@ func TestWindowParseTag(t *testing.T) {
 	} {
 		w := &Window{
 			tag: Text{
-				oeb: MakeObservableEditableBufferTag(RuneArray(tc.tag)),
+				oeb: file.MakeObservableEditableBufferTag(file.RuneArray(tc.tag)),
 			},
 		}
 		if got, want := w.ParseTag(), tc.filename; got != want {
@@ -143,7 +144,7 @@ func TestWindowClearTag(t *testing.T) {
 	want := "/foo bar/test.txt Del Snarf Undo Put |"
 	w := &Window{
 		tag: Text{
-			oeb: MakeObservableEditableBufferTag(RuneArray(tag)),
+			oeb: file.MakeObservableEditableBufferTag(file.RuneArray(tag)),
 		},
 	}
 	w.ClearTag()

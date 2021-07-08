@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"image"
 	"log"
 	"path/filepath"
@@ -193,7 +194,7 @@ func makenewwindow(t *Text) *Window {
 
 type Warning struct {
 	md  *MntDir
-	buf RuneArray
+	buf file.RuneArray
 }
 
 var warnings = []*Warning{}
