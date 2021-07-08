@@ -513,7 +513,7 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.treatasclean = false
 			f.b.Delete(u.p0, u.p0+u.n)
 			f.oeb.AllObservers(func(i interface{}) {
-				i.(BufferObserver).deleted(u.p0, u.p0+u.n)
+				i.(BufferObserver).Deleted(u.p0, u.p0+u.n)
 			})
 			q0 = u.p0
 			q1 = u.p0
@@ -525,7 +525,7 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 			f.treatasclean = false
 			f.b.Insert(u.p0, u.buf)
 			f.oeb.AllObservers(func(i interface{}) {
-				i.(BufferObserver).inserted(u.p0, u.buf)
+				i.(BufferObserver).Inserted(u.p0, u.buf)
 			})
 			q0 = u.p0
 			q1 = u.p0 + u.n
