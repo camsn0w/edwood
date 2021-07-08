@@ -20,7 +20,7 @@ const Ctlsize = 5 * 12
 
 // Errors returned by file server.
 var (
-	ErrDeletedWin = fmt.Errorf("deleted window")
+	ErrDeletedWin = fmt.Errorf("Deleted window")
 	ErrBadCtl     = fmt.Errorf("ill-formed control message")
 	ErrBadAddr    = fmt.Errorf("bad address syntax")
 	ErrAddrRange  = fmt.Errorf("address out of range")

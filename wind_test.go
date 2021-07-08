@@ -16,7 +16,7 @@ func TestWindowUndoSelection(t *testing.T) {
 		word = file.RuneArray("hello")
 		p0   = 3
 		undo = &file.Undo{
-			t:   Insert,
+			t:   file.Insert,
 			buf: word,
 			p0:  p0,
 			n:   word.nc(),

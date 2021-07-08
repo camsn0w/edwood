@@ -148,7 +148,7 @@ func TestFileUndoRedo(t *testing.T) {
 	// Redo
 	f.Undo(false)
 
-	// Validate state: we have s1 + s2 inserted.
+	// Validate state: we have s1 + s2 Inserted.
 	check(t, "TestFileUndoRedo after 1 Redos", f,
 		&fileStateSummary{false, true, false, true, s1 + s2})
 }

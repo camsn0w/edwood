@@ -15,6 +15,7 @@ import (
 	"github.com/rjkroege/edwood/internal/complete"
 	"github.com/rjkroege/edwood/internal/draw"
 	"github.com/rjkroege/edwood/internal/draw/drawutil"
+	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/frame"
 	"github.com/rjkroege/edwood/internal/runes"
 )
@@ -42,7 +43,7 @@ var (
 		left3,
 	}
 
-	_ BufferObserver = (*Text)(nil) // Enforce at compile time that Text implements BufferObserver
+	_ file.BufferObserver = (*Text)(nil) // Enforce at compile time that Text implements BufferObserver
 )
 
 type TextKind byte
@@ -58,7 +59,7 @@ const (
 // Files have possible multiple texts corresponding to clones.
 type Text struct {
 	display draw.Display
-	oeb     *ObservableEditableBuffer
+	oeb     *file.ObservableEditableBuffer
 	fr      frame.Frame
 	font    string
 
@@ -373,7 +374,7 @@ func getDirNames(f *os.File) ([]string, error) {
 
 // BsInsert inserts runes r at observers position q0. If r contains backspaces ('\b'),
 // they are interpreted, removing the runes preceding them.
-// The final observers position where r is inserted and the number of runes inserted
+// The final observers position where r is Inserted and the number of runes Inserted
 // after interpreting backspaces is returned.
 func (t *Text) BsInsert(q0 int, r []rune, tofile bool) (q, nr int) {
 	n := len(r)
@@ -418,9 +419,9 @@ func (t *Text) BsInsert(q0 int, r []rune, tofile bool) (q, nr int) {
 	return q0, n
 }
 
-// inserted is a callback invoked by File on Insert* to update each Text
+// Inserted is a callback invoked by File on Insert* to update each Text
 // that is using a given File.
-func (t *Text) inserted(q0 int, r []rune) {
+func (t *Text) Inserted(q0 int, r []rune) {
 	if t.eq0 == -1 {
 		t.eq0 = q0
 	}
@@ -567,10 +568,10 @@ func (t *Text) Delete(q0, q1 int, _ bool) {
 	t.oeb.DeleteAt(q0, q1)
 }
 
-// deleted implements the single-observers deletion observer for this Text's
+// Deleted implements the single-observers deletion observer for this Text's
 // backing File. It updates the Text (i.e. the view) for the removal of
 // runes [q0, q1).
-func (t *Text) deleted(q0, q1 int) {
+func (t *Text) Deleted(q0, q1 int) {
 	n := q1 - q0
 	if t.what == Body {
 		t.w.utflastqid = -1
@@ -629,8 +630,8 @@ func (t *Text) Q1() int                                  { return t.q1 }
 func (t *Text) SetQ0(q0 int)                             { t.q0 = q0 }
 func (t *Text) SetQ1(q1 int)                             { t.q1 = q1 }
 func (t *Text) Constrain(q0, q1 int) (p0, p1 int) {
-	p0 = min(q0, t.oeb.f.Size())
-	p1 = min(q1, t.oeb.f.Size())
+	p0 = min(q0, t.oeb.Size())
+	p1 = min(q1, t.oeb.FileSize())
 	return p0, p1
 }
 

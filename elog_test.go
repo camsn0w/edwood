@@ -63,7 +63,7 @@ func TestElogInsertDelete(t *testing.T) {
 	if len(e.log) != 2 {
 		t.Errorf("Insertions should have catenated")
 	}
-	if e.log[0].t != Null {
+	if e.log[0].t != file.Null {
 		t.Errorf("Sentinel displaced")
 	}
 	if string(e.log[1].r) != "This is a test" {
@@ -107,30 +107,30 @@ func TestApply(t *testing.T) {
 	}{
 		{TextBuffer{0, 0, []rune{}},
 			file.Elog{[]file.ElogOperation{
-				{Null, 0, 0, []rune{}},
-				{Insert, 0, 0, []rune("0123456789")},
+				{file.Null, 0, 0, []rune{}},
+				{file.Insert, 0, 0, []rune("0123456789")},
 			}, false},
 			"0123456789"},
 
 		{TextBuffer{0, 0, []rune("0123456789")},
 			file.Elog{[]file.ElogOperation{
-				{Null, 0, 0, []rune{}},
-				{Delete, 0, 5, []rune{}},
+				{file.Null, 0, 0, []rune{}},
+				{file.Delete, 0, 5, []rune{}},
 			}, false},
 			"56789"},
 
 		{TextBuffer{0, 0, []rune("XXX56789")},
 			file.Elog{[]file.ElogOperation{
-				{Null, 0, 0, []rune{}},
-				{Insert, 0, 0, []rune("01234")},
-				{Delete, 0, 3, []rune{}},
+				{file.Null, 0, 0, []rune{}},
+				{file.Insert, 0, 0, []rune("01234")},
+				{file.Delete, 0, 3, []rune{}},
 			}, false},
 			"0123456789"},
 
 		{TextBuffer{0, 0, []rune("XXX56789")},
 			file.Elog{[]file.ElogOperation{
-				{Null, 0, 0, []rune{}},
-				{Replace, 0, 3, []rune("01234")},
+				{file.Null, 0, 0, []rune{}},
+				{file.Replace, 0, 3, []rune("01234")},
 			}, false},
 			"0123456789"},
 	}

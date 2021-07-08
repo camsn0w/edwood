@@ -325,9 +325,9 @@ func TestEditMultipleWindows(t *testing.T) {
 		}},
 
 		// b
-		{Range{0, 0}, "test", "b alt_example_2\ni/inserted/\n", []string{
+		{Range{0, 0}, "test", "b alt_example_2\ni/Inserted/\n", []string{
 			contents,
-			"inserted" + alt_contents,
+			"Inserted" + alt_contents,
 		}, []string{
 			"'+  alt_example_2\n",
 		}},

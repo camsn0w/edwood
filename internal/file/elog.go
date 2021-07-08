@@ -151,7 +151,8 @@ func (e *Elog) Insert(q0 int, r []rune) {
 
 	if eo.q0 < e.secondlast().q0 {
 		e.warned = true
-		main.warning(nil, WsequenceDire)
+		//TODO(sn0w): Handle this from caller
+		//warning(nil, WsequenceDire)
 	}
 }
 
@@ -166,10 +167,11 @@ func (e *Elog) Delete(q0, q1 int) {
 	// Check for out-of-order
 	if (q0 < eo.q0+eo.nd) && !e.warned {
 		e.warned = true
-		main.warning(nil, Wsequence)
+		//TODO(sn0w): Handle this from caller
+		//warning(nil, Wsequence)
 	}
 
-	if eo.t == main.Delete && (eo.q0+eo.nd == q0) {
+	if eo.t == Delete && (eo.q0+eo.nd == q0) {
 		eo.nd += q1 - q0
 		return
 	}
@@ -177,12 +179,13 @@ func (e *Elog) Delete(q0, q1 int) {
 	e.extend()
 
 	eo = e.last()
-	eo.t = main.Delete
+	eo.t = Delete
 	eo.q0 = q0
 	eo.nd = q1 - q0
 	if eo.q0 < e.secondlast().q0 {
 		e.warned = true
-		main.warning(nil, WsequenceDire)
+		//TODO(sn0w): Handle this from caller
+		//warning(nil, WsequenceDire)
 	}
 }
 
@@ -195,13 +198,13 @@ func (e *Elog) Empty() bool {
 // Apply plays back the log, from back to front onto the given observers.
 // Unlike the C version, this does not mark the file - that should happen at a higher
 // level.
-func (e *Elog) Apply(t main.Texter) {
+func (e *Elog) Apply(t interface{}) {
 	// The log is applied back-to-front - this avoids disturbing the observers ahead of the
 	// current application point.
 	for i := len((*e).log) - 1; i >= 1; i-- {
 		eo := (*e).log[i]
 		switch eo.t {
-		case main.Replace:
+		case Replace:
 			if tracelog {
 				fmt.Printf("elog replace %d %d (%d %d)\n",
 					eo.q0, eo.q0+eo.nd, t.Q0(), t.Q1())
