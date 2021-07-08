@@ -357,7 +357,7 @@ func fullrunewrite(x *Xfid) []rune {
 		cnt += x.f.nrpart
 		x.f.nrpart = 0
 	}
-	r, nb, _ := cvttorunes(x.fcall.Data, cnt-utf8.UTFMax)
+	r, nb, _ := runes.Cvttorunes(x.fcall.Data, cnt-utf8.UTFMax)
 	for utf8.FullRune(x.fcall.Data[nb:]) {
 		ru, si := utf8.DecodeRune(x.fcall.Data[nb:])
 		if ru != 0 {
@@ -494,7 +494,7 @@ func xfidwrite(x *Xfid) {
 			x.respond(&fc, ErrAddrRange)
 			break
 		}
-		r, _, _ := cvttorunes(x.fcall.Data, int(x.fcall.Count))
+		r, _, _ := runes.Cvttorunes(x.fcall.Data, int(x.fcall.Count))
 		if !w.nomark {
 			seq++
 			t.oeb.Mark(seq)
@@ -594,7 +594,7 @@ forloop:
 				err = ErrBadCtl
 				break forloop
 			}
-			r, _, nulls := cvttorunes([]byte(words[1]), len(words[1]))
+			r, _, nulls := runes.Cvttorunes([]byte(words[1]), len(words[1]))
 			if nulls {
 				err = fmt.Errorf("nulls in file name")
 				break forloop
@@ -613,7 +613,7 @@ forloop:
 				err = ErrBadCtl
 				break forloop
 			}
-			r, _, nulls := cvttorunes([]byte(words[1]), len(words[1]))
+			r, _, nulls := runes.Cvttorunes([]byte(words[1]), len(words[1]))
 			if nulls {
 				err = fmt.Errorf("nulls in dump string")
 				break forloop
@@ -624,7 +624,7 @@ forloop:
 				err = ErrBadCtl
 				break forloop
 			}
-			r, _, nulls := cvttorunes([]byte(words[1]), len(words[1]))
+			r, _, nulls := runes.Cvttorunes([]byte(words[1]), len(words[1]))
 			if nulls {
 				err = fmt.Errorf("nulls in dump directory string")
 				break forloop
@@ -677,7 +677,7 @@ forloop:
 				err = ErrBadCtl
 				break forloop
 			}
-			r, _, nulls := cvttorunes([]byte(words[1]), len(words[1]))
+			r, _, nulls := runes.Cvttorunes([]byte(words[1]), len(words[1]))
 			if nulls {
 				err = fmt.Errorf("nulls in font name")
 				break forloop

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rjkroege/edwood/internal/runes"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -26,7 +27,7 @@ func TestCvttorunes(t *testing.T) {
 		{[]byte("\x96界 hello"), 1 + 3 + 6, []rune("\uFFFD界 hello"), 1 + 3 + 6, false},
 	}
 	for _, tc := range testCases {
-		r, nb, nulls := cvttorunes(tc.p, tc.n)
+		r, nb, nulls := runes.Cvttorunes(tc.p, tc.n)
 		if !reflect.DeepEqual(r, tc.r) || nb != tc.nb || nulls != tc.nulls {
 			t.Errorf("cvttorunes of (%q, %v) returned %q, %v, %v; expected %q, %v, %v\n",
 				tc.p, tc.n, r, nb, nulls, tc.r, tc.nb, tc.nulls)
@@ -66,7 +67,7 @@ func TestQuote(t *testing.T) {
 		{"Don't worry!", "'Don''t worry!'"},
 	}
 	for _, tc := range testCases {
-		q := quote(tc.s)
+		q := runes.Quote(tc.s)
 		if q != tc.q {
 			t.Errorf("%q quoted is %q; expected %q\n", tc.s, q, tc.q)
 		}
@@ -86,7 +87,7 @@ func TestSkipbl(t *testing.T) {
 		{[]rune(" \t\nαβγ \t\nαβγ"), []rune("αβγ \t\nαβγ")},
 	}
 	for _, tc := range tt {
-		q := skipbl(tc.s)
+		q := runes.Skipbl(tc.s)
 		if !reflect.DeepEqual(q, tc.q) {
 			t.Errorf("skipbl(%v) returned %v; expected %v", tc.s, q, tc.q)
 		}

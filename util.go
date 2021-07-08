@@ -5,11 +5,7 @@ import (
 	"image"
 	"log"
 	"path/filepath"
-	"strings"
 	"sync"
-	"unicode/utf8"
-
-	"github.com/rjkroege/edwood/internal/runes"
 )
 
 func min(a, b int) int {
@@ -63,57 +59,6 @@ func restoremouse(w *Window) bool {
 		return true
 	}
 	return false
-}
-
-func bytetorune(s []byte) []rune {
-	r, _, _ := cvttorunes(s, len(s))
-	return r
-}
-
-// TODO(flux) The "correct" answer here is return unicode.IsNumber(c) || unicode.IsLetter(c)
-func isalnum(c rune) bool {
-	// Hard to get absolutely right.  Use what we know about ASCII
-	// and assume anything above the Latin control characters is
-	// potentially an alphanumeric.
-	if c <= ' ' {
-		return false
-	}
-	if 0x7F <= c && c <= 0xA0 {
-		return false
-	}
-	if strings.ContainsRune("!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~", c) {
-		return false
-	}
-	return true
-}
-
-// Cvttorunes decodes runes r from p. It's guaranteed that first n
-// bytes of p will be interpreted without worrying about partial runes.
-// This may mean reading up to UTFMax-1 more bytes than n; the caller
-// must ensure p is large enough. Partial runes and invalid encodings
-// are converted to RuneError. Nb (always >= n) is the number of bytes
-// interpreted.
-//
-// If any U+0000 rune is present in r, they are elided and nulls is set
-// to true.
-func cvttorunes(p []byte, n int) (r []rune, nb int, nulls bool) {
-	for nb < n {
-		var w int
-		var ru rune
-		if p[nb] < utf8.RuneSelf {
-			w = 1
-			ru = rune(p[nb])
-		} else {
-			ru, w = utf8.DecodeRune(p[nb:])
-		}
-		if ru != 0 {
-			r = append(r, ru)
-		} else {
-			nulls = true
-		}
-		nb += w
-	}
-	return
 }
 
 func errorwin1Name(dir string) string {
@@ -332,43 +277,4 @@ func addwarningtext(md *MntDir, r []rune) {
 	case cwarn <- 0:
 	default:
 	}
-}
-
-const quoteChar = '\''
-
-func needsQuote(s string) bool {
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c == quoteChar || c <= ' ' { // quote, blanks, or control characters
-			return true
-		}
-	}
-	return false
-}
-
-// Quote adds single quotes to s in the style of rc(1) if they are needed.
-// The behaviour should be identical to Plan 9's quote(3).
-func quote(s string) string {
-	if s == "" {
-		return "''"
-	}
-	if !needsQuote(s) {
-		return s
-	}
-	var b strings.Builder
-	b.Grow(10 + len(s)) // Enough room for few quotes
-	b.WriteByte(quoteChar)
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c == quoteChar {
-			b.WriteByte(quoteChar)
-		}
-		b.WriteByte(c)
-	}
-	b.WriteByte(quoteChar)
-	return b.String()
-}
-
-func skipbl(r []rune) []rune {
-	return runes.TrimLeft(r, " \t\n")
 }

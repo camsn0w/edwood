@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/rjkroege/edwood/internal/runes"
 	"image"
 	"log"
 	"net/http"
@@ -680,7 +681,7 @@ func acmeputsnarf() {
 func acmegetsnarf() {
 	b := make([]byte, MAXSNARF)
 	n, _, _ := row.display.ReadSnarf(b)
-	r, _, _ := cvttorunes(b, n)
+	r, _, _ := runes.Cvttorunes(b, n)
 	snarfbuf.Reset()
 	snarfbuf.Insert(0, r)
 }

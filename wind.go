@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/runes"
 	"image"
 	"os"
 	"path/filepath"
@@ -651,7 +652,7 @@ func (w *Window) CtlPrint(fonts bool) string {
 	if fonts {
 		// fsys exposes the actual physical font name.
 		buf = fmt.Sprintf("%s%11d %s %11d ", buf, w.body.fr.Rect().Dx(),
-			quote(fontget(w.body.font, w.display).Name()), w.body.fr.GetMaxtab())
+			runes.Quote(fontget(w.body.font, w.display).Name()), w.body.fr.GetMaxtab())
 	}
 	return buf
 }

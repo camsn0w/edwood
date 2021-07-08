@@ -247,10 +247,10 @@ func plumbshow(m *plumb.Message) {
 		name = filepath.Join(m.Dir, name)
 	}
 	name = filepath.Clean(name)
-	r, _, _ := cvttorunes([]byte(name), len(name)) // remove nulls
+	r, _, _ := runes.Cvttorunes([]byte(name), len(name)) // remove nulls
 	name = string(r)
 	w.SetName(name)
-	r, _, _ = cvttorunes(m.Data, len(m.Data))
+	r, _, _ = runes.Cvttorunes(m.Data, len(m.Data))
 	w.body.Insert(0, r, true)
 	w.body.oeb.f.Clean()
 	w.SetTag()
@@ -335,7 +335,7 @@ func search(ct *Text, r []rune) bool {
 
 func isfilec(r rune) bool {
 	Lx := ".-+/:@"
-	if isalnum(r) {
+	if runes.Isalnum(r) {
 		return true
 	}
 	if strings.ContainsRune(Lx, r) {
@@ -347,7 +347,7 @@ func isfilec(r rune) bool {
 // Runestr wrapper for cleanname
 func cleanrname(rs []rune) []rune {
 	s := filepath.Clean(string(rs))
-	r, _, _ := cvttorunes([]byte(s), len(s))
+	r, _, _ := runes.Cvttorunes([]byte(s), len(s))
 	return r
 }
 
@@ -495,10 +495,10 @@ func expand(t *Text, q0 int, q1 int) (*Expand, bool) {
 	}
 
 	if q0 == q1 {
-		for q1 < t.oeb.f.Size() && isalnum(t.ReadC(q1)) {
+		for q1 < t.oeb.f.Size() && runes.Isalnum(t.ReadC(q1)) {
 			q1++
 		}
-		for q0 > 0 && isalnum(t.ReadC(q0-1)) {
+		for q0 > 0 && runes.Isalnum(t.ReadC(q0-1)) {
 			q0--
 		}
 	}
