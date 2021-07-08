@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	runes2 "github.com/rjkroege/edwood/internal/runes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -254,7 +255,7 @@ func e_cmd(t *Text, cp *Cmd) bool {
 	if err != nil {
 		editerror("%v unreadable", name)
 	}
-	runes, _, nulls := cvttorunes(d, len(d))
+	runes, _, nulls := runes2.Cvttorunes(d, len(d))
 	oeb.elog.Replace(q0, q1, runes)
 
 	if nulls {
@@ -479,7 +480,7 @@ func runpipe(t *Text, cmd rune, cr []rune, state int) {
 		w    *Window
 	)
 
-	r = skipbl(cr)
+	r = runes2.Skipbl(cr)
 	if len(r) == 0 {
 		editerror("no command specified for %c", cmd)
 	}

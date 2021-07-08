@@ -245,7 +245,7 @@ func (t *Text) Columnate(names []string, widths []int) {
 	q1 = 0
 	for i := 0; i < nrow; i++ {
 		for j := i; j < len(names); j += nrow {
-			dl := bytetorune([]byte(names[j]))
+			dl := runes.Bytetorune([]byte(names[j]))
 			t.oeb.f.InsertAt(q1, dl)
 			q1 += len(dl)
 			if j+nrow >= len(names) {
@@ -656,7 +656,7 @@ func (t *Text) BsWidth(c rune) int {
 			break
 		}
 		if c == 0x17 {
-			eq := isalnum(r)
+			eq := runes.Isalnum(r)
 			if eq && skipping { // found one; stop skipping
 				skipping = false
 			} else {
@@ -1375,11 +1375,11 @@ func (t *Text) DoubleClick(inq0, inq1 int) (q0, q1 int) {
 	}
 	// try filling out word to right
 	q1 = inq0
-	for q1 < t.oeb.f.Size() && isalnum(t.oeb.f.ReadC(q1)) {
+	for q1 < t.oeb.f.Size() && runes.Isalnum(t.oeb.f.ReadC(q1)) {
 		q1++
 	}
 	// try filling out word to left
-	for q0 > 0 && isalnum(t.oeb.f.ReadC(q0-1)) {
+	for q0 > 0 && runes.Isalnum(t.oeb.f.ReadC(q0-1)) {
 		q0--
 	}
 

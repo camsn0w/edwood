@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	runes2 "github.com/rjkroege/edwood/internal/runes"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -227,7 +228,7 @@ func (f *File) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, e
 	if err != nil {
 		warning(nil, "read error in RuneArray.Load")
 	}
-	runes, _, hasNulls := cvttorunes(d, len(d))
+	runes, _, hasNulls := runes2.Cvttorunes(d, len(d))
 
 	if sethash {
 		f.details.Hash = file.CalcHash(d)

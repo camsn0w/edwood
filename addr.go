@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"github.com/rjkroege/edwood/internal/runes"
+	"strings"
+)
 
 // These constants indicates the direction of regular expresssion search.
 // TODO(fhs): Introduce a new type for these constants.
@@ -26,7 +29,7 @@ func isregexc(r rune) bool {
 	if r == 0 {
 		return false
 	}
-	if isalnum(r) {
+	if runes.Isalnum(r) {
 		return true
 	}
 	if strings.ContainsRune("^+-.*?#,;[]()$", r) {
