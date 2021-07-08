@@ -155,7 +155,7 @@ func (e *ObservableEditableBuffer) Dirty() bool {
 // InsertAt is a forwarding function for file.InsertAt.
 func (e *ObservableEditableBuffer) InsertAt(p0 int, s []rune) {
 	e.AllObservers(func(i interface{}) {
-		i.(BufferObserver).inserted(p0, s)
+		i.(BufferObserver).Inserted(p0, s)
 	})
 	e.f.InsertAt(p0, s)
 }
@@ -173,7 +173,7 @@ func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
 // DeleteAt is a forwarding function for file.DeleteAt.
 func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
 	e.AllObservers(func(i interface{}) {
-		i.(BufferObserver).deleted(q0, q1)
+		i.(BufferObserver).Deleted(q0, q1)
 	})
 	e.f.DeleteAt(q0, q1)
 }
