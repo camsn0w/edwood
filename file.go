@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
-	"strings"
-
-	"github.com/rjkroege/edwood/internal/file"
+	"github.com/rjkroege/edwood/internal/elog"
+	"github.com/rjkroege/edwood/internal/util"
 )
 
 // File is an editable text buffer with undo. Many Text can share one
@@ -377,9 +374,9 @@ func (f *File) UnsetName(delta *[]*Undo) {
 
 func NewFile() *File {
 	return &File{
-		b:         NewBuffer(),
-		delta:     []*Undo{},
-		epsilon:   []*Undo{},
+		b:       NewBuffer(),
+		delta:   []*Undo{},
+		epsilon: []*Undo{},
 		//	seq       int
 		mod: false,
 		//	ntext   int
