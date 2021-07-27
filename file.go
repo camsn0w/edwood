@@ -70,6 +70,10 @@ type File struct {
 // NB how the cache is folded into RuneArray.
 //TODO(rjk): make undo.RuneArray implement Reader and Writer.
 
+func (b *RuneArray) Clean() {
+
+}
+
 // HasUncommitedChanges returns true if there are changes that
 // have been made to the File after the last Commit.
 func (t *File) HasUncommitedChanges() bool {
@@ -183,7 +187,7 @@ func (f *File) Commit() {
 		// TODO(rjk): Generate a better error message.
 		panic("internal error: File.Commit")
 	}
-	if f.seq > 0 {
+	if f.Seq() > 0 {
 		f.Uninsert(&f.delta, f.cq0, len(f.cache))
 	}
 	f.b.Insert(f.cq0, f.cache)
@@ -227,7 +231,7 @@ func (f *File) Load(q0 int, d []byte) (n int, hasNulls bool, err error) {
 // TODO(rjk): switching to undo.RuneArray will require removing use of seq
 // TODO(rjk): This function maps to undo.RuneArray.Clean()
 func (f *File) SnapshotSeq() {
-	f.putseq = f.seq
+	f.putseq = f.Seq()
 }
 
 // Dirty reports whether the current state of the File is different from
@@ -236,7 +240,7 @@ func (f *File) SnapshotSeq() {
 // TODO(rjk): switching to undo.RuneArray will require removing external uses
 // of seq.
 func (f *File) Dirty() bool {
-	return f.seq != f.putseq
+	return f.Seq() != f.putseq
 }
 
 // InsertAt inserts s runes at rune address p0.
@@ -249,7 +253,7 @@ func (f *File) InsertAt(p0 int, s []rune) {
 	if p0 > f.b.nc() {
 		panic("internal error: fileinsert")
 	}
-	if f.seq > 0 {
+	if f.Seq() > 0 {
 		f.Uninsert(&f.delta, p0, len(s))
 	}
 	f.b.Insert(p0, s)
@@ -291,7 +295,7 @@ func (f *File) Uninsert(delta *[]*Undo, q0, ns int) {
 	u.t = elog.Delete
 
 	u.mod = f.mod
-	u.seq = f.seq
+	u.seq = f.Seq()
 	u.p0 = q0
 	u.n = ns
 	*delta = append(*delta, &u)
@@ -311,7 +315,7 @@ func (f *File) DeleteAt(p0, p1 int) {
 		util.Acmeerror("internal error: DeleteAt", nil)
 	}
 
-	if f.seq > 0 {
+	if f.Seq() > 0 {
 		f.Undelete(&f.delta, p0, p1)
 	}
 	f.b.Delete(p0, p1)
@@ -330,7 +334,7 @@ func (f *File) Undelete(delta *[]*Undo, p0, p1 int) {
 	var u Undo
 	u.t = elog.Insert
 	u.mod = f.mod
-	u.seq = f.seq
+	u.seq = f.Seq()
 	u.p0 = p0
 	u.n = p1 - p0
 	u.buf = make([]rune, u.n)
@@ -354,7 +358,7 @@ func (f *File) SetName(name string) {
 		return
 	}
 
-	if f.seq > 0 {
+	if f.Seq() > 0 {
 		f.UnsetName(&f.delta)
 	}
 	f.oeb.Setnameandisscratch(name)
@@ -365,7 +369,7 @@ func (f *File) UnsetName(delta *[]*Undo) {
 	// undo a file name change by restoring old name
 	u.t = elog.Filename
 	u.mod = f.mod
-	u.seq = f.seq
+	u.seq = f.Seq()
 	u.p0 = 0 // unused
 	u.n = len(f.oeb.Name())
 	u.buf = []rune(f.oeb.Name())
@@ -439,7 +443,7 @@ func (f *File) Undo(isundo bool) (q0, q1 int, ok bool) {
 		// undo; reverse delta onto epsilon, seq decreases
 		delta = &f.delta
 		epsilon = &f.epsilon
-		stop = f.seq
+		stop = f.Seq()
 	} else {
 		// redo; reverse epsilon onto delta, seq increases
 		delta = &f.epsilon
