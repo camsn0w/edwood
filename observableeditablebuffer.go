@@ -24,8 +24,9 @@ type ObservableEditableBuffer struct {
 	// don't have an implicit Commit. We set editclean in the Edit cmd
 	// implementation code to let multiple Inserts be grouped together?
 	// Figure out how this inter-operates with seq.
-	Editclean bool
-	details      *file.DiskDetails
+	Editclean  bool
+	details    *file.DiskDetails
+	undoBuffer Buffer
 }
 
 // Set is a forwarding function for file_hash.Set
@@ -99,6 +100,7 @@ func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEdita
 		details:      &file.DiskDetails{Name: filename, Hash: file.Hash{}},
 		elog:         elog.MakeElog(),
 		Editclean:    true,
+		undoBuffer:   *NewUndoBuffer(b),
 	}
 	oeb.f.oeb = oeb
 	return oeb
@@ -115,6 +117,7 @@ func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
 		details:      &file.DiskDetails{Hash: file.Hash{}},
 		elog:         elog.MakeElog(),
 		Editclean:    true,
+		undoBuffer:   *NewUndoBuffer(b),
 	}
 	oeb.f.oeb = oeb
 	return oeb
@@ -255,7 +258,7 @@ func (e *ObservableEditableBuffer) SetHash(hash file.Hash) {
 
 // Seq is a getter for file.details.Seq.
 func (e *ObservableEditableBuffer) Seq() int {
-	return e.f.seq
+	return e.f.Seq()
 }
 
 // RedoSeq is a getter for file.details.RedoSeq.
