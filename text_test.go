@@ -413,7 +413,7 @@ func TestTextBsInsert(t *testing.T) {
 	}
 }
 
-/*func checkTabexpand(t *testing.T, getText func(tabexpand bool, tabstop int) *Text) {
+func checkTabexpand(t *testing.T, getText func(tabexpand bool, tabstop int) *Text) {
 	for _, tc := range []struct {
 		tabexpand bool
 		tabstop   int
@@ -433,9 +433,9 @@ func TestTextBsInsert(t *testing.T) {
 			t.Errorf("loaded editor %q; expected %q", got, tc.want)
 		}
 	}
-}*/
+}
 
-/*func TestTextTypeTabInBody(t *testing.T) {
+func TestTextTypeTabInBody(t *testing.T) {
 	checkTabexpand(t, func(tabexpand bool, tabstop int) *Text {
 		w := &Window{
 			body: Text{
@@ -458,4 +458,4 @@ func TestTextTypeTabInTag(t *testing.T) {
 			tabstop:   tabstop,
 		}
 	})
-}*/
+}
