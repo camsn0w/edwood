@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/rjkroege/edwood/internal/elog"
+	"github.com/rjkroege/edwood/internal/file"
 	"reflect"
 	"testing"
 )
@@ -93,7 +94,7 @@ func TestAcmeregexp(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			warnings = nil
 			text := &Text{
-				file: MakeObservableEditableBufferTag(RuneArray([]rune("abcd αβξδ\n"))),
+				file: file.MakeObservableEditableBufferTag(file.RuneArray([]rune("abcd αβξδ\n"))),
 			}
 			lim := Range{
 				0,
