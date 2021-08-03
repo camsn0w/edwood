@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/runes"
 	"github.com/rjkroege/edwood/internal/util"
 	"image"
@@ -81,12 +82,12 @@ func (w *Window) initHeadless(clone *Window) *Window {
 	w.ctlfid = MaxFid
 	w.utflastqid = -1
 
-	f := MakeObservableEditableBufferTag(nil)
+	f := file.MakeObservableEditableBufferTag(nil)
 	f.AddObserver(&w.tag)
 	w.tag.file = f
 
 	// Body setup.
-	f = MakeObservableEditableBuffer("", nil)
+	f = file.MakeObservableEditableBuffer("", nil)
 	if clone != nil {
 		f = clone.body.file
 		w.body.org = clone.body.org
