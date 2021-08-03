@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rjkroege/edwood/internal/elog"
 	_ "github.com/rjkroege/edwood/internal/elog"
 	"github.com/rjkroege/edwood/internal/file"
 	"reflect"
@@ -9,7 +10,6 @@ import (
 	"github.com/rjkroege/edwood/internal/edwoodtest"
 )
 
-/*
 // TestWindowUndoSelection checks text selection change after undo/redo.
 // It tests that selection doesn't change when undoing/redoing
 // using nil delta/epsilon, which fixes https://github.com/rjkroege/edwood/issues/230.
@@ -43,15 +43,15 @@ func TestWindowUndoSelection(t *testing.T) {
 				file: file.MakeObservableEditableBufferTag(file.RuneArray("This is an example sentence.\n")),
 			},
 		}
-		w.body.file.f.delta = tc.delta
-		w.body.file.f.epsilon = tc.epsilon
+		w.body.file.SetDelta(tc.delta)
+		w.body.file.SetEpsilon(tc.epsilon)
 		w.Undo(tc.isundo)
 		if w.body.q0 != tc.wantQ0 || w.body.q1 != tc.wantQ1 {
 			t.Errorf("%v changed q0, q1 to %v, %v; want %v, %v",
 				tc.name, w.body.q0, w.body.q1, tc.wantQ0, tc.wantQ1)
 		}
 	}
-}*/
+}
 
 func TestSetTag1(t *testing.T) {
 	const (
