@@ -1,6 +1,7 @@
 package file
 
 import (
+	"errors"
 	"fmt"
 	"github.com/rjkroege/edwood/internal/elog"
 	"io"
@@ -184,14 +185,13 @@ func (e *ObservableEditableBuffer) SaveableAndDirty() bool {
 func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, err error) {
 	d, err := ioutil.ReadAll(fd)
 	if err != nil {
-		// TODO(sn0w): Catch this on the receiver side.
-		//warning(nil, "read error in RuneArray.Load")
+		err = errors.New("read error in RuneArray.Load")
 	}
 	if sethash {
 		e.SetHash(CalcHash(d))
 	}
-
-	return e.f.Load(q0, d)
+	n, hasNulls = e.f.Load(q0, d)
+	return n, hasNulls, err
 }
 
 // Dirty is a forwarding function for file.Dirty.
