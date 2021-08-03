@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/util"
 	"io/ioutil"
 	"os"
@@ -34,7 +35,7 @@ func resetxec() {
 	clearcollection()
 }
 
-func mkaddr(file *ObservableEditableBuffer) (a Address) {
+func mkaddr(file *file.ObservableEditableBuffer) (a Address) {
 	cur := file.GetCurObserver().(*Text)
 	a.r.q0 = cur.q0
 	a.r.q1 = cur.q1
@@ -56,7 +57,7 @@ func cmdexec(t *Text, cp *Cmd) bool {
 		editerror("no current window")
 	}
 	i := cmdlookup(cp.cmdc) // will be -1 for '{'
-	file := (*ObservableEditableBuffer)(nil)
+	file := (*file.ObservableEditableBuffer)(nil)
 	if t != nil && t.w != nil {
 		t = &t.w.body
 		file = t.file
@@ -119,7 +120,7 @@ func edittext(w *Window, q int, r []rune) error {
 		return ErrPermission
 	case Inserting:
 		f := w.body.file
-		err := f.elog.Insert(q, r)
+		err := f.Elog.Insert(q, r)
 		if err != nil {
 			warning(nil, err.Error())
 		}
@@ -184,7 +185,7 @@ func B_cmd(t *Text, cp *Cmd) bool {
 }
 
 func c_cmd(t *Text, cp *Cmd) bool {
-	err := t.file.elog.Replace(addr.r.q0, addr.r.q1, []rune(cp.text))
+	err := t.file.Elog.Replace(addr.r.q0, addr.r.q1, []rune(cp.text))
 	if err != nil {
 		warning(nil, err.Error())
 	}
@@ -195,7 +196,7 @@ func c_cmd(t *Text, cp *Cmd) bool {
 
 func d_cmd(t *Text, cp *Cmd) bool {
 	if addr.r.q1 > addr.r.q0 {
-		err := t.file.elog.Delete(addr.r.q0, addr.r.q1)
+		err := t.file.Elog.Delete(addr.r.q0, addr.r.q1)
 		if err != nil {
 			warning(nil, err.Error())
 		}
@@ -234,7 +235,7 @@ func D_cmd(t *Text, cp *Cmd) bool {
 
 func e_cmd(t *Text, cp *Cmd) bool {
 	file := t.file
-	f := t.file.f
+	f := t.file
 	q0 := addr.r.q0
 	q1 := addr.r.q1
 	if cp.cmdc == 'e' {
@@ -264,8 +265,8 @@ func e_cmd(t *Text, cp *Cmd) bool {
 	if err != nil {
 		editerror("%v unreadable", name)
 	}
-	runes, _, nulls := cvttorunes(d, len(d))
-	err = file.elog.Replace(q0, q1, runes)
+	runes, _, nulls := util.Cvttorunes(d, len(d))
+	err = file.Elog.Replace(q0, q1, runes)
 	if err != nil {
 		warning(nil, err.Error())
 	}
@@ -312,7 +313,7 @@ func i_cmd(t *Text, cp *Cmd) bool {
 	return appendx(t.file, cp, addr.r.q0)
 }
 
-func copyx(f *ObservableEditableBuffer, addr2 Address) {
+func copyx(f *file.ObservableEditableBuffer, addr2 Address) {
 	ni := 0
 	buf := make([]rune, RBUFSIZE)
 	for p := addr.r.q0; p < addr.r.q1; p += ni {
@@ -321,23 +322,23 @@ func copyx(f *ObservableEditableBuffer, addr2 Address) {
 			ni = RBUFSIZE
 		}
 		f.Read(p, buf[:ni])
-		err := addr2.file.elog.Insert(addr2.r.q1, buf[:ni])
+		err := addr2.file.Elog.Insert(addr2.r.q1, buf[:ni])
 		if err != nil {
 			warning(nil, err.Error())
 		}
 	}
 }
 
-func move(f *ObservableEditableBuffer, addr2 Address) {
+func move(f *file.ObservableEditableBuffer, addr2 Address) {
 	if addr.file != addr2.file || addr.r.q1 <= addr2.r.q0 {
-		err := f.elog.Delete(addr.r.q0, addr.r.q1)
+		err := f.Elog.Delete(addr.r.q0, addr.r.q1)
 		if err != nil {
 			warning(nil, err.Error())
 		}
 		copyx(f, addr2)
 	} else if addr.r.q0 >= addr2.r.q1 {
 		copyx(f, addr2)
-		err := f.elog.Delete(addr.r.q0, addr.r.q1)
+		err := f.Elog.Delete(addr.r.q0, addr.r.q1)
 		if err != nil {
 			warning(nil, err.Error())
 		}
@@ -428,7 +429,7 @@ func s_cmd(t *Text, cp *Cmd) bool {
 				}
 			}
 		}
-		err := t.file.elog.Replace(sel[0].q0, sel[0].q1, []rune(buf))
+		err := t.file.Elog.Replace(sel[0].q0, sel[0].q1, []rune(buf))
 		if err != nil {
 			warning(nil, err.Error())
 		}
@@ -513,7 +514,7 @@ func runpipe(t *Text, cmd rune, cr []rune, state int) {
 		t.q0 = addr.r.q0
 		t.q1 = addr.r.q1
 		if cmd == '<' || cmd == '|' {
-			err := t.file.elog.Delete(t.q0, t.q1)
+			err := t.file.Elog.Delete(t.q0, t.q1)
 			if err != nil {
 				warning(nil, err.Error())
 			}
@@ -595,7 +596,7 @@ const (
 
 func printposn(t *Text, mode int) {
 	var l1, l2 int
-	if t != nil && t.file.f != nil && t.file.Name() != "" {
+	if t != nil && t.file != nil && t.file.Name() != "" {
 		warning(nil, "%s:", t.file.Name())
 	}
 	switch mode {
@@ -673,9 +674,9 @@ func nl_cmd(t *Text, cp *Cmd) bool {
 	return true
 }
 
-func appendx(file *ObservableEditableBuffer, cp *Cmd, p int) bool {
+func appendx(file *file.ObservableEditableBuffer, cp *Cmd, p int) bool {
 	if len(cp.text) > 0 {
-		err := file.elog.Insert(p, []rune(cp.text))
+		err := file.Elog.Insert(p, []rune(cp.text))
 		if err != nil {
 			warning(nil, err.Error())
 		}
@@ -686,7 +687,7 @@ func appendx(file *ObservableEditableBuffer, cp *Cmd, p int) bool {
 	return true
 }
 
-func pdisplay(file *ObservableEditableBuffer) bool {
+func pdisplay(file *file.ObservableEditableBuffer) bool {
 	p1 := addr.r.q0
 	p2 := addr.r.q1
 	if p2 > file.Nr() {
@@ -708,7 +709,7 @@ func pdisplay(file *ObservableEditableBuffer) bool {
 	return true
 }
 
-func pfilename(f *ObservableEditableBuffer) {
+func pfilename(f *file.ObservableEditableBuffer) {
 	dirtychar := ' '
 	if f.SaveableAndDirty() {
 		dirtychar = '\''
@@ -721,7 +722,7 @@ func pfilename(f *ObservableEditableBuffer) {
 		'+', fc, f.Name())
 }
 
-func loopcmd(file *ObservableEditableBuffer, cp *Cmd, rp []Range) {
+func loopcmd(file *file.ObservableEditableBuffer, cp *Cmd, rp []Range) {
 	for _, r := range rp {
 		cur := file.GetCurObserver().(*Text)
 		cur.q0 = r.q0
@@ -730,7 +731,7 @@ func loopcmd(file *ObservableEditableBuffer, cp *Cmd, rp []Range) {
 	}
 }
 
-func looper(file *ObservableEditableBuffer, cp *Cmd, isX bool) {
+func looper(file *file.ObservableEditableBuffer, cp *Cmd, isX bool) {
 	rp := []Range{}
 	tr := Range{}
 	r := addr.r
@@ -772,7 +773,7 @@ func looper(file *ObservableEditableBuffer, cp *Cmd, isX bool) {
 	nest--
 }
 
-func linelooper(file *ObservableEditableBuffer, cp *Cmd) {
+func linelooper(file *file.ObservableEditableBuffer, cp *Cmd) {
 	//	long nrp, p;
 	//	Range r, linesel;
 	//	Address a, a3;
@@ -898,7 +899,7 @@ func filelooper(t *Text, cp *Cmd, XY bool) {
 
 // TODO(flux) This actually looks like "find one match after p"
 // This is almost certainly broken for ^
-func nextmatch(file *ObservableEditableBuffer, r string, p int, sign int) {
+func nextmatch(file *file.ObservableEditableBuffer, r string, p int, sign int) {
 	are, err := rxcompile(r)
 	if err != nil {
 		editerror("bad regexp in command address")
@@ -1049,7 +1050,7 @@ func cmdaddress(ap *Addr, a Address, sign int) Address {
 }
 
 type ToOEB struct {
-	oeb *ObservableEditableBuffer
+	oeb *file.ObservableEditableBuffer
 	r   string
 }
 
@@ -1072,7 +1073,7 @@ func alltofile(w *Window, tp *ToOEB) {
 	}
 }
 
-func toOEB(r string) *ObservableEditableBuffer {
+func toOEB(r string) *file.ObservableEditableBuffer {
 	var t ToOEB
 
 	t.r = strings.TrimLeft(r, " \t\n")
@@ -1103,7 +1104,7 @@ func allmatchfile(w *Window, tp *ToOEB) {
 	}
 }
 
-func matchfile(r string) *ObservableEditableBuffer {
+func matchfile(r string) *file.ObservableEditableBuffer {
 	var tf ToOEB
 
 	tf.oeb = nil
@@ -1116,7 +1117,7 @@ func matchfile(r string) *ObservableEditableBuffer {
 	return tf.oeb
 }
 
-func filematch(f *ObservableEditableBuffer, r string) bool {
+func filematch(f *file.ObservableEditableBuffer, r string) bool {
 	// compile expr first so if we get an error, we haven't allocated anything  {
 	are, err := rxcompile(r)
 	if err != nil {
@@ -1157,7 +1158,7 @@ func lineaddr(l int, addr Address, sign int) Address {
 	var a Address
 	file := addr.file
 	a.file = file
-	f := file.f
+	f := file
 	n := 0
 	p := 0
 	if sign >= 0 {
@@ -1175,14 +1176,14 @@ func lineaddr(l int, addr Address, sign int) Address {
 				n = 1
 			} else {
 				p = addr.r.q1 - 1
-				if f.ReadC(p) == '\n' {
+				if file.ReadC(p) == '\n' {
 					n = 1
 				}
 				p++
 			}
 			for n < l {
 				// TODO(rjk) utf8 buffer issue p
-				if p >= f.Size() {
+				if p >= file.Size() {
 					editerror("address out of range")
 				}
 				if f.ReadC(p) == '\n' {
@@ -1229,7 +1230,7 @@ func lineaddr(l int, addr Address, sign int) Address {
 }
 
 type Filecheck struct {
-	f *ObservableEditableBuffer
+	f *file.ObservableEditableBuffer
 	r string
 }
 
@@ -1243,7 +1244,7 @@ func allfilecheck(w *Window, fp *Filecheck) {
 	}
 }
 
-func cmdname(oeb *ObservableEditableBuffer, str string, set bool) string {
+func cmdname(oeb *file.ObservableEditableBuffer, str string, set bool) string {
 	var fc Filecheck
 	r := ""
 	s := ""
