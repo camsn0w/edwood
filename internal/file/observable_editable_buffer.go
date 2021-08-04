@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rjkroege/edwood/internal/elog"
+	"github.com/rjkroege/edwood/internal/util"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,7 +17,7 @@ import (
 type ObservableEditableBuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
-	f            *File
+	f            *Buffer
 	Elog         elog.Elog
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -90,9 +91,8 @@ func (e *ObservableEditableBuffer) HasMultipleObservers() bool {
 }
 
 // MakeObservableEditableBuffer is a constructor wrapper for NewFile() to abstract File from the main program.
-func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEditableBuffer {
-	f := NewFile()
-	f.b = b
+func MakeObservableEditableBuffer(filename string, b []byte) *ObservableEditableBuffer {
+	f := NewBuffer(b)
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
@@ -106,9 +106,8 @@ func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEdita
 }
 
 // MakeObservableEditableBufferTag is a constructor wrapper for NewTagFile() to abstract File from the main program.
-func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
-	f := NewTagFile()
-	f.b = b
+func MakeObservableEditableBufferTag(b []byte) *ObservableEditableBuffer {
+	f := NewBuffer(b)
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
@@ -127,8 +126,8 @@ func (e *ObservableEditableBuffer) Clean() {
 }
 
 // Size is a forwarding function for file.Size.
-func (e *ObservableEditableBuffer) Size() int {
-	return e.f.Size()
+func (e *ObservableEditableBuffer) Size() int64 {
+	return e.f.Size() / 4 // Size is returned in bytes, we want the size in runes
 }
 
 // Mark is a forwarding function for file.Mark.
@@ -167,8 +166,8 @@ func (e *ObservableEditableBuffer) SetDir(flag bool) {
 }
 
 // Nr is a forwarding function for file.Nr.
-func (e *ObservableEditableBuffer) Nr() int {
-	return e.f.Nr()
+func (e *ObservableEditableBuffer) Nr() int64 {
+	return e.f.Size()
 }
 
 // ReadC is a forwarding function for file.ReadC.
@@ -300,7 +299,7 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
-	return e.f.b.Read(q0, r)
+	return e.f.Read(q0, r)
 }
 
 // View is a forwarding function for rune_array.View.
@@ -310,12 +309,12 @@ func (e *ObservableEditableBuffer) View(q0 int, q1 int) []rune {
 
 // String is a forwarding function for rune_array.String.
 func (e *ObservableEditableBuffer) String() string {
-	return e.f.b.String()
+	return e.f.String()
 }
 
 // ResetBuffer is a forwarding function for rune_array.Reset.
 func (e *ObservableEditableBuffer) ResetBuffer() {
-	e.f.b.Reset()
+	e.f.Reset()
 }
 
 // Reader is a forwarding function for rune_array.Reader.
@@ -371,5 +370,7 @@ func (e *ObservableEditableBuffer) SetEpsilon(epsilon []*Undo) {
 
 // GetCache is a Getter for file.cache for use in tests.
 func (e *ObservableEditableBuffer) GetCache() []rune {
-	return e.f.cache
+	rawData := e.f.cachedPiece.data
+	cacheAsRunes, _, _ := util.Cvttorunes(rawData, len(rawData)/4)
+	return cacheAsRunes
 }

@@ -63,3 +63,11 @@ func Cvttorunes(p []byte, n int) (r []rune, nb int, nulls bool) {
 	}
 	return
 }
+
+func Cvttobytes(r []rune) ([]byte, int) {
+	result := make([]byte, len(r)*4)
+	for i, c := range r {
+		result[i] = utf8.EncodeRune()
+	}
+
+}

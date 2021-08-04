@@ -81,8 +81,10 @@ package file
 
 import (
 	"errors"
+	"github.com/rjkroege/edwood/internal/util"
 	"io"
 	"time"
+	"unicode/utf8"
 )
 
 var ErrWrongOffset = errors.New("offset is greater than buffer size")
@@ -99,6 +101,11 @@ type Buffer struct {
 	currentAction *action   // action for the current change group
 	savedAction   *action
 	oeb           *ObservableEditableBuffer
+	isdir         bool
+	mod           bool
+	treatasclean  bool
+	seq           int
+	putseq        int
 }
 
 // NewBuffer initializes a new buffer with the given content as a starting point.
@@ -381,6 +388,7 @@ func (b *Buffer) Clean() {
 	} else {
 		b.savedAction = nil
 	}
+	b.mod = false
 }
 
 // Dirty reports whether the current state of the buffer is different from the
@@ -501,4 +509,155 @@ func (p *piece) delete(off int, length int64) bool {
 	}
 	p.data = append(p.data[:off], p.data[off+int(length):]...)
 	return true
+}
+
+func (b *Buffer) Mark(seq int) {
+	b.Commit()
+	b.seq = seq
+}
+
+func (b *Buffer) Reset() {
+	*b = *NewBuffer(nil)
+}
+
+// HasUncommitedChanges returns true if there are changes that
+// have been made to the File after the last Commit.
+func (b *Buffer) HasUncommitedChanges() bool {
+	return b.cachedPiece != nil
+}
+
+// HasUndoableChanges returns true if there are changes to the File
+// that can be undone.
+func (b *Buffer) HasUndoableChanges() bool {
+	return b.HasUncommitedChanges() && b.cachedPiece.prev != nil
+}
+
+func (b *Buffer) HasRedoableChanges() bool {
+	return b.HasUncommitedChanges() && b.cachedPiece.next != nil
+}
+
+// IsDir returns true if the File has a synthetic backing of
+// a directory.
+// TODO(rjk): File is a facade that subsumes the entire Model
+// of an Edwood MVC. As such, it should look like a text buffer for
+// view/controller code. isdir is true for a specific kind of File innards
+// where we automatically alter the contents in various ways.
+// Automatically altering the contents should be expressed differently.
+// Directory listings should not be special cased throughout.
+func (b *Buffer) IsDir() bool {
+	return b.isdir
+}
+
+func (b *Buffer) SetDir(flag bool) {
+	b.isdir = flag
+}
+
+// TODO(sn0w): Not sure this works yet will have to test it exhaustively.
+func (b *Buffer) ReadC(q int) rune {
+	var resultBuffer []byte
+	resultBuffer = make([]byte, 4)
+
+	n, _ := b.ReadAt(resultBuffer, int64(q))
+	r, _ := utf8.DecodeRune(resultBuffer)
+	return r
+}
+
+func (b *Buffer) SaveableAndDirty() bool {
+	return (b.mod || b.Dirty() || b.cachedPiece != nil) && !b.IsDirOrScratch()
+}
+
+func (b *Buffer) Modded() {
+	b.mod = true
+	b.treatasclean = false
+}
+
+func (b *Buffer) TreatAsClean() {
+	b.treatasclean = true
+}
+
+func (b *Buffer) IsDirOrScratch() bool {
+	return b.oeb.isscratch || b.isdir
+}
+
+func (b *Buffer) String() string {
+	resultBuf := make([]byte, b.Size())
+	n, _ := b.ReadAt(resultBuf, 0)
+	return string(resultBuf)
+}
+
+func (b *Buffer) Read(q0 int, r []rune) (int, error) {
+	resultBuf := make([]byte, q0*4)
+	lenRead, err := b.ReadAt(resultBuf, int64(q0))
+	if err != nil || lenRead != len(r)*4 {
+		return -1, err
+	}
+	result, finalLen, _ := util.Cvttorunes(resultBuf, q0)
+	copy(r, result)
+	return finalLen, _
+}
+
+/*// TODO(flux): This is another design constraint of RuneArray - we want to efficiently
+// present contiguous segments of bytes, possibly by merging/flattening our tree
+// when a view is requested. This should be a rare operation...
+func (b *RuneArray) View(q0, q1 int) []rune {
+	if q1 > len(*b) {
+		q1 = len(*b)
+	}
+	return (*b)[q0:q1]
+}*/
+
+func (b *Buffer) View(q0, q1 int64) []rune {
+	if q1 > b.Size() {
+		q1 = b.Size()
+	}
+	buffLen := (q1 - 1) - q0
+	resultBuffer := make([]byte, buffLen*4)
+	n, _ := b.ReadAt(resultBuffer, q0*4)
+	runes, _, _ := util.Cvttorunes(resultBuffer, n)
+	return runes
+}
+func (b *Buffer) Load(q0 int, d []byte) (n int, hasNulls bool) {
+
+	runes, _, hasNulls := util.Cvttorunes(d, len(d))
+
+	// Would appear to require a commit operation.
+	// NB: Runs the observers.
+	f.InsertAt(q0, runes)
+
+	return len(runes), hasNulls
+}
+
+/*func (f *File) InsertAt(p0 int, s []rune) {
+	f.treatasclean = false
+	if p0 > f.b.Nc() {
+		panic("internal error: fileinsert")
+	}
+	if f.seq > 0 {
+		f.Uninsert(&f.delta, p0, len(s))
+	}
+	f.b.Insert(p0, s)
+	if len(s) != 0 {
+		f.Modded()
+	}
+	f.oeb.inserted(p0, s)
+}
+*/
+func (b *Buffer) InsertAt(p0 int, s []rune) {
+	b.treatasclean = false
+	if int64(p0) > b.Size() {
+		panic("internal error: fileinsert")
+	}
+	if b.seq > 0 {
+		// TODO(sn0w): Add the uninsert function here once it is ready.
+	}
+	b.Insert(p0, s)
+}
+
+// Nr returns the number of runes in the buffer
+func (b *Buffer) Nr() int64 {
+	var size int64
+	for p := b.begin; p != nil; p = p.next {
+		size += int64(utf8.RuneCount(p.data))
+	}
+	return size
 }
