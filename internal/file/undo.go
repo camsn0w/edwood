@@ -129,18 +129,18 @@ func NewBuffer(content []byte) *Buffer {
 
 // Insert inserts the data at the given offset in the buffer. An error is return when the
 // given offset is invalid.
-func (b *Buffer) Insert(off int64, data []byte) error {
+func (b *Buffer) Insert(off int64, data []byte) (error, bool) {
 	if len(data) == 0 {
-		return nil
+		return nil, false
 	}
 
 	p, offset := b.findPiece(off)
 	if p == nil {
-		return ErrWrongOffset
+		return ErrWrongOffset, false
 	} else if p == b.cachedPiece {
 		// just update the last Inserted piece
 		p.insert(offset, data)
-		return nil
+		return nil, false
 	}
 
 	c := b.newChange(off)
@@ -156,9 +156,9 @@ func (b *Buffer) Insert(off int64, data []byte) error {
 		// piece. That is we have 3 new pieces one containing the content
 		// before the insertion point then one holding the newly Inserted
 		// text and one holding the content after the insertion point.
-		before := b.newPiece(p.data[:offset], p.prev, nil)
+		before := b.newPiece(p.data.Byte()[:offset], p.prev, nil)
 		pnew = b.newPiece(data, before, nil)
-		after := b.newPiece(p.data[offset:], pnew, p.next)
+		after := b.newPiece(p.data.Byte()[offset:], pnew, p.next)
 		before.next = pnew
 		pnew.next = after
 		c.new = newSpan(before, after)
@@ -167,7 +167,7 @@ func (b *Buffer) Insert(off int64, data []byte) error {
 
 	b.cachedPiece = pnew
 	swapSpans(c.old, c.new)
-	return nil
+	return nil, pnew.data.HasNull()
 }
 
 // Delete deletes the portion of the length at the given offset. An error is returned
@@ -229,17 +229,17 @@ func (b *Buffer) Delete(off, length int64) error {
 		end = p
 
 		beg := p.len() + int(length-cur)
-		newBuf := make([]byte, len(p.data[beg:]))
-		copy(newBuf, p.data[beg:])
+		newBuf := make([]byte, len(p.data.Byte()[beg:]))
+		copy(newBuf, p.data.Byte()[beg:])
 		after = b.newPiece(newBuf, before, p.next)
 	}
 
 	var newStart, newEnd *piece
 	if midwayStart {
 		// we finally know which piece follows our newly allocated before piece
-		newBuf := make([]byte, len(start.data[:offset]))
-		copy(newBuf, start.data[:offset])
-		before.data = newBuf
+		newBuf := make([]byte, len(start.data.Byte()[:offset]))
+		copy(newBuf, start.data.Byte()[:offset])
+		before.data = *utf8Bytes.NewBytes(newBuf)
 		before.prev, before.next = start.prev, after
 
 		newStart = before
@@ -291,7 +291,7 @@ func (b *Buffer) newPiece(data []byte, prev, next *piece) *piece {
 		id:   b.piecesCnt,
 		prev: prev,
 		next: next,
-		data: data,
+		data: *utf8Bytes.NewBytes(data),
 	}
 }
 
@@ -415,7 +415,7 @@ func (b *Buffer) ReadAt(data []byte, off int64) (n int, err error) {
 	}
 
 	for n < len(data) && p != nil {
-		n += copy(data[n:], p.data[off:])
+		n += copy(data[n:], p.data.Byte()[off:])
 		p = p.next
 		off = 0
 	}
@@ -620,8 +620,7 @@ func (b *Buffer) View(q0, q1 int64) []rune {
 func (b *Buffer) Load(q0 int, d []byte) (n int, hasNulls bool) {
 	// Would appear to require a commit operation.
 	// NB: Runs the observers.
-	hasNulls = utf8.
-		b.InsertAt(q0, d)
+	hasNulls = b.InsertAt(q0, d)
 
 	return utf8.RuneCount(d), hasNulls
 }
@@ -641,7 +640,7 @@ func (b *Buffer) Load(q0 int, d []byte) (n int, hasNulls bool) {
 	f.oeb.inserted(p0, s)
 }
 */
-func (b *Buffer) InsertAt(p0 int, s []byte) {
+func (b *Buffer) InsertAt(p0 int, s []byte) bool {
 	b.treatasclean = false
 	if int64(p0) > b.Size() {
 		panic("internal error: fileinsert")
@@ -649,14 +648,15 @@ func (b *Buffer) InsertAt(p0 int, s []byte) {
 	if b.seq > 0 {
 		// TODO(sn0w): Add the uninsert function here once it is ready.
 	}
-	_ = b.Insert(int64(p0), s)
+	_, hasNulls := b.Insert(int64(p0), s)
+	return hasNulls
 }
 
 // Nr returns the number of runes in the buffer
 func (b *Buffer) Nr() int64 {
 	var size int64
 	for p := b.begin; p != nil; p = p.next {
-		size += int64(utf8.RuneCount(p.data))
+		size += int64(p.data.RuneCount())
 	}
 	return size
 }
