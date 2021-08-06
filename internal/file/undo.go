@@ -597,16 +597,6 @@ func (b *Buffer) Read(q0 int, r []rune) (int, error) {
 	return finalLen, _
 }
 
-/*// TODO(flux): This is another design constraint of RuneArray - we want to efficiently
-// present contiguous segments of bytes, possibly by merging/flattening our tree
-// when a view is requested. This should be a rare operation...
-func (b *RuneArray) View(q0, q1 int) []rune {
-	if q1 > len(*b) {
-		q1 = len(*b)
-	}
-	return (*b)[q0:q1]
-}*/
-
 func (b *Buffer) View(q0, q1 int64) []rune {
 	if q1 > b.Size() {
 		q1 = b.Size()
@@ -625,21 +615,6 @@ func (b *Buffer) Load(q0 int, d []byte) (n int, hasNulls bool) {
 	return utf8.RuneCount(d), hasNulls
 }
 
-/*func (f *File) InsertAt(p0 int, s []rune) {
-	f.treatasclean = false
-	if p0 > f.b.Nc() {
-		panic("internal error: fileinsert")
-	}
-	if f.seq > 0 {
-		f.Uninsert(&f.delta, p0, len(s))
-	}
-	f.b.Insert(p0, s)
-	if len(s) != 0 {
-		f.Modded()
-	}
-	f.oeb.inserted(p0, s)
-}
-*/
 func (b *Buffer) InsertAt(p0 int, s []byte) bool {
 	b.treatasclean = false
 	if int64(p0) > b.Size() {
