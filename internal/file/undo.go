@@ -81,6 +81,7 @@ package file
 
 import (
 	"errors"
+	"github.com/rjkroege/edwood/internal/utf8Bytes"
 	"github.com/rjkroege/edwood/internal/util"
 	"io"
 	"time"
@@ -492,22 +493,22 @@ func swapSpans(old, new span) {
 type piece struct {
 	id         int
 	prev, next *piece
-	data       []byte
+	data       utf8Bytes.Bytes
 }
 
 func (p *piece) len() int {
-	return len(p.data)
+	return len(p.data.Byte())
 }
 
 func (p *piece) insert(off int, data []byte) {
-	p.data = append(p.data[:off], append(data, p.data[off:]...)...)
+	p.data.Init(append(p.data.Byte()[:off], append(data, p.data.Byte()[off:]...)...))
 }
 
 func (p *piece) delete(off int, length int64) bool {
-	if int64(off)+length > int64(len(p.data)) {
+	if int64(off)+length > int64(len(p.data.Byte())) {
 		return false
 	}
-	p.data = append(p.data[:off], p.data[off+int(length):]...)
+	p.data.Init(append(p.data.Byte()[:off], p.data.Byte()[off+int(length):]...))
 	return true
 }
 
@@ -617,14 +618,12 @@ func (b *Buffer) View(q0, q1 int64) []rune {
 	return runes
 }
 func (b *Buffer) Load(q0 int, d []byte) (n int, hasNulls bool) {
-
-	runes, _, hasNulls := util.Cvttorunes(d, len(d))
-
 	// Would appear to require a commit operation.
 	// NB: Runs the observers.
-	f.InsertAt(q0, runes)
+	hasNulls = utf8.
+		b.InsertAt(q0, d)
 
-	return len(runes), hasNulls
+	return utf8.RuneCount(d), hasNulls
 }
 
 /*func (f *File) InsertAt(p0 int, s []rune) {
@@ -642,7 +641,7 @@ func (b *Buffer) Load(q0 int, d []byte) (n int, hasNulls bool) {
 	f.oeb.inserted(p0, s)
 }
 */
-func (b *Buffer) InsertAt(p0 int, s []rune) {
+func (b *Buffer) InsertAt(p0 int, s []byte) {
 	b.treatasclean = false
 	if int64(p0) > b.Size() {
 		panic("internal error: fileinsert")
@@ -650,7 +649,7 @@ func (b *Buffer) InsertAt(p0 int, s []rune) {
 	if b.seq > 0 {
 		// TODO(sn0w): Add the uninsert function here once it is ready.
 	}
-	b.Insert(p0, s)
+	_ = b.Insert(int64(p0), s)
 }
 
 // Nr returns the number of runes in the buffer
