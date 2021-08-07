@@ -376,6 +376,6 @@ func (e *ObservableEditableBuffer) SetEpsilon(epsilon []*Undo) {
 // GetCache is a Getter for file.cache for use in tests.
 func (e *ObservableEditableBuffer) GetCache() []rune {
 	rawData := e.f.cachedPiece.data
-	cacheAsRunes, _, _ := util.Cvttorunes(rawData, len(rawData)/4)
+	cacheAsRunes, _, _ := util.Cvttorunes(rawData.Byte(), rawData.RuneCount())
 	return cacheAsRunes
 }
