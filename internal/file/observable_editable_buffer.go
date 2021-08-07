@@ -333,8 +333,8 @@ func (e *ObservableEditableBuffer) IndexRune(r rune) int {
 }
 
 // Equal is a forwarding function for rune_array.Equal.
-func (e *ObservableEditableBuffer) Equal(s []rune) bool {
-	return e.f.b.Equal(s)
+func (e *ObservableEditableBuffer) Equal(s []byte) bool {
+	return e.f.Equal(s)
 }
 
 // Nbyte is a forwarding function for rune_array.Nbyte.

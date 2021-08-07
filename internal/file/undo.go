@@ -635,3 +635,7 @@ func (b *Buffer) Nr() int64 {
 	}
 	return size
 }
+
+func (b *Buffer) Equal(rawBytes []byte) bool {
+	return b.String() == string(rawBytes)
+}
