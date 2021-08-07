@@ -338,8 +338,8 @@ func (e *ObservableEditableBuffer) Equal(s []rune) bool {
 }
 
 // Nbyte is a forwarding function for rune_array.Nbyte.
-func (e *ObservableEditableBuffer) Nbyte() int {
-	return e.f.b.Nbyte()
+func (e *ObservableEditableBuffer) Nbyte() int64 {
+	return e.f.Size()
 }
 
 // Setnameandisscratch updates the oeb.details.name and isscratch bit
