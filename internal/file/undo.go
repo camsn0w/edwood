@@ -81,7 +81,7 @@ package file
 
 import (
 	"errors"
-	"github.com/rjkroege/edwood/internal/utf8Bytes"
+	"github.com/rjkroege/edwood/internal/utf8bytes"
 	"github.com/rjkroege/edwood/internal/util"
 	"io"
 	"time"
@@ -493,7 +493,7 @@ func swapSpans(old, new span) {
 type piece struct {
 	id         int
 	prev, next *piece
-	data       utf8Bytes.Bytes
+	data       utf8bytes.Bytes
 }
 
 func (p *piece) len() int {
