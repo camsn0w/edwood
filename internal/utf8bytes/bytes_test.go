@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package utf8Bytes
+package utf8bytes
 
 import (
-	"fmt"
+	"bytes"
 	"math/rand"
 	"testing"
 	"unicode/utf8"
@@ -23,13 +23,13 @@ var testStrings = []string{
 func TestScanForwards(t *testing.T) {
 	for _, s := range testStrings {
 		runes := []rune(s)
-		bytes := NewBytes([]byte(s))
-		if bytes.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), bytes.RuneCount())
+		b := NewBytes([]byte(s))
+		if b.RuneCount() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
 		}
 		for i, expect := range runes {
-			got := bytes.At(i)
+			got := b.At(i)
 			if got != expect {
 				t.Errorf("%s[%d]: expected %c (%U); got %c (%U)", s, i, expect, expect, got, got)
 			}
@@ -40,14 +40,14 @@ func TestScanForwards(t *testing.T) {
 func TestScanBackwards(t *testing.T) {
 	for _, s := range testStrings {
 		runes := []rune(s)
-		bytes := NewBytes([]byte(s))
-		if bytes.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), bytes.RuneCount())
+		b := NewBytes([]byte(s))
+		if b.RuneCount() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
 		}
 		for i := len(runes) - 1; i >= 0; i-- {
 			expect := runes[i]
-			got := bytes.At(i)
+			got := b.At(i)
 			if got != expect {
 				t.Errorf("%s[%d]: expected %c (%U); got %c (%U)", s, i, expect, expect, got, got)
 			}
@@ -68,15 +68,15 @@ func TestRandomAccess(t *testing.T) {
 			continue
 		}
 		runes := []rune(s)
-		bytes := NewBytes([]byte(s))
-		if bytes.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), bytes.RuneCount())
+		b := NewBytes([]byte(s))
+		if b.RuneCount() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
 		}
 		for j := 0; j < randCount(); j++ {
 			i := rand.Intn(len(runes))
 			expect := runes[i]
-			got := bytes.At(i)
+			got := b.At(i)
 			if got != expect {
 				t.Errorf("%s[%d]: expected %c (%U); got %c (%U)", s, i, expect, expect, got, got)
 			}
@@ -90,9 +90,9 @@ func TestRandomSliceAccess(t *testing.T) {
 			continue
 		}
 		runes := []rune(s)
-		bytes := NewBytes([]byte(s))
-		if bytes.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), bytes.RuneCount())
+		b := NewBytes([]byte(s))
+		if b.RuneCount() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
 		}
 		for k := 0; k < randCount(); k++ {
@@ -102,7 +102,7 @@ func TestRandomSliceAccess(t *testing.T) {
 				continue
 			}
 			expect := string(runes[i:j])
-			got := string(bytes.Slice(i, j))
+			got := string(b.Slice(i, j))
 			if got != expect {
 				t.Errorf("%s[%d:%d]: expected %q got %q", s, i, j, expect, got)
 			}
@@ -112,25 +112,40 @@ func TestRandomSliceAccess(t *testing.T) {
 
 func TestLimitSliceAccess(t *testing.T) {
 	for _, s := range testStrings {
-		bytes := NewBytes([]byte(s))
+		b := NewBytes([]byte(s))
 
-		if string(bytes.Slice(0, 0)) != "" {
+		if string(b.Slice(0, 0)) != "" {
 			t.Error("failure with empty slice at beginning")
 			t.Error("Failed with string: ", s)
-
-			stuffsBegin := bytes.Slice(0, 0)
-			if stuffsBegin != nil {
-				println("salkdjaslkdj")
-			}
-			fmt.Printf("StuffsBegin: %v\n", stuffsBegin)
 		}
 		nr := utf8.RuneCountInString(s)
 
-		if string(bytes.Slice(nr, nr)) != "" {
+		if string(b.Slice(nr, nr)) != "" {
 			t.Error("failure with empty slice at end")
+		}
+	}
+}
 
-			stuffsEnd := bytes.Slice(nr, nr)
-			fmt.Printf("StuffsEnd: %v\n", stuffsEnd)
+func TestBytes_Read(t *testing.T) {
+	for _, s := range testStrings {
+		b := NewBytes([]byte(s))
+		strLen := len(s)
+		var readTo int
+		if strLen == 0 {
+			readTo = 0
+		} else {
+			readTo = rand.Intn(strLen)
+		}
+
+		got := make([]byte, readTo)
+		b.Read(got)
+
+		reader := bytes.NewReader(b.Byte())
+		wanted := make([]byte, readTo)
+		reader.Read(wanted)
+
+		if string(got) != string(wanted) {
+			t.Errorf("Expected: %s, got: %s\n", got, wanted)
 		}
 	}
 }

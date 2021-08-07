@@ -3,7 +3,8 @@
 // license that can be found in the LICENSE file.
 
 // Package utf8Bytes provides an efficient way to index bytes by rune rather than by byte.
-package utf8Bytes // import "golang.org/x/exp/utf8Bytes"
+// utf8Bytes is a modified version of utf8string found at "https://cs.opensource.google/go/x/exp/+/master:utf8string/"
+package utf8bytes // import "golang.org/x/exp/utf8Bytes"
 
 import (
 	"errors"
@@ -205,6 +206,12 @@ func (b *Bytes) HasNull() bool {
 		}
 	}
 	return false
+}
+
+// Read implements the io.Reader interface
+func (b *Bytes) Read(buf []byte) (n int, err error) {
+	n = copy(buf, b.Byte())
+	return n, nil
 }
 
 var outOfRange = errors.New("utf8Bytes: index out of range")
