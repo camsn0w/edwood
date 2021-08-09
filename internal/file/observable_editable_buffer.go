@@ -328,8 +328,8 @@ func (e *ObservableEditableBuffer) Reader(q0 int64, q1 int64) io.Reader {
 }
 
 // IndexRune is a forwarding function for rune_array.IndexRune.
-func (e *ObservableEditableBuffer) IndexRune(r rune) int {
-	return e.f.b.IndexRune(r)
+func (e *ObservableEditableBuffer) IndexRune(r rune) int64 {
+	return e.f.IndexRune(r)
 }
 
 // Equal is a forwarding function for rune_array.Equal.

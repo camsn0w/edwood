@@ -80,7 +80,6 @@
 package file
 
 import (
-	"bytes"
 	"errors"
 	"github.com/rjkroege/edwood/internal/utf8bytes"
 	"github.com/rjkroege/edwood/internal/util"
@@ -645,4 +644,13 @@ func (b *Buffer) Equal(rawBytes []byte) bool {
 func (b *Buffer) Reader(q0, q1 int64) io.Reader {
 	newStr := []byte(b.String())[q0:q1]
 	return strings.NewReader(string(newStr))
+}
+
+func (b *Buffer) IndexRune(r rune) int64 {
+	for i := int64(0); i < b.Nr(); i++ {
+		if b.ReadC(i) == r {
+			return i
+		}
+	}
+	return -1
 }
