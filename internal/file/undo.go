@@ -239,7 +239,7 @@ func (b *Buffer) Delete(off, length int64) error {
 		// we finally know which piece follows our newly allocated before piece
 		newBuf := make([]byte, len(start.data.Byte()[:offset]))
 		copy(newBuf, start.data.Byte()[:offset])
-		before.data = *utf8Bytes.NewBytes(newBuf)
+		before.data = *utf8bytes.NewBytes(newBuf)
 		before.prev, before.next = start.prev, after
 
 		newStart = before
@@ -586,7 +586,7 @@ func (b *Buffer) String() string {
 	return string(resultBuf)
 }
 
-func (b *Buffer) Read(q0 int, r []rune) (int, error) {
+func (b *Buffer) ReadWithLen(q0 int, r []rune) (int, error) {
 	resultBuf := make([]byte, q0*4)
 	lenRead, err := b.ReadAt(resultBuf, int64(q0))
 	if err != nil || lenRead != len(r)*4 {
