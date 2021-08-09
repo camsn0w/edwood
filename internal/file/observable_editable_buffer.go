@@ -304,7 +304,7 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
-	return e.f.Read(q0, r)
+	return e.f.ReadWithLen(q0, r)
 }
 
 // View is a forwarding function for rune_array.View.
