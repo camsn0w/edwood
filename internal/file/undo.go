@@ -658,3 +658,18 @@ func (b *Buffer) IndexRune(r rune) int64 {
 func (b *Buffer) TreatAsDirty() bool {
 	return !b.treatasclean && b.Dirty()
 }
+
+// InsertAtWithoutCommit inserts s at p0 without creating
+// an undo record.
+// TODO(rjk): Remove this as a prelude to converting to undo.RuneArray
+// But preserve the cache. Every "small" insert should go into the cache.
+// It almost certainly greatly improves performance for a series of single
+// character insertions.
+func (b *Buffer) InsertAtWithoutCommit(p0 int, s []rune) {
+	b.treatasclean = false
+	if int64(p0) > b.Nr()+int64(b.cachedPiece.data.RuneCount()) {
+		panic("Undo.Buffer.InsertAtWithoutCommit insertion off the end")
+	}
+	b.cachedPiece.insert(p0, []byte(string(s)))
+	b.oeb.inserted(p0, s)
+}
