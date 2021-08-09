@@ -214,8 +214,13 @@ func (e *ObservableEditableBuffer) SetName(name string) {
 }
 
 // Undo is a forwarding function for file.Undo.
-func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
-	return e.f.Undo(isundo)
+func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int64, ok bool) {
+	ok = true
+	n, off := e.f.NewUndo()
+	if off == -1 {
+		ok = false
+	}
+	return n, n + off, ok
 }
 
 // DeleteAt is a forwarding function for file.DeleteAt.
