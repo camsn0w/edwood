@@ -219,8 +219,8 @@ func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
 }
 
 // DeleteAt is a forwarding function for file.DeleteAt.
-func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
-	e.f.DeleteAt(q0, q1)
+func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int64) {
+	e.f.Delete(q0, q1-q0)
 }
 
 // TreatAsClean is a forwarding function for file.TreatAsClean.
