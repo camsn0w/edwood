@@ -555,11 +555,11 @@ func (b *Buffer) SetDir(flag bool) {
 }
 
 // TODO(sn0w): Not sure this works yet will have to test it exhaustively.
-func (b *Buffer) ReadC(q int) rune {
+func (b *Buffer) ReadC(q int64) rune {
 	var resultBuffer []byte
 	resultBuffer = make([]byte, 4)
 
-	n, _ := b.ReadAt(resultBuffer, int64(q))
+	b.ReadAt(resultBuffer, q)
 	r, _ := utf8.DecodeRune(resultBuffer)
 	return r
 }
