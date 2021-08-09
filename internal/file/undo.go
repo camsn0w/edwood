@@ -616,15 +616,15 @@ func (b *Buffer) Load(q0 int, d []byte) (n int, hasNulls bool) {
 	return utf8.RuneCount(d), hasNulls
 }
 
-func (b *Buffer) InsertAt(p0 int, s []byte) bool {
+func (b *Buffer) InsertAt(p0 int64, s []byte) bool {
 	b.treatasclean = false
-	if int64(p0) > b.Size() {
+	if p0 > b.Size() {
 		panic("internal error: fileinsert")
 	}
 	if b.seq > 0 {
 		// TODO(sn0w): Add the uninsert function here once it is ready.
 	}
-	_, hasNulls := b.Insert(int64(p0), s)
+	_, hasNulls := b.Insert(p0, s)
 	return hasNulls
 }
 
