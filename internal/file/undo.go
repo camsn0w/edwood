@@ -291,7 +291,7 @@ func (b *Buffer) newPiece(data []byte, prev, next *piece) *piece {
 		id:   b.piecesCnt,
 		prev: prev,
 		next: next,
-		data: *utf8Bytes.NewBytes(data),
+		data: *utf8bytes.NewBytes(data),
 	}
 }
 
