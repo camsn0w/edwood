@@ -323,8 +323,8 @@ func (e *ObservableEditableBuffer) ResetBuffer() {
 }
 
 // Reader is a forwarding function for rune_array.Reader.
-func (e *ObservableEditableBuffer) Reader(q0 int, q1 int) io.Reader {
-	return e.f.b.Reader(q0, q1)
+func (e *ObservableEditableBuffer) Reader(q0 int64, q1 int64) io.Reader {
+	return e.f.Reader(q0, q1)
 }
 
 // IndexRune is a forwarding function for rune_array.IndexRune.

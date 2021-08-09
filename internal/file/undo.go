@@ -80,10 +80,12 @@
 package file
 
 import (
+	"bytes"
 	"errors"
 	"github.com/rjkroege/edwood/internal/utf8bytes"
 	"github.com/rjkroege/edwood/internal/util"
 	"io"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -638,4 +640,9 @@ func (b *Buffer) Nr() int64 {
 
 func (b *Buffer) Equal(rawBytes []byte) bool {
 	return b.String() == string(rawBytes)
+}
+
+func (b *Buffer) Reader(q0, q1 int64) io.Reader {
+	newStr := []byte(b.String())[q0:q1]
+	return strings.NewReader(string(newStr))
 }
