@@ -583,7 +583,7 @@ func (b *Buffer) IsDirOrScratch() bool {
 
 func (b *Buffer) String() string {
 	resultBuf := make([]byte, b.Size())
-	n, _ := b.ReadAt(resultBuf, 0)
+	b.ReadAt(resultBuf, 0)
 	return string(resultBuf)
 }
 
