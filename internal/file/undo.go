@@ -654,3 +654,7 @@ func (b *Buffer) IndexRune(r rune) int64 {
 	}
 	return -1
 }
+
+func (b *Buffer) TreatAsDirty() bool {
+	return !b.treatasclean && b.Dirty()
+}
