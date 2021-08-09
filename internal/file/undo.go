@@ -595,7 +595,7 @@ func (b *Buffer) ReadWithLen(q0 int, r []rune) (int, error) {
 	}
 	result, finalLen, _ := util.Cvttorunes(resultBuf, q0)
 	copy(r, result)
-	return finalLen, _
+	return finalLen, nil
 }
 
 func (b *Buffer) View(q0, q1 int64) []rune {

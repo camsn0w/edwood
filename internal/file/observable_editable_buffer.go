@@ -308,8 +308,8 @@ func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
 }
 
 // View is a forwarding function for rune_array.View.
-func (e *ObservableEditableBuffer) View(q0 int, q1 int) []rune {
-	return e.f.b.View(q0, q1)
+func (e *ObservableEditableBuffer) View(q0, q1 int64) []rune {
+	return e.f.View(q0, q1)
 }
 
 // String is a forwarding function for rune_array.String.
