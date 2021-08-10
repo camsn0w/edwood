@@ -126,8 +126,8 @@ func (e *ObservableEditableBuffer) Clean() {
 }
 
 // Size is a forwarding function for file.Size.
-func (e *ObservableEditableBuffer) Size() int64 {
-	return e.f.Size() / 4 // Size is returned in bytes, we want the size in runes
+func (e *ObservableEditableBuffer) Size() int {
+	return int(e.f.Nr()) // Size is returned in bytes, we want the size in runes
 }
 
 // Mark is a forwarding function for file.Mark.
@@ -166,13 +166,13 @@ func (e *ObservableEditableBuffer) SetDir(flag bool) {
 }
 
 // Nr is a forwarding function for file.Nr.
-func (e *ObservableEditableBuffer) Nr() int64 {
-	return e.f.Size()
+func (e *ObservableEditableBuffer) Nr() int {
+	return int(e.f.Nr())
 }
 
 // ReadC is a forwarding function for file.ReadC.
 func (e *ObservableEditableBuffer) ReadC(q int) rune {
-	return e.f.ReadC(q)
+	return e.f.ReadC(int64(q))
 }
 
 // SaveableAndDirty is a forwarding function for file.SaveableAndDirty.
@@ -189,7 +189,7 @@ func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n i
 	if sethash {
 		e.SetHash(CalcHash(d))
 	}
-	n, hasNulls = e.f.Load(q0, d)
+	n, hasNulls = e.f.Load(int64(q0), d)
 	return n, hasNulls, err
 }
 
@@ -200,7 +200,7 @@ func (e *ObservableEditableBuffer) Dirty() bool {
 
 // InsertAt is a forwarding function for file.InsertAt.
 func (e *ObservableEditableBuffer) InsertAt(p0 int, b []byte) {
-	e.f.InsertAt(p0, b)
+	e.f.InsertAt(int64(p0), b)
 }
 
 // SetName sets the name of the backing for this file.
@@ -214,18 +214,22 @@ func (e *ObservableEditableBuffer) SetName(name string) {
 }
 
 // Undo is a forwarding function for file.Undo.
-func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int64, ok bool) {
+func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
+	if !isundo {
+		off, n := e.f.Redo()
+		return int(n), int(n + off), ok
+	}
 	ok = true
 	n, off := e.f.NewUndo()
 	if off == -1 {
 		ok = false
 	}
-	return n, n + off, ok
+	return int(n), int(n + off), ok
 }
 
 // DeleteAt is a forwarding function for file.DeleteAt.
-func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int64) {
-	e.f.Delete(q0, q1-q0)
+func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
+	e.f.Delete(int64(q0), int64(q1-q0))
 }
 
 // TreatAsClean is a forwarding function for file.TreatAsClean.
@@ -270,7 +274,7 @@ func (e *ObservableEditableBuffer) Seq() int {
 
 // RedoSeq is a getter for file.details.RedoSeq.
 func (e *ObservableEditableBuffer) RedoSeq() int {
-	return e.f.RedoSeq()
+	return 0
 }
 
 // inserted is a forwarding function for text.inserted.
@@ -309,12 +313,16 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
-	return e.f.ReadWithLen(q0, r)
+	resultBuf := make([]byte, cap(r)*4)
+	n, _ := e.f.ReadAt(resultBuf, int64(q0)*4)
+	resultRunes, _, _ := util.Cvttorunes(resultBuf, n)
+	copy(r, resultRunes)
+	return n, nil
 }
 
 // View is a forwarding function for rune_array.View.
-func (e *ObservableEditableBuffer) View(q0, q1 int64) []rune {
-	return e.f.View(q0, q1)
+func (e *ObservableEditableBuffer) View(q0, q1 int) []rune {
+	return e.f.View(int64(q0), int64(q1))
 }
 
 // String is a forwarding function for rune_array.String.
@@ -328,13 +336,13 @@ func (e *ObservableEditableBuffer) ResetBuffer() {
 }
 
 // Reader is a forwarding function for rune_array.Reader.
-func (e *ObservableEditableBuffer) Reader(q0 int64, q1 int64) io.Reader {
-	return e.f.Reader(q0, q1)
+func (e *ObservableEditableBuffer) Reader(q0 int, q1 int) io.Reader {
+	return e.f.Reader(int64(q0), int64(q1))
 }
 
 // IndexRune is a forwarding function for rune_array.IndexRune.
-func (e *ObservableEditableBuffer) IndexRune(r rune) int64 {
-	return e.f.IndexRune(r)
+func (e *ObservableEditableBuffer) IndexRune(r rune) int {
+	return int(e.f.IndexRune(r))
 }
 
 // Equal is a forwarding function for rune_array.Equal.
@@ -343,8 +351,8 @@ func (e *ObservableEditableBuffer) Equal(s []byte) bool {
 }
 
 // Nbyte is a forwarding function for rune_array.Nbyte.
-func (e *ObservableEditableBuffer) Nbyte() int64 {
-	return e.f.Size()
+func (e *ObservableEditableBuffer) Nbyte() int {
+	return int(e.f.Size())
 }
 
 // Setnameandisscratch updates the oeb.details.name and isscratch bit
