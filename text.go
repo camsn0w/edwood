@@ -215,8 +215,8 @@ func (t *Text) Close() {
 func (t *Text) Columnate(names []string, widths []int) {
 	var colw, mint, maxt, ncol, nrow int
 	q1 := 0
-	Lnl := []rune("\n")
-	Ltab := []rune("\t")
+	Lnl := []byte("\n")
+	Ltab := []byte("\t")
 
 	if t.file.HasMultipleObservers() {
 		panic("Text.Columnate is only for directories that can't have zerox")
@@ -247,9 +247,8 @@ func (t *Text) Columnate(names []string, widths []int) {
 	q1 = 0
 	for i := 0; i < nrow; i++ {
 		for j := i; j < len(names); j += nrow {
-			dl := bytetorune([]byte(names[j]))
-			t.file.InsertAt(q1, dl)
-			q1 += len(dl)
+			t.file.InsertAt(q1, []byte(names[j]))
+			q1 += len(names[j])
 			if j+nrow >= len(names) {
 				break
 			}
@@ -487,7 +486,7 @@ func (t *Text) Insert(q0 int, r []rune, tofile bool) {
 	if len(r) == 0 {
 		return
 	}
-	t.file.InsertAt(q0, r)
+	t.file.InsertAt(q0, []byte(string(r)))
 }
 
 func (t *Text) TypeCommit() {
