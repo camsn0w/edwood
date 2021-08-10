@@ -321,7 +321,7 @@ func (t *Buffer) insertString(off int, data string) {
 }
 
 func (t *Buffer) cacheInsertString(off int, data string) {
-	err := t.Insert(int64(off), []byte(data))
+	err, _ := t.Insert(int64(off), []byte(data))
 	if err != nil {
 		panic(err)
 	}
@@ -345,7 +345,7 @@ func (t *Buffer) printPieces() {
 		if p.next != nil {
 			next = p.next.id
 		}
-		fmt.Printf("%d, p:%d, n:%d = %s\n", p.id, prev, next, string(p.data))
+		fmt.Printf("%d, p:%d, n:%d = %s\n", p.id, prev, next, string(p.data.Byte()))
 	}
 	fmt.Println()
 }
@@ -364,7 +364,7 @@ func (t *Buffer) allContent() string {
 	var data []byte
 	p := t.begin.next
 	for p != t.end {
-		data = append(data, p.data...)
+		data = append(data, p.data.Byte()...)
 		p = p.next
 
 	}

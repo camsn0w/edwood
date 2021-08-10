@@ -116,10 +116,10 @@ func TestPutfile(t *testing.T) {
 		}
 	}
 
-	want := "Hello, 世界\n"
+	want := []byte("Hello, 世界\n")
 	w := &Window{
 		body: Text{
-			file: file2.MakeObservableEditableBuffer(filename, file2.RuneArray(want)),
+			file: file2.MakeObservableEditableBuffer(filename, want),
 		},
 	}
 	f := w.body.file
@@ -142,7 +142,7 @@ func TestPutfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("putfile failed: %v", err)
 	}
-	checkFile(t, want)
+	checkFile(t, string(want))
 
 	// mtime increased but hash is the same
 	increaseMtime(t, time.Second)
@@ -150,10 +150,10 @@ func TestPutfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("putfile failed: %v", err)
 	}
-	checkFile(t, want)
+	checkFile(t, string(want))
 
 	// mtime increased and hash changed
-	want = "Hello, 世界\nThis line added outside of Edwood.\n"
+	want = []byte("Hello, 世界\nThis line added outside of Edwood.\n")
 	err = ioutil.WriteFile(filename, []byte(""), 0644)
 	if err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
