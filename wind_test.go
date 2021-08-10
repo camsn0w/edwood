@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/rjkroege/edwood/internal/elog"
 	_ "github.com/rjkroege/edwood/internal/elog"
 	"github.com/rjkroege/edwood/internal/file"
 	"reflect"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/rjkroege/edwood/internal/edwoodtest"
 )
@@ -17,34 +17,25 @@ func TestWindowUndoSelection(t *testing.T) {
 	var (
 		word = file.RuneArray("hello")
 		p0   = 3
-		undo = &file.Undo{
-			T:   elog.Insert,
-			Buf: word,
-			P0:  p0,
-			N:   word.Nc(),
-		}
 	)
 	for _, tc := range []struct {
 		name           string
 		isundo         bool
 		q0, q1         int
 		wantQ0, wantQ1 int
-		delta, epsilon []*file.Undo
 	}{
-		{"undo", true, 14, 17, p0, p0 + word.Nc(), []*file.Undo{undo}, nil},
-		{"redo", false, 14, 17, p0, p0 + word.Nc(), nil, []*file.Undo{undo}},
-		{"undo (nil delta)", true, 14, 17, 14, 17, nil, nil},
-		{"redo (nil epsilon)", false, 14, 17, 14, 17, nil, nil},
+		{"undo", true, 14, 17, p0, p0 + word.Nc()},
+		{"redo", false, 14, 17, p0, p0 + word.Nc()},
+		{"undo (nil delta)", true, 14, 17, 14, 17},
+		{"redo (nil epsilon)", false, 14, 17, 14, 17},
 	} {
 		w := &Window{
 			body: Text{
 				q0:   tc.q0,
 				q1:   tc.q1,
-				file: file.MakeObservableEditableBufferTag(file.RuneArray("This is an example sentence.\n")),
+				file: file.MakeObservableEditableBufferTag([]byte("This is an example sentence.\n")),
 			},
 		}
-		w.body.file.SetDelta(tc.delta)
-		w.body.file.SetEpsilon(tc.epsilon)
 		w.Undo(tc.isundo)
 		if w.body.q0 != tc.wantQ0 || w.body.q1 != tc.wantQ1 {
 			t.Errorf("%v changed q0, q1 to %v, %v; want %v, %v",
@@ -87,7 +78,7 @@ func TestSetTag1(t *testing.T) {
 			t.Errorf("bad initial tag for file %q:\n got: %q\nwant: %q", name, got, want)
 		}
 
-		w.tag.file.InsertAt(w.tag.file.Nr(), []rune(extraSuffix))
+		w.tag.file.InsertAt(w.tag.file.Nr(), []byte(extraSuffix))
 		w.setTag1()
 		got = w.tag.file.String()
 		want = name + defaultSuffix + extraSuffix
@@ -98,13 +89,13 @@ func TestSetTag1(t *testing.T) {
 }
 
 func TestWindowClampAddr(t *testing.T) {
-	buf := file.RuneArray("Hello, 世界")
+	buf := []byte("Hello, 世界")
 
 	for _, tc := range []struct {
 		addr, want Range
 	}{
 		{Range{-1, -1}, Range{0, 0}},
-		{Range{100, 100}, Range{buf.Nc(), buf.Nc()}},
+		{Range{100, 100}, Range{utf8.RuneCount(buf), utf8.RuneCount(buf)}},
 	} {
 		w := &Window{
 			addr: tc.addr,
@@ -132,7 +123,7 @@ func TestWindowParseTag(t *testing.T) {
 	} {
 		w := &Window{
 			tag: Text{
-				file: file.MakeObservableEditableBufferTag(file.RuneArray(tc.tag)),
+				file: file.MakeObservableEditableBufferTag([]byte(tc.tag)),
 			},
 		}
 		if got, want := w.ParseTag(), tc.filename; got != want {
@@ -146,7 +137,7 @@ func TestWindowClearTag(t *testing.T) {
 	want := "/foo bar/test.txt Del Snarf Undo Put |"
 	w := &Window{
 		tag: Text{
-			file: file.MakeObservableEditableBufferTag(file.RuneArray(tag)),
+			file: file.MakeObservableEditableBufferTag([]byte(tag)),
 		},
 	}
 	w.ClearTag()

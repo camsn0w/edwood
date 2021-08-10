@@ -2,6 +2,7 @@ package file
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestDelObserver(t *testing.T) {
-	f := MakeObservableEditableBufferTag(RuneArray{})
+	f := MakeObservableEditableBufferTag([]byte{})
 
 	testData := []*testText{{file: MakeObservableEditableBuffer("World sourdoughs from antiquity", nil)},
 		{file: MakeObservableEditableBuffer("Willowbrook Association Handbook: 2011", nil)},
@@ -52,11 +53,15 @@ func TestFileInsertAtWithoutCommit(t *testing.T) {
 	f := MakeObservableEditableBuffer("edwood", nil)
 
 	f.InsertAtWithoutCommit(0, []rune(s1))
-
+	println("Printing str")
+	for i := 0; i < f.Size(); i++ {
+		fmt.Printf("Char: %U \n", f.ReadC(i))
+	}
+	println("Done printing str")
 	i := 0
 	for _, r := range s1 {
 		if got, want := f.ReadC(i), r; got != want {
-			t.Errorf("ReadC failed. got %v want % v", got, want)
+			t.Errorf("ReadC failed. got %v want %v", string(got), string(want))
 		}
 		i++
 	}
@@ -89,26 +94,26 @@ func TestFileInsertAt(t *testing.T) {
 	check(t, "TestFileInsertAt after InsertAtWithoutCommits", f,
 		&fileStateSummary{false, true, false, true, s1})
 
-	f.InsertAt(f.Nr(), []rune(s2))
+	f.InsertAt(f.Nr(), []byte(s2))
 	f.Commit()
 
 	check(t, "TestFileUndoRedo after InsertAt", f,
 		&fileStateSummary{false, true, false, true, s1 + s2})
 }
 
-func readwholefile(t *testing.T, f *File) string {
+func readwholefile(t *testing.T, f *ObservableEditableBuffer) string {
 	var sb strings.Builder
 
-	// Currently ReadAtRune does not return runes in the cache.
-	if f.HasUncommitedChanges() {
-		for i := 0; i < f.Nr(); i++ {
-			sb.WriteRune(f.ReadC(i))
-		}
-		return sb.String()
-	}
+	/*	// Currently ReadAtRune does not return runes in the cache.
+		if f.HasUncommitedChanges() {
+			for i := 0; i < f.Nr(); i++ {
+				sb.WriteRune(f.ReadC(i))
+			}
+			return sb.String()
+		}*/
 
 	targetbuffer := make([]rune, f.Nr())
-	if _, err := f.ReadAtRune(targetbuffer, 0); err != nil {
+	if _, err := f.Read(0, targetbuffer); err != nil {
 		t.Fatalf("readwhole could not read File %v", f)
 	}
 
@@ -128,11 +133,10 @@ func TestFileUndoRedo(t *testing.T) {
 	check(t, "TestFileUndoRedo on an empty buffer", f,
 		&fileStateSummary{false, false, false, false, ""})
 
-	f.Mark(1)
-	f.InsertAt(0, []rune(s1))
-	f.InsertAt(f.Nr(), []rune(s2))
+	//f.Mark(1)
+	f.InsertAt(0, []byte(s1+s2))
 
-	check(t, "TestFileUndoRedo after 2 inserts", f,
+	check(t, "TestFileUndoRedo after 1 inserts", f,
 		&fileStateSummary{false, true, false, true, s1 + s2})
 
 	// Because of how seq managed the number of Undo actions, this
@@ -160,7 +164,7 @@ type fileStateSummary struct {
 }
 
 func check(t *testing.T, testname string, oeb *ObservableEditableBuffer, fss *fileStateSummary) {
-	f := oeb.f
+	f := oeb
 	if got, want := f.HasUncommitedChanges(), fss.HasUncommitedChanges; got != want {
 		t.Errorf("%s: HasUncommitedChanges failed. got %v want %v", testname, got, want)
 	}
@@ -183,10 +187,10 @@ func TestFileUndoRedoWithMark(t *testing.T) {
 
 	// Force Undo to operate.
 	f.Mark(1)
-	f.InsertAt(0, []rune(s1))
+	f.InsertAt(0, []byte(s1))
 
 	f.Mark(2)
-	f.InsertAt(f.Nr(), []rune(s2))
+	f.InsertAt(f.Nr(), []byte(s2))
 
 	check(t, "TestFileUndoRedoWithMark after 2 inserts", f,
 		&fileStateSummary{false, true, false, true, s1 + s2})
@@ -208,7 +212,7 @@ func TestFileLoadNoUndo(t *testing.T) {
 	f := MakeObservableEditableBuffer("edwood", nil)
 
 	// Insert some pre-existing content.
-	f.InsertAt(0, []rune(s1))
+	f.InsertAt(0, []byte(s1))
 
 	buffy := bytes.NewBuffer([]byte(s2 + s2))
 
@@ -289,8 +293,8 @@ func TestFileInsertDeleteUndo(t *testing.T) {
 	f.Mark(1)
 	f.Clean()
 
-	f.InsertAt(0, []rune(s1))
-	f.InsertAt(0, []rune(s2))
+	f.InsertAt(0, []byte(s1))
+	f.InsertAt(0, []byte(s2))
 	// After inserting two strings is an Undo point:  byehi 海老麺
 	f.Mark(2)
 
@@ -299,7 +303,7 @@ func TestFileInsertDeleteUndo(t *testing.T) {
 	// After deleting is an Undo point.
 	f.Mark(3)
 
-	f.InsertAt(f.Nr()-1, []rune(s1)) // yi 海老hi 海老麺
+	f.InsertAt(f.Nr()-1, []byte(s1)) // yi 海老hi 海老麺
 
 	check(t, "TestFileInsertDeleteUndo after setup", f,
 		&fileStateSummary{false, true, false, true, "yi 海老hi 海老麺麺"})
@@ -322,7 +326,7 @@ func TestFileRedoSeq(t *testing.T) {
 	// Empty File is an Undo point and considered clean
 
 	f.Mark(1)
-	f.InsertAt(0, []rune(s1))
+	f.InsertAt(0, []byte(s1))
 
 	check(t, "TestFileRedoSeq after setup", f,
 		&fileStateSummary{false, true, false, true, s1})
