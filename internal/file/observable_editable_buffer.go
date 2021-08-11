@@ -16,7 +16,7 @@ import (
 type ObservableEditableBuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
-	f            *File
+	f            *Buffer
 	Elog         elog.Elog
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -90,9 +90,8 @@ func (e *ObservableEditableBuffer) HasMultipleObservers() bool {
 }
 
 // MakeObservableEditableBuffer is a constructor wrapper for NewFile() to abstract File from the main program.
-func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEditableBuffer {
-	f := NewFile()
-	f.b = b
+func MakeObservableEditableBuffer(filename string, b []byte) *ObservableEditableBuffer {
+	f := NewBuffer(b)
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
@@ -106,9 +105,8 @@ func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEdita
 }
 
 // MakeObservableEditableBufferTag is a constructor wrapper for NewTagFile() to abstract File from the main program.
-func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
-	f := NewTagFile()
-	f.b = b
+func MakeObservableEditableBufferTag(b []byte) *ObservableEditableBuffer {
+	f := NewBuffer(b)
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
