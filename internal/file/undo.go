@@ -106,8 +106,6 @@ type Buffer struct {
 	isdir         bool
 	mod           bool
 	treatasclean  bool
-	seq           int
-	putseq        int
 }
 
 // NewBuffer initializes a new buffer with the given content as a starting point.
@@ -515,7 +513,6 @@ func (p *piece) delete(off int, length int64) bool {
 
 func (b *Buffer) Mark(seq int) {
 	b.Commit()
-	b.seq = seq
 }
 
 func (b *Buffer) Reset() {
@@ -620,9 +617,6 @@ func (b *Buffer) InsertAt(p0 int64, s []byte) bool {
 	b.treatasclean = false
 	if p0 > b.Size() {
 		panic("internal error: fileinsert")
-	}
-	if b.seq > 0 {
-		// TODO(sn0w): Add the uninsert function here once it is ready.
 	}
 	_, hasNulls := b.Insert(p0, s)
 	return hasNulls
