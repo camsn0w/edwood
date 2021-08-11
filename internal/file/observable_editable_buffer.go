@@ -124,9 +124,9 @@ func (e *ObservableEditableBuffer) Clean() {
 	e.f.Clean()
 }
 
-// Size is a forwarding function for file.Size.
+// Size is a forwarding function for Undo.Nr.
 func (e *ObservableEditableBuffer) Size() int {
-	return e.f.Size()
+	return int(e.f.Nr())
 }
 
 // Mark is a forwarding function for file.Mark.
