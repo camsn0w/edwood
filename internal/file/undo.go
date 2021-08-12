@@ -502,6 +502,7 @@ func (p *piece) delete(off int, length int64) bool {
 	return true
 }
 
+// Bytes returns the byte representation of the internal buffer.
 func (b *Buffer) Bytes() []byte {
 	byteBuf := make([]byte, 0, b.Size())
 	for p := b.begin; p != nil; p = p.next {
