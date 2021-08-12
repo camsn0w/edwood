@@ -291,11 +291,29 @@ func (b *Bytes) HasRedoableChanges() bool {
 	return b.buf.HasRedoableChanges()
 }
 
+// HasUndoableChanges is a forwarding function for undo.HasUndoableChanges.
 func (b *Bytes) HasUndoableChanges() bool {
-
+	return b.buf.HasRedoableChanges()
 }
 
-//
+func (b *Bytes) Load(q0 int, r []rune) int {
+
+	// Would appear to require a commit operation.
+	// NB: Runs the observers.
+	b.InsertAt(q0, r)
+
+	return len(r)
+}
+
+func (b *Bytes) InsertAt(p0 int, s []rune) {
+	b.buf.Insert(int64(p0), []byte(string(s)))
+}
+
+func (b *Bytes) DeleteAt(q0, q1 int) {
+	totalLen := len(b.Slice(q0, q1))
+	off := utf8.RuneLen(b.At(q0))
+	b.buf.Delete(int64(off), int64(totalLen))
+}
 
 var errOutOfRange = errors.New("utf8Bytes: index out of range")
 var errSliceOutOfRange = errors.New("utf8Bytes: slice index out of range")

@@ -3,6 +3,7 @@ package file
 import (
 	"errors"
 	"fmt"
+	"github.com/rjkroege/edwood/internal/util"
 	"io"
 	"io/ioutil"
 	"os"
@@ -186,7 +187,10 @@ func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n i
 	if sethash {
 		e.SetHash(CalcHash(d))
 	}
-	n, hasNulls = e.f.Load(q0, d)
+	runes, _, hasNulls := util.Cvttorunes(d, len(d))
+
+	n = e.f.Load(q0, runes)
+	e.inserted(q0, runes)
 	return n, hasNulls, err
 }
 
@@ -202,7 +206,11 @@ func (e *ObservableEditableBuffer) InsertAt(p0 int, s []rune) {
 
 // SetName is a forwarding function for file.SetName.
 func (e *ObservableEditableBuffer) SetName(name string) {
-	e.f.SetName(name)
+	if e.Name() == name {
+		return
+	}
+
+	e.Setnameandisscratch(name)
 }
 
 // Undo is a forwarding function for file.Undo.
