@@ -224,5 +224,12 @@ func (b *Bytes) Nb() int {
 	return int(b.buf.Size())
 }
 
+// Clean is a forwarding function for undo.Clean.
+func (b *Bytes) Clean() {
+	b.mod = false
+	b.treatasclean = false
+	b.buf.Clean()
+}
+
 var errOutOfRange = errors.New("utf8Bytes: index out of range")
 var errSliceOutOfRange = errors.New("utf8Bytes: slice index out of range")
