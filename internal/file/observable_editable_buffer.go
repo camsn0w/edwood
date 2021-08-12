@@ -17,7 +17,7 @@ import (
 type ObservableEditableBuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
-	f            *File
+	f            *Bytes
 	Elog         sam.Elog
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -91,13 +91,11 @@ func (e *ObservableEditableBuffer) HasMultipleObservers() bool {
 }
 
 // MakeObservableEditableBuffer is a constructor wrapper for NewFile() to abstract File from the main program.
-func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEditableBuffer {
-	f := NewFile()
-	f.b = b
+func MakeObservableEditableBuffer(filename string, b []byte) *ObservableEditableBuffer {
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
-		f:            f,
+		f:            NewBytes(b),
 		details:      &DiskDetails{Name: filename, Hash: Hash{}},
 		Elog:         sam.MakeElog(),
 		EditClean:    true,
@@ -107,13 +105,11 @@ func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEdita
 }
 
 // MakeObservableEditableBufferTag is a constructor wrapper for NewTagFile() to abstract File from the main program.
-func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
-	f := NewTagFile()
-	f.b = b
+func MakeObservableEditableBufferTag(b []byte) *ObservableEditableBuffer {
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
-		f:            f,
+		f:            NewBytes(b),
 		Elog:         sam.MakeElog(),
 		details:      &DiskDetails{Hash: Hash{}},
 		EditClean:    true,
