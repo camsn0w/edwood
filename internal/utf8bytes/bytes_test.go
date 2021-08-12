@@ -24,8 +24,8 @@ func TestScanForwards(t *testing.T) {
 	for _, s := range testStrings {
 		runes := []rune(s)
 		b := NewBytes([]byte(s))
-		if b.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
+		if b.Nr() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.Nr())
 			break
 		}
 		for i, expect := range runes {
@@ -41,8 +41,8 @@ func TestScanBackwards(t *testing.T) {
 	for _, s := range testStrings {
 		runes := []rune(s)
 		b := NewBytes([]byte(s))
-		if b.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
+		if b.Nr() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.Nr())
 			break
 		}
 		for i := len(runes) - 1; i >= 0; i-- {
@@ -69,8 +69,8 @@ func TestRandomAccess(t *testing.T) {
 		}
 		runes := []rune(s)
 		b := NewBytes([]byte(s))
-		if b.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
+		if b.Nr() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.Nr())
 			break
 		}
 		for j := 0; j < randCount(); j++ {
@@ -91,8 +91,8 @@ func TestRandomSliceAccess(t *testing.T) {
 		}
 		runes := []rune(s)
 		b := NewBytes([]byte(s))
-		if b.RuneCount() != len(runes) {
-			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
+		if b.Nr() != len(runes) {
+			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.Nr())
 			break
 		}
 		for k := 0; k < randCount(); k++ {

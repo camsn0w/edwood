@@ -66,8 +66,8 @@ func (b *Bytes) Bytes() []byte {
 	return b.buf.Bytes()
 }
 
-// RuneCount returns the number of runes (Unicode code points) in the Bytes.
-func (b *Bytes) RuneCount() int {
+// Nr returns the number of runes (Unicode code points) in the Bytes.
+func (b *Bytes) Nr() int {
 	return b.numRunes
 }
 
