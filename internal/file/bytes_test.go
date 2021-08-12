@@ -140,7 +140,7 @@ func TestBytes_Read(t *testing.T) {
 		got := make([]byte, readTo)
 		b.Read(got)
 
-		reader := bytes.NewReader(b.Byte())
+		reader := bytes.NewReader(b.Bytes())
 		wanted := make([]byte, readTo)
 		reader.Read(wanted)
 
