@@ -77,7 +77,7 @@
 // and deletions). An action is represented by any operations between two calls of
 // Commit method. Anything that happens between these two calls is a part of that
 // particular action.
-package file
+package undo
 
 import (
 	"errors"
