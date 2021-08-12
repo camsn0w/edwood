@@ -8,8 +8,9 @@ package utf8bytes // import "golang.org/x/exp/utf8Bytes"
 
 import (
 	"errors"
-	"github.com/rjkroege/edwood/internal/undo"
 	"unicode/utf8"
+
+	"github.com/rjkroege/edwood/internal/undo"
 )
 
 // Bytes wraps a regular bytes with a small structure that provides more
@@ -23,11 +24,13 @@ type Bytes struct {
 	b        *undo.Buffer
 	numRunes int
 	// If width > 0, the rune at runePos starts at bytePos and has the specified width.
-	width    int
-	bytePos  int
-	runePos  int
-	nonASCII int // byte index of the first non-ASCII rune.
-	oeb      *ObservableEditableBuffer
+	width        int
+	bytePos      int
+	runePos      int
+	nonASCII     int // byte index of the first non-ASCII rune.
+	mod          bool
+	treatasclean bool
+	isdir        bool
 }
 
 // NewBytes returns a new UTF-8 Bytes with the provided contents.
