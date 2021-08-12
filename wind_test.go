@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/edwoodtest"
 	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/sam"
