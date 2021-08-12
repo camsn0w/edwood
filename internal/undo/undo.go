@@ -510,3 +510,23 @@ func (b *Buffer) Bytes() []byte {
 	}
 	return byteBuf
 }
+
+// CacheLen returns the length of the cache, in bytes, it returns 0 if the cache is nil.
+func (b *Buffer) CacheLen() int {
+	if b.cachedPiece == nil || b.cachedPiece.data == nil {
+		return 0
+	} else {
+		return b.cachedPiece.len()
+	}
+}
+
+func (b *Buffer) HasRedoableChanges() bool {
+	if b.head > len(b.actions)-1 {
+		return false
+	}
+	return true
+}
+
+func (b *Buffer) HasUndoableChanges() bool {
+	return b.head != 0
+}

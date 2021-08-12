@@ -174,7 +174,7 @@ func (e *ObservableEditableBuffer) ReadC(q int) rune {
 
 // SaveableAndDirty is a forwarding function for file.SaveableAndDirty.
 func (e *ObservableEditableBuffer) SaveableAndDirty() bool {
-	return e.details.Name != "" && e.f.SaveableAndDirty()
+	return e.details.Name != "" && !e.IsDirOrScratch() && e.f.SaveableAndDirty()
 }
 
 // Load is a forwarding function for file.Load.
@@ -286,7 +286,7 @@ func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
 
 // IsDirOrScratch is a forwarding function for file.IsDirOrScratch.
 func (e *ObservableEditableBuffer) IsDirOrScratch() bool {
-	return e.f.IsDirOrScratch()
+	return e.f.IsDir() || e.isscratch
 }
 
 // TreatAsDirty is a forwarding function for file.TreatAsDirty.

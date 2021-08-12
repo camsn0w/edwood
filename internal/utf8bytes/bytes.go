@@ -265,5 +265,37 @@ func (b *Bytes) ReadC(q int) rune {
 	return b.At(q)
 }
 
+// Dirty is a forwarding function for undo.Buffer.Dirty.
+func (b *Bytes) Dirty() bool {
+	return b.buf.Dirty()
+}
+
+// SaveableAndDirty returns true if the File's contents differ from the
+// backing diskfile File.name, and the diskfile is plausibly writable
+// (not a directory or scratch file).
+func (b *Bytes) SaveableAndDirty() bool {
+	return b.mod || b.Dirty() || b.buf.CacheLen() > 0
+}
+
+// Commit is a forwarding function for undo.Buffer.Commit.
+func (b *Bytes) Commit() {
+	b.buf.Commit()
+}
+
+func (b *Bytes) HasUncommitedChanges() bool {
+	return b.buf.CacheLen() > 0
+}
+
+// HasRedoableChanges is a forwarding function for undo.HasRedoableChanges
+func (b *Bytes) HasRedoableChanges() bool {
+	return b.buf.HasRedoableChanges()
+}
+
+func (b *Bytes) HasUndoableChanges() bool {
+
+}
+
+//
+
 var errOutOfRange = errors.New("utf8Bytes: index out of range")
 var errSliceOutOfRange = errors.New("utf8Bytes: slice index out of range")
