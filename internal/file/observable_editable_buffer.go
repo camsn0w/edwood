@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/rjkroege/edwood/internal/sam"
+	"github.com/rjkroege/edwood/internal/utf8bytes"
 )
 
 // The ObservableEditableBuffer is used by the main program
@@ -17,7 +18,7 @@ import (
 type ObservableEditableBuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
-	f            *Bytes
+	f            *utf8bytes.Bytes
 	Elog         sam.Elog
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -95,12 +96,11 @@ func MakeObservableEditableBuffer(filename string, b []byte) *ObservableEditable
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
-		f:            NewBytes(b),
+		f:            utf8bytes.NewBytes(b),
 		details:      &DiskDetails{Name: filename, Hash: Hash{}},
 		Elog:         sam.MakeElog(),
 		EditClean:    true,
 	}
-	oeb.f.oeb = oeb
 	return oeb
 }
 
@@ -109,12 +109,11 @@ func MakeObservableEditableBufferTag(b []byte) *ObservableEditableBuffer {
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
-		f:            NewBytes(b),
+		f:            utf8bytes.NewBytes(b),
 		Elog:         sam.MakeElog(),
 		details:      &DiskDetails{Hash: Hash{}},
 		EditClean:    true,
 	}
-	oeb.f.oeb = oeb
 	return oeb
 }
 
