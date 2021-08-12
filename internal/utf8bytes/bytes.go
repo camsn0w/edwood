@@ -27,6 +27,7 @@ type Bytes struct {
 	bytePos  int
 	runePos  int
 	nonASCII int // byte index of the first non-ASCII rune.
+	oeb      *ObservableEditableBuffer
 }
 
 // NewBytes returns a new UTF-8 Bytes with the provided contents.
