@@ -231,5 +231,39 @@ func (b *Bytes) Clean() {
 	b.buf.Clean()
 }
 
+// Size returns the size of the underlying buf and cache, in runes
+func (b *Bytes) Size() int {
+	// TODO(sn0w): Not sure if this will include the cache as I planned, we will have to see.
+	return utf8.RuneCount(b.Bytes())
+}
+
+// Mark sets an Undo point and
+// and discards Redo records. Call this at the beginning
+// of a set of edits that ought to be undo-able as a unit.
+func (b *Bytes) Mark(seq int) {
+	b.buf.Commit()
+}
+
+// Reset deletes the undo and redo logs.
+func (b *Bytes) Reset() {
+	// TODO(sn0w): Not sure if this works.
+	*b = *NewBytes(b.buf.Bytes())
+}
+
+// IsDir is a forwarding function for isdir.
+func (b *Bytes) IsDir() bool {
+	return b.isdir
+}
+
+// SetDir is a setter for isdir.
+func (b *Bytes) SetDir(flag bool) {
+	b.isdir = flag
+}
+
+// ReadC returns the rune at position q.
+func (b *Bytes) ReadC(q int) rune {
+	return b.At(q)
+}
+
 var errOutOfRange = errors.New("utf8Bytes: index out of range")
 var errSliceOutOfRange = errors.New("utf8Bytes: slice index out of range")
