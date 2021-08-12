@@ -8,6 +8,7 @@ package utf8bytes // import "golang.org/x/exp/utf8Bytes"
 
 import (
 	"errors"
+	"github.com/rjkroege/edwood/internal/undo"
 	"unicode/utf8"
 )
 
@@ -19,7 +20,7 @@ import (
 // scanning from the beginning.
 // If the string is ASCII, random access is O(1).
 type Bytes struct {
-	b        *Buffer
+	b        *undo.Buffer
 	numRunes int
 	// If width > 0, the rune at runePos starts at bytePos and has the specified width.
 	width    int
@@ -36,7 +37,7 @@ func NewBytes(contents []byte) *Bytes {
 // Init initializes an existing Bytes to hold the provided contents.
 // It returns a pointer to the initialized Bytes.
 func (bytes *Bytes) Init(contents []byte) *Bytes {
-	bytes.b = NewBuffer(contents)
+	bytes.b = undo.NewBuffer(contents)
 	bytes.bytePos = 0
 	bytes.runePos = 0
 	for i := 0; i < len(contents); i++ {
