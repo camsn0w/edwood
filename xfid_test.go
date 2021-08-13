@@ -157,10 +157,10 @@ func TestXfidreadQWrdsel(t *testing.T) {
 	const wantSel = "εxαmple"
 
 	w := &Window{
-		body: Text{fr: &MockFrame{}, file: file.MakeObservableEditableBuffer("", file.NewRuneArray())},
+		body: Text{fr: &MockFrame{}, file: file.MakeObservableEditableBuffer("", []byte{})},
 		tag: Text{
 			fr:   &MockFrame{},
-			file: file.MakeObservableEditableBuffer("", file.NewRuneArray()),
+			file: file.MakeObservableEditableBuffer("", []byte{}),
 		},
 		col: new(Column),
 	}
@@ -220,7 +220,7 @@ func TestXfidwriteQWaddr(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mr := new(mockResponder)
 			w := NewWindow().initHeadless(nil)
-			w.body.file = file.MakeObservableEditableBufferTag([]rune("abcαβξ\n"))
+			w.body.file = file.MakeObservableEditableBufferTag([]byte("abcαβξ\n"))
 			w.col = new(Column)
 			w.limit = Range{0, w.body.file.Nr()}
 			x := &Xfid{
@@ -630,7 +630,7 @@ func TestXfidwriteQWtag(t *testing.T) {
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
 	w.body.file = file.MakeObservableEditableBuffer("", nil)
-	w.tag.file = file.MakeObservableEditableBuffer("", file.RuneArray(prevTag))
+	w.tag.file = file.MakeObservableEditableBuffer("", []byte(prevTag))
 	x := &Xfid{
 		fcall: plan9.Fcall{
 			Data:  []byte(extra),
@@ -758,7 +758,7 @@ func TestXfidwriteQWerrors(t *testing.T) {
 	mr := new(mockResponder)
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.tag.file = file.MakeObservableEditableBufferTag(file.RuneArray("/home/gopher/edwood/row.go Del Snarf | Look "))
+	w.tag.file = file.MakeObservableEditableBufferTag([]byte("/home/gopher/edwood/row.go Del Snarf | Look "))
 	w.tag.fr = &MockFrame{}
 	w.body.fr = &MockFrame{}
 	x := &Xfid{
@@ -992,7 +992,7 @@ func TestXfidwriteQWeventExecuteSend(t *testing.T) {
 	defer func() { w.nopen[QWevent]-- }()
 	w.tag = Text{
 		w:       w,
-		file:    file.MakeObservableEditableBuffer("", file.RuneArray("Send")),
+		file:    file.MakeObservableEditableBuffer("", []byte("Send")),
 		fr:      &MockFrame{},
 		display: d,
 	}
@@ -1080,9 +1080,9 @@ func TestXfidreadQWbodyQWtag(t *testing.T) {
 			w.body.fr = &MockFrame{}
 			switch tc.q {
 			case QWbody:
-				w.body.file = file.MakeObservableEditableBufferTag([]rune(data))
+				w.body.file = file.MakeObservableEditableBufferTag([]byte(data))
 			case QWtag:
-				w.tag.file = file.MakeObservableEditableBufferTag([]rune(data))
+				w.tag.file = file.MakeObservableEditableBufferTag([]byte(data))
 			}
 
 			x := &Xfid{
@@ -1141,7 +1141,7 @@ func TestXfidruneread(t *testing.T) {
 			fs: mr,
 		}
 		w := NewWindow().initHeadless(nil)
-		w.body.file = file.MakeObservableEditableBufferTag(tc.body)
+		w.body.file = file.MakeObservableEditableBufferTag([]byte(string(tc.body)))
 		nr := xfidruneread(x, &w.body, tc.q0, tc.q1)
 		if got, want := nr, tc.nr; got != want {
 			t.Errorf("read %v runes from %q (q0=%v, q1=%v); should read %v runes",
@@ -1183,7 +1183,7 @@ func TestXfidreadQWxdataQWdata(t *testing.T) {
 			mr := new(mockResponder)
 			w := NewWindow().initHeadless(nil)
 			w.col = new(Column)
-			w.body.file = file.MakeObservableEditableBufferTag([]rune(body))
+			w.body.file = file.MakeObservableEditableBufferTag([]byte(body))
 			w.addr = tc.inAddr
 			xfidread(&Xfid{
 				f: &Fid{
@@ -1217,7 +1217,7 @@ func TestXfidreadQWaddr(t *testing.T) {
 	)
 	w := NewWindow().initHeadless(nil)
 	w.col = new(Column)
-	w.body.file = file.MakeObservableEditableBufferTag([]rune(body))
+	w.body.file = file.MakeObservableEditableBufferTag([]byte(body))
 	w.addr.q0 = 5
 	w.addr.q1 = 12
 
@@ -1246,8 +1246,8 @@ func TestXfidreadQWctl(t *testing.T) {
 	w.col = new(Column)
 	w.display = edwoodtest.NewDisplay()
 	w.body.fr = &MockFrame{}
-	w.tag.file = file.MakeObservableEditableBufferTag([]rune(("/etc/hosts Del Snarf | Look Get ")))
-	w.body.file = file.MakeObservableEditableBufferTag([]rune("Hello, world!\n"))
+	w.tag.file = file.MakeObservableEditableBufferTag([]byte(("/etc/hosts Del Snarf | Look Get ")))
+	w.body.file = file.MakeObservableEditableBufferTag([]byte("Hello, world!\n"))
 
 	mr := new(mockResponder)
 	xfidread(&Xfid{
