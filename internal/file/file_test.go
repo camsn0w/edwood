@@ -9,7 +9,7 @@ import (
 )
 
 func TestDelObserver(t *testing.T) {
-	f := MakeObservableEditableBufferTag(RuneArray{})
+	f := MakeObservableEditableBufferTag([]byte{})
 
 	testData := []*testText{{file: MakeObservableEditableBuffer("World sourdoughs from antiquity", nil)},
 		{file: MakeObservableEditableBuffer("Willowbrook Association Handbook: 2011", nil)},
@@ -75,9 +75,6 @@ const s2 = "bye"
 func TestFileInsertAt(t *testing.T) {
 	f := MakeObservableEditableBuffer("edwood", nil)
 
-	// Force Undo.
-	f.f.seq = 1
-
 	f.InsertAtWithoutCommit(0, []rune(s1))
 
 	// NB: the read code not include the uncommitted content.
@@ -96,7 +93,7 @@ func TestFileInsertAt(t *testing.T) {
 		&fileStateSummary{false, true, false, true, s1 + s2})
 }
 
-func readwholefile(t *testing.T, f *File) string {
+func readwholefile(t *testing.T, f *ObservableEditableBuffer) string {
 	var sb strings.Builder
 
 	// Currently ReadAtRune does not return runes in the cache.
@@ -108,7 +105,7 @@ func readwholefile(t *testing.T, f *File) string {
 	}
 
 	targetbuffer := make([]rune, f.Nr())
-	if _, err := f.ReadAtRune(targetbuffer, 0); err != nil {
+	if _, err := f.Read(0, targetbuffer); err != nil {
 		t.Fatalf("readwhole could not read File %v", f)
 	}
 
@@ -159,8 +156,7 @@ type fileStateSummary struct {
 	filecontents         string
 }
 
-func check(t *testing.T, testname string, oeb *ObservableEditableBuffer, fss *fileStateSummary) {
-	f := oeb.f
+func check(t *testing.T, testname string, f *ObservableEditableBuffer, fss *fileStateSummary) {
 	if got, want := f.HasUncommitedChanges(), fss.HasUncommitedChanges; got != want {
 		t.Errorf("%s: HasUncommitedChanges failed. got %v want %v", testname, got, want)
 	}
@@ -359,31 +355,31 @@ func TestFileUpdateInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stat failed: %v", err)
 	}
-	f := MakeObservableEditableBuffer(filename, nil).f
-	f.oeb.SetHash(EmptyHash)
-	f.oeb.SetInfo(nil)
+	f := MakeObservableEditableBuffer(filename, nil)
+	f.SetHash(EmptyHash)
+	f.SetInfo(nil)
 
-	f.oeb.UpdateInfo(filename, d)
-	if f.oeb.Info() != nil {
-		t.Errorf("File info is %v; want nil", f.oeb.Info())
+	f.UpdateInfo(filename, d)
+	if f.Info() != nil {
+		t.Errorf("File info is %v; want nil", f.Info())
 	}
 
 	h, err := HashFor(filename)
 	if err != nil {
 		t.Fatalf("HashFor(%v) failed: %v", filename, err)
 	}
-	f.oeb.SetHash(h)
-	f.oeb.SetInfo(nil)
-	f.oeb.UpdateInfo(filename, d)
-	if f.oeb.Info() != d {
-		t.Errorf("File info is %v; want %v", f.oeb.Info(), d)
+	f.SetHash(h)
+	f.SetInfo(nil)
+	f.UpdateInfo(filename, d)
+	if f.Info() != d {
+		t.Errorf("File info is %v; want %v", f.Info(), d)
 	}
 }
 
 func TestFileUpdateInfoError(t *testing.T) {
 	filename := "/non-existent-file"
-	f := MakeObservableEditableBuffer(filename, nil).f
-	err := f.oeb.UpdateInfo(filename, nil)
+	f := MakeObservableEditableBuffer(filename, nil)
+	err := f.UpdateInfo(filename, nil)
 	want := "failed to compute hash for"
 	if err == nil || !strings.HasPrefix(err.Error(), want) {
 		t.Errorf("File.UpdateInfo returned error %q; want prefix %q", err, want)
