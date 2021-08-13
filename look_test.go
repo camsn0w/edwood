@@ -58,9 +58,9 @@ func TestExpand(t *testing.T) {
 	}
 	for i, tc := range tt {
 		t.Run(fmt.Sprintf("test-%02d", i), func(t *testing.T) {
-			r := []rune(tc.s)
+			r := []byte(tc.s)
 			text := &Text{
-				file: file.MakeObservableEditableBufferTag(file.RuneArray(r)),
+				file: file.MakeObservableEditableBufferTag(r),
 				q0:   0,
 				q1:   tc.sel1,
 			}
@@ -98,7 +98,7 @@ func TestExpandJump(t *testing.T) {
 
 	for _, tc := range tt {
 		text := &Text{
-			file: file.MakeObservableEditableBufferTag([]rune("chicken")),
+			file: file.MakeObservableEditableBufferTag([]byte("chicken")),
 			q0:   0,
 			q1:   5,
 			what: tc.kind,
@@ -171,7 +171,7 @@ func TestLook3Message(t *testing.T) {
 }
 
 func textSetSelection(t *Text, buf string) {
-	b := []rune(buf)
+	b := []byte(buf)
 	popRune := func(r rune) int {
 		q := runes.IndexRune(b, r)
 		if q < 0 {
