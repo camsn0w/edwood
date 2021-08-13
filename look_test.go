@@ -171,7 +171,7 @@ func TestLook3Message(t *testing.T) {
 }
 
 func textSetSelection(t *Text, buf string) {
-	b := []byte(buf)
+	b := []rune(buf)
 	popRune := func(r rune) int {
 		q := runes.IndexRune(b, r)
 		if q < 0 {
@@ -183,5 +183,5 @@ func textSetSelection(t *Text, buf string) {
 
 	t.q0 = popRune('«')
 	t.q1 = popRune('»')
-	t.file = file.MakeObservableEditableBuffer("", b)
+	t.file = file.MakeObservableEditableBuffer("", []byte(string(b)))
 }
