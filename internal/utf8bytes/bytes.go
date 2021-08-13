@@ -8,6 +8,7 @@ package utf8bytes // import "golang.org/x/exp/utf8Bytes"
 
 import (
 	"errors"
+	"io"
 	"unicode/utf8"
 
 	"github.com/rjkroege/edwood/internal/undo"
@@ -305,14 +306,74 @@ func (b *Bytes) Load(q0 int, r []rune) int {
 	return len(r)
 }
 
+// InsertAt inserts s runes at rune address p0.
 func (b *Bytes) InsertAt(p0 int, s []rune) {
 	b.buf.Insert(int64(p0), []byte(string(s)))
+	b.Commit()
 }
 
+// DeleteAt removes the rune range [p0,p1) from File.
 func (b *Bytes) DeleteAt(q0, q1 int) {
 	totalLen := len(b.Slice(q0, q1))
 	off := utf8.RuneLen(b.At(q0))
 	b.buf.Delete(int64(off), int64(totalLen))
+}
+
+// Modded marks the File if we know that its backing is different from
+// its contents. This is needed to track when Edwood has modified the
+// backing without changing the File (e.g. via the Edit w command).
+func (b *Bytes) Modded() {
+	b.mod = true
+	b.treatasclean = false
+}
+
+// TreatAsClean notes that the File should be considered as not Dirty
+// until its next modification.
+func (b *Bytes) TreatAsClean() {
+	b.treatasclean = true
+}
+
+func (b *Bytes) TreatAsDirty() bool {
+	return !b.treatasclean && b.Dirty()
+}
+
+// GetCache is a getter for undo.Buffer.GetCache.
+func (b *Bytes) GetCache() []byte {
+	return b.buf.GetCache()
+}
+
+func (b *Bytes) Equal(s []rune) bool {
+	return string(b.Bytes()) == string(s)
+}
+
+func (b *Bytes) IndexRune(r rune) int {
+	for i := 0; i < b.Nr(); i++ {
+		if b.At(i) == r {
+			return i
+		}
+	}
+	return -1
+}
+
+func (b *Bytes) Reader(q0 int, q1 int) io.Reader {
+	slice := b.Slice(q0, q1)
+	return NewBytes(slice)
+}
+
+func (b *Bytes) String() string {
+	return string(b.Bytes())
+}
+
+func (b *Bytes) InsertAtWithoutCommit(p0 int, s []rune) {
+	b.buf.Insert(int64(p0), []byte(string(s)))
+}
+
+func (b *Bytes) Undo() (int, int, bool) {
+	off, n := b.buf.Undo()
+	if off == -1 {
+		return int(off), int(n), false
+	}
+	return int(off / 4), int((n - off) / 4), true
 }
 
 var errOutOfRange = errors.New("utf8Bytes: index out of range")

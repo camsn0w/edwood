@@ -530,3 +530,10 @@ func (b *Buffer) HasRedoableChanges() bool {
 func (b *Buffer) HasUndoableChanges() bool {
 	return b.head != 0
 }
+
+func (b *Buffer) GetCache() []byte {
+	if b.CacheLen() == 0 {
+		return nil
+	}
+	return b.cachedPiece.data
+}

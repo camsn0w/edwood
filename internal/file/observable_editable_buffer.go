@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/rjkroege/edwood/internal/sam"
 	"github.com/rjkroege/edwood/internal/utf8bytes"
@@ -202,6 +203,7 @@ func (e *ObservableEditableBuffer) Dirty() bool {
 // InsertAt is a forwarding function for file.InsertAt.
 func (e *ObservableEditableBuffer) InsertAt(p0 int, s []rune) {
 	e.f.InsertAt(p0, s)
+	e.inserted(p0, s)
 }
 
 // SetName is a forwarding function for file.SetName.
@@ -215,12 +217,14 @@ func (e *ObservableEditableBuffer) SetName(name string) {
 
 // Undo is a forwarding function for file.Undo.
 func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
-	return e.f.Undo(isundo)
+
+	return e.f.Undo()
 }
 
 // DeleteAt is a forwarding function for file.DeleteAt.
 func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
 	e.f.DeleteAt(q0, q1)
+	e.deleted(q0, q1)
 }
 
 // TreatAsClean is a forwarding function for file.TreatAsClean.
@@ -260,12 +264,12 @@ func (e *ObservableEditableBuffer) SetHash(hash Hash) {
 
 // Seq is a getter for file.details.Seq.
 func (e *ObservableEditableBuffer) Seq() int {
-	return e.f.seq
+	return 0
 }
 
 // RedoSeq is a getter for file.details.RedoSeq.
 func (e *ObservableEditableBuffer) RedoSeq() int {
-	return e.f.RedoSeq()
+	return 0
 }
 
 // inserted is a forwarding function for text.inserted.
@@ -290,6 +294,7 @@ func (e *ObservableEditableBuffer) Commit() {
 // InsertAtWithoutCommit is a forwarding function for file.InsertAtWithoutCommit.
 func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
 	e.f.InsertAtWithoutCommit(p0, s)
+	e.inserted(p0, s)
 }
 
 // IsDirOrScratch is a forwarding function for file.IsDirOrScratch.
@@ -304,42 +309,45 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
-	return e.f.b.Read(q0, r)
+	r = e.View(q0, len(r)-1)
+	return len(r), nil
 }
 
 // View is a forwarding function for rune_array.View.
 func (e *ObservableEditableBuffer) View(q0 int, q1 int) []rune {
-	return e.f.b.View(q0, q1)
+	rawBytes := e.f.Slice(q0, q1)
+	r, _, _ := util.Cvttorunes(rawBytes, q0-q1)
+	return r
 }
 
 // String is a forwarding function for rune_array.String.
 func (e *ObservableEditableBuffer) String() string {
-	return e.f.b.String()
+	return e.f.String()
 }
 
 // ResetBuffer is a forwarding function for rune_array.Reset.
 func (e *ObservableEditableBuffer) ResetBuffer() {
-	e.f.b.Reset()
+	e.f.Reset()
 }
 
 // Reader is a forwarding function for rune_array.Reader.
 func (e *ObservableEditableBuffer) Reader(q0 int, q1 int) io.Reader {
-	return e.f.b.Reader(q0, q1)
+	return e.f.Reader(q0, q1)
 }
 
 // IndexRune is a forwarding function for rune_array.IndexRune.
 func (e *ObservableEditableBuffer) IndexRune(r rune) int {
-	return e.f.b.IndexRune(r)
+	return e.f.IndexRune(r)
 }
 
 // Equal is a forwarding function for rune_array.Equal.
 func (e *ObservableEditableBuffer) Equal(s []rune) bool {
-	return e.f.b.Equal(s)
+	return e.f.Equal(s)
 }
 
 // Nbyte is a forwarding function for rune_array.Nbyte.
 func (e *ObservableEditableBuffer) Nbyte() int {
-	return e.f.b.Nbyte()
+	return e.f.Nb()
 }
 
 // Setnameandisscratch updates the oeb.details.name and isscratch bit
@@ -355,25 +363,24 @@ func (e *ObservableEditableBuffer) Setnameandisscratch(name string) {
 
 // SetSeq is a setter for file.seq for use in tests.
 func (e *ObservableEditableBuffer) SetSeq(seq int) {
-	e.f.seq = seq
 }
 
 // SetPutseq is a setter for file.putseq for use in tests.
 func (e *ObservableEditableBuffer) SetPutseq(putseq int) {
-	e.f.putseq = putseq
 }
 
 // SetDelta is a setter for file.delta for use in tests.
 func (e *ObservableEditableBuffer) SetDelta(delta []*Undo) {
-	e.f.delta = delta
 }
 
 // SetEpsilon is a setter for file.epsilon for use in tests.
 func (e *ObservableEditableBuffer) SetEpsilon(epsilon []*Undo) {
-	e.f.epsilon = epsilon
 }
 
 // GetCache is a Getter for file.cache for use in tests.
 func (e *ObservableEditableBuffer) GetCache() []rune {
-	return e.f.cache
+	cache := e.f.GetCache()
+
+	r, _, _ := util.Cvttorunes(cache, utf8.RuneCount(cache))
+	return r
 }
