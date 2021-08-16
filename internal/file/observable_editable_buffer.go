@@ -202,7 +202,7 @@ func (e *ObservableEditableBuffer) Dirty() bool {
 
 // InsertAt is a forwarding function for file.InsertAt.
 func (e *ObservableEditableBuffer) InsertAt(p0 int, s []rune) {
-	e.f.InsertAt(p0, s)
+	e.f.InsertAt(p0, s, true)
 	e.inserted(p0, s)
 }
 
@@ -217,8 +217,7 @@ func (e *ObservableEditableBuffer) SetName(name string) {
 
 // Undo is a forwarding function for file.Undo.
 func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
-
-	return e.f.Undo()
+	return e.f.Undo(isundo)
 }
 
 // DeleteAt is a forwarding function for file.DeleteAt.
@@ -309,7 +308,7 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
-	r = e.View(q0, len(r)-1)
+	r = e.View(q0, len(r))
 	return len(r), nil
 }
 

@@ -8,6 +8,7 @@ package utf8bytes // import "golang.org/x/exp/utf8Bytes"
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"unicode/utf8"
 
@@ -120,6 +121,7 @@ func (b *Bytes) At(i int) rune {
 
 	// Now we do need to know the index is valid.
 	if i < 0 || i >= b.numRunes {
+		fmt.Printf("Len is %v, i is: %v\n", b.numRunes, i)
 		panic(errOutOfRange)
 	}
 
@@ -294,28 +296,40 @@ func (b *Bytes) HasRedoableChanges() bool {
 
 // HasUndoableChanges is a forwarding function for undo.HasUndoableChanges.
 func (b *Bytes) HasUndoableChanges() bool {
-	return b.buf.HasRedoableChanges()
+	return b.buf.HasUndoableChanges()
 }
 
 func (b *Bytes) Load(q0 int, r []rune) int {
 
 	// Would appear to require a commit operation.
 	// NB: Runs the observers.
-	b.InsertAt(q0, r)
+	b.Commit()
+	off := b.getByteOffset(q0)
+	b.InsertAt(off, r, true)
 
 	return len(r)
 }
 
 // InsertAt inserts s runes at rune address p0.
-func (b *Bytes) InsertAt(p0 int, s []rune) {
-	b.buf.Insert(int64(p0), []byte(string(s)))
-	b.Commit()
+func (b *Bytes) InsertAt(p0 int, s []rune, commit bool) {
+	off := b.getByteOffset(p0)
+	//fmt.Printf("From InsertAt in bytes.go Inserting at %v", off)
+	b.buf.Insert(int64(off), []byte(string(s)))
+	numRunes, width, nonASCII := getBytesInfo(s)
+	b.numRunes += numRunes
+	if nonASCII+off < nonASCII {
+		b.width = width
+		b.nonASCII = nonASCII + off
+	}
+	if commit {
+		b.Commit()
+	}
 }
 
 // DeleteAt removes the rune range [p0,p1) from File.
 func (b *Bytes) DeleteAt(q0, q1 int) {
 	totalLen := len(b.Slice(q0, q1))
-	off := utf8.RuneLen(b.At(q0))
+	off := b.getByteOffset(q0)
 	b.buf.Delete(int64(off), int64(totalLen))
 }
 
@@ -364,16 +378,67 @@ func (b *Bytes) String() string {
 	return string(b.Bytes())
 }
 
+// TOOD(sn0w): write some kind of logic to handle rebuilding indices once new data is added
 func (b *Bytes) InsertAtWithoutCommit(p0 int, s []rune) {
-	b.buf.Insert(int64(p0), []byte(string(s)))
+	b.InsertAt(p0, s, false)
 }
 
-func (b *Bytes) Undo() (int, int, bool) {
-	off, n := b.buf.Undo()
+func (b *Bytes) Undo(isundo bool) (int, int, bool) {
+	var off, n int64
+	if isundo {
+		off, n = b.buf.Undo()
+	} else {
+		off, n = b.buf.Redo()
+	}
 	if off == -1 {
 		return int(off), int(n), false
 	}
+	b.Refresh()
 	return int(off / 4), int((n - off) / 4), true
+}
+
+func getBytesInfo(r []rune) (numRunes, width, nonASCII int) {
+	numRunes = len(r)
+	for i, c := range r {
+		if c >= utf8.RuneSelf {
+			nonASCII = i
+			width = utf8.RuneLen(r[0])
+			return
+		}
+	}
+	numRunes = len(r)
+	width = 0
+	nonASCII = len(r)
+	return
+}
+
+func (b *Bytes) getByteOffset(runepos int) int {
+	if runepos == b.numRunes {
+		return len(b.Bytes())
+	}
+	off := 0
+	for i := runepos; i < b.numRunes; i++ {
+		off += utf8.RuneLen(b.At(i))
+	}
+	return off
+}
+func (b *Bytes) Refresh() {
+	b.bytePos = 0
+	b.runePos = 0
+	contents := b.buf.Bytes()
+	for i := 0; i < len(contents); i++ {
+		if contents[i] >= utf8.RuneSelf {
+			// Not ASCII.
+			b.numRunes = utf8.RuneCount(contents)
+			_, b.width = utf8.DecodeRune(contents)
+			b.nonASCII = i
+			return
+		}
+	}
+	// ASCII is simple.  Also, the empty string is ASCII.
+	b.numRunes = len(contents)
+	b.width = 0
+	b.nonASCII = len(contents)
 }
 
 var errOutOfRange = errors.New("utf8Bytes: index out of range")
