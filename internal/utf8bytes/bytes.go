@@ -417,7 +417,7 @@ func (b *Bytes) getByteOffset(runepos int) int {
 		return len(b.Bytes())
 	}
 	off := 0
-	for i := runepos; i < b.numRunes; i++ {
+	for i := 0; i < runepos; i++ {
 		off += utf8.RuneLen(b.At(i))
 	}
 	return off
