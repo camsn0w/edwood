@@ -1,7 +1,6 @@
 package main
 
 import (
-	file2 "github.com/rjkroege/edwood/internal/file"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/rjkroege/edwood/internal/file"
 )
 
 func acmeTestingMain() {
@@ -119,7 +120,7 @@ func TestPutfile(t *testing.T) {
 	want := "Hello, 世界\n"
 	w := &Window{
 		body: Text{
-			file: file2.MakeObservableEditableBuffer(filename, file2.RuneArray(want)),
+			file: file.MakeObservableEditableBuffer(filename, file.RuneArray(want)),
 		},
 	}
 	f := w.body.file
@@ -169,7 +170,7 @@ func TestExpandtabToggle(t *testing.T) {
 	want := true
 	w := &Window{
 		body: Text{
-			file:      file2.MakeObservableEditableBuffer("", nil),
+			file:      file.MakeObservableEditableBuffer("", nil),
 			tabexpand: false,
 			tabstop:   4,
 		},
