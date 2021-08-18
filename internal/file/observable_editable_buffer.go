@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/rjkroege/edwood/internal/sam"
 	"github.com/rjkroege/edwood/internal/undo"
+	"github.com/rjkroege/edwood/internal/util"
 )
 
 // The ObservableEditableBuffer is used by the main program
@@ -204,12 +206,18 @@ func (e *ObservableEditableBuffer) SaveableAndDirty() bool {
 func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n int, hasNulls bool, err error) {
 	d, err := ioutil.ReadAll(fd)
 	if err != nil {
-		err = errors.New("read error in RuneArray.Load")
+		err = errors.New("read error in file.Load")
 	}
 	if sethash {
 		e.SetHash(CalcHash(d))
 	}
-	n, hasNulls = e.f.Load(q0, d)
+
+	runes, _, hasNulls := util.Cvttorunes(d, len(d))
+
+	// Would appear to require a commit operation.
+	// NB: Runs the observers.
+	e.InsertAt(q0, runes)
+
 	return n, hasNulls, err
 }
 
@@ -220,7 +228,8 @@ func (e *ObservableEditableBuffer) Dirty() bool {
 
 // InsertAt is a forwarding function for file.InsertAt.
 func (e *ObservableEditableBuffer) InsertAt(p0 int, s []rune) {
-	e.f.InsertAt(p0, s)
+	e.InsertAtWithoutCommit(p0, s)
+	e.undo.Commit()
 }
 
 // SetName sets the name of the backing for this file.
@@ -231,21 +240,38 @@ func (e *ObservableEditableBuffer) SetName(name string) {
 		return
 	}
 
-	if e.f.seq > 0 {
-		e.f.UnsetName(&e.f.delta)
-	}
 	e.Setnameandisscratch(name)
 }
 
 // Undo is a forwarding function for file.Undo.
 func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
-	e.undo.TreatAsDirty()
-	return e.f.Undo(isundo)
+	e.undo.MarkUnclean()
+
+	var off, n int64
+	if isundo {
+		off, n = e.undo.Undo()
+	} else {
+		off, n = e.undo.Redo()
+	}
+
+	if off == -1 {
+		return int(off), int(n), false
+	}
+
+	return
 }
 
 // DeleteAt is a forwarding function for file.DeleteAt.
 func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
-	e.f.DeleteAt(q0, q1)
+	if q1 <= e.rbi.nonASCII {
+		e.undo.Delete(int64(q0), int64(q1-q0))
+
+	} else {
+		off := len(e.rbi.Slice(0, q0))
+		n := len(e.rbi.Slice(q0, q1))
+		e.undo.Delete(int64(off), int64(n))
+	}
+	e.deleted(q0, q1)
 }
 
 // TreatAsClean is a forwarding function for undo.TreatAsClean.
@@ -316,7 +342,29 @@ func (e *ObservableEditableBuffer) Commit() {
 
 // InsertAtWithoutCommit is a forwarding function for file.InsertAtWithoutCommit.
 func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
-	e.f.InsertAtWithoutCommit(p0, s)
+	e.rbi.At(p0)
+	origpos := e.rbi.bytePos
+
+	e.rbi.numRunes += len(s)
+
+	ob := make([]byte, utf8.MaxRune*len(s))
+	b := ob
+	tb := 0
+	for _, r := range s {
+		nb := utf8.EncodeRune(b, r)
+		e.rbi.bytePos += nb
+		e.rbi.runePos++
+		if nb > 1 && e.rbi.nonASCII > e.rbi.bytePos {
+			e.rbi.nonASCII = e.rbi.bytePos
+		}
+		if nb > 1 {
+			e.rbi.width = nb
+		}
+		b = b[nb:]
+		tb += nb
+	}
+	e.undo.Insert(int64(origpos), ob[0:tb])
+	// TODO(sn0w): Maybe run the observers here?
 }
 
 // IsDirOrScratch returns true if the File has a synthetic backing of
@@ -328,7 +376,7 @@ func (e *ObservableEditableBuffer) IsDirOrScratch() bool {
 
 // TreatAsDirty is a forwarding function for file.TreatAsDirty.
 func (e *ObservableEditableBuffer) TreatAsDirty() bool {
-	return e.f.TreatAsDirty()
+	return e.undo.TreatAsDirty()
 }
 
 // Read is a forwarding function for rune_array.Read.
