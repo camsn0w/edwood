@@ -544,10 +544,14 @@ func (b *Buffer) Modded() {
 	b.treatasclean = false
 }
 
-func (b *Buffer) TreatAsDirty() {
-	b.treatasclean = false
+func (b *Buffer) TreatAsDirty() bool {
+	return !b.treatasclean && b.Dirty()
 }
 
 func (b *Buffer) TreatAsClean() {
 	b.treatasclean = true
+}
+
+func (b *Buffer) MarkUnclean() {
+	b.treatasclean = false
 }
