@@ -8,6 +8,8 @@ package file // import "golang.org/x/exp/utf8Bytes"
 
 import (
 	"errors"
+	"github.com/rjkroege/edwood/internal/undo"
+	"io"
 	"unicode/utf8"
 )
 
@@ -19,13 +21,13 @@ import (
 // scanning from the beginning.
 // If the string is ASCII, random access is O(1).
 type Bytes struct {
-	b        []byte
 	numRunes int
 	// If width > 0, the rune at runePos starts at bytePos and has the specified width.
 	width    int
 	bytePos  int
 	runePos  int
 	nonASCII int // byte index of the first non-ASCII rune.
+	oeb      *ObservableEditableBuffer
 }
 
 // NewBytes returns a new UTF-8 Bytes with the provided contents.
@@ -36,7 +38,6 @@ func NewBytes(contents []byte) *Bytes {
 // Init initializes an existing Bytes to hold the provided contents.
 // It returns a pointer to the initialized Bytes.
 func (bytes *Bytes) Init(contents []byte) *Bytes {
-	bytes.b = contents
 	bytes.bytePos = 0
 	bytes.runePos = 0
 	for i := 0; i < len(contents); i++ {
@@ -57,8 +58,8 @@ func (bytes *Bytes) Init(contents []byte) *Bytes {
 
 // Bytes returns the contents of the Bytes.  This method also means the
 // Bytes is directly printable by fmt.Print.
-func (bytes *Bytes) Byte() []byte {
-	return bytes.b
+func (bytes *Bytes) Bytes() []byte {
+	return bytes.oeb.Bytes()
 }
 
 // RuneCount returns the number of runes (Unicode code points) in the Bytes.
@@ -75,7 +76,7 @@ func (bytes *Bytes) IsASCII() bool {
 func (bytes *Bytes) Slice(i, j int) []byte {
 	// ASCII is easy.  Let the compiler catch the indexing error if there is one.
 	if j < bytes.nonASCII {
-		return bytes.b[i:j]
+		return bytes.oeb.Bytes()[i:j]
 	}
 	if i < 0 || j > bytes.numRunes || i > j {
 		panic(errSliceOutOfRange)
@@ -89,19 +90,19 @@ func (bytes *Bytes) Slice(i, j int) []byte {
 	case i < bytes.nonASCII:
 		low = i
 	case i == bytes.numRunes:
-		low = len(bytes.b)
+		low = len(bytes.oeb.Bytes())
 	default:
 		bytes.At(i)
 		low = bytes.bytePos
 	}
 	switch {
 	case j == bytes.numRunes:
-		high = len(bytes.b)
+		high = len(bytes.oeb.Bytes())
 	default:
 		bytes.At(j)
 		high = bytes.bytePos
 	}
-	return bytes.b[low:high]
+	return bytes.oeb.Bytes()[low:high]
 }
 
 // At returns the rune with index i in the Bytes.  The sequence of runes is the same
@@ -109,7 +110,7 @@ func (bytes *Bytes) Slice(i, j int) []byte {
 func (bytes *Bytes) At(i int) rune {
 	// ASCII is easy.  Let the compiler catch the indexing error if there is one.
 	if i < bytes.nonASCII {
-		return rune(bytes.b[i])
+		return rune(bytes.oeb.Bytes()[i])
 	}
 
 	// Now we do need to know the index is valid.
@@ -124,7 +125,7 @@ func (bytes *Bytes) At(i int) rune {
 	switch {
 
 	case i == bytes.runePos-1: // backing up one rune
-		r, bytes.width = utf8.DecodeLastRune(bytes.b[0:bytes.bytePos])
+		r, bytes.width = utf8.DecodeLastRune(bytes.oeb.Bytes()[0:bytes.bytePos])
 		bytes.runePos = i
 		bytes.bytePos -= bytes.width
 		return r
@@ -133,18 +134,18 @@ func (bytes *Bytes) At(i int) rune {
 		bytes.bytePos += bytes.width
 		fallthrough
 	case i == bytes.runePos:
-		r, bytes.width = utf8.DecodeRune(bytes.b[bytes.bytePos:])
+		r, bytes.width = utf8.DecodeRune(bytes.oeb.Bytes()[bytes.bytePos:])
 		return r
 	case i == 0: // start of string
-		r, bytes.width = utf8.DecodeRune(bytes.b)
+		r, bytes.width = utf8.DecodeRune(bytes.oeb.Bytes())
 		bytes.runePos = 0
 		bytes.bytePos = 0
 		return r
 
 	case i == bytes.numRunes-1: // last rune in string
-		r, bytes.width = utf8.DecodeLastRune(bytes.b)
+		r, bytes.width = utf8.DecodeLastRune(bytes.oeb.Bytes())
 		bytes.runePos = i
-		bytes.bytePos = len(bytes.b) - bytes.width
+		bytes.bytePos = len(bytes.oeb.Bytes()) - bytes.width
 		return r
 	}
 
@@ -171,14 +172,14 @@ func (bytes *Bytes) At(i int) rune {
 			// Scan forward from pos
 		} else {
 			// Scan backwards from end
-			bytes.bytePos, bytes.runePos = len(bytes.b), bytes.numRunes
+			bytes.bytePos, bytes.runePos = len(bytes.oeb.Bytes()), bytes.numRunes
 			forward = false
 		}
 	}
 	if forward {
 		// TODO: Is it much faster to use a range loop for this scan?
 		for {
-			r, bytes.width = utf8.DecodeRune(bytes.b[bytes.bytePos:])
+			r, bytes.width = utf8.DecodeRune(bytes.oeb.Bytes()[bytes.bytePos:])
 			if bytes.runePos == i {
 				break
 			}
@@ -187,7 +188,7 @@ func (bytes *Bytes) At(i int) rune {
 		}
 	} else {
 		for {
-			r, bytes.width = utf8.DecodeLastRune(bytes.b[0:bytes.bytePos])
+			r, bytes.width = utf8.DecodeLastRune(bytes.oeb.Bytes()[0:bytes.bytePos])
 			bytes.runePos--
 			bytes.bytePos -= bytes.width
 			if bytes.runePos == i {
@@ -199,9 +200,9 @@ func (bytes *Bytes) At(i int) rune {
 }
 
 // HasNull returns true if Bytes contains a null rune.
-func (b *Bytes) HasNull() bool {
-	for i := 0; i < b.numRunes; i++ {
-		if b.At(i) == 0 {
+func (bytes *Bytes) HasNull() bool {
+	for i := 0; i < bytes.numRunes; i++ {
+		if bytes.At(i) == 0 {
 			return true
 		}
 	}
@@ -209,9 +210,25 @@ func (b *Bytes) HasNull() bool {
 }
 
 // Read implements the io.Reader interface.
-func (b *Bytes) Read(buf []byte) (n int, err error) {
-	n = copy(buf, b.Byte())
+func (bytes *Bytes) Read(buf []byte) (n int, err error) {
+	n = copy(buf, bytes.Bytes())
 	return n, nil
+}
+
+func (bytes *Bytes) IndexRune(r rune) int {
+	for i := 0; i < bytes.RuneCount(); i++ {
+		if bytes.At(i) == r {
+			return i
+		}
+	}
+	return -1
+}
+
+func (bytes *Bytes) Reader(q0 int, q1 int) io.Reader {
+	slice := bytes.Slice(q0, q1)
+	reader := NewBytes(slice)
+	reader.oeb.undo = undo.NewBuffer(slice)
+	return reader
 }
 
 var errOutOfRange = errors.New("utf8Bytes: index out of range")

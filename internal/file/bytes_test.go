@@ -9,6 +9,8 @@ import (
 	"math/rand"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/rjkroege/edwood/internal/undo"
 )
 
 var testStrings = []string{
@@ -23,7 +25,7 @@ var testStrings = []string{
 func TestScanForwards(t *testing.T) {
 	for _, s := range testStrings {
 		runes := []rune(s)
-		b := NewBytes([]byte(s))
+		b := InitOEBNewBytes([]byte(s))
 		if b.RuneCount() != len(runes) {
 			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
@@ -40,7 +42,7 @@ func TestScanForwards(t *testing.T) {
 func TestScanBackwards(t *testing.T) {
 	for _, s := range testStrings {
 		runes := []rune(s)
-		b := NewBytes([]byte(s))
+		b := InitOEBNewBytes([]byte(s))
 		if b.RuneCount() != len(runes) {
 			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
@@ -68,7 +70,7 @@ func TestRandomAccess(t *testing.T) {
 			continue
 		}
 		runes := []rune(s)
-		b := NewBytes([]byte(s))
+		b := InitOEBNewBytes([]byte(s))
 		if b.RuneCount() != len(runes) {
 			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
@@ -90,7 +92,7 @@ func TestRandomSliceAccess(t *testing.T) {
 			continue
 		}
 		runes := []rune(s)
-		b := NewBytes([]byte(s))
+		b := InitOEBNewBytes([]byte(s))
 		if b.RuneCount() != len(runes) {
 			t.Errorf("%s: expected %d runes; got %d", s, len(runes), b.RuneCount())
 			break
@@ -112,7 +114,7 @@ func TestRandomSliceAccess(t *testing.T) {
 
 func TestLimitSliceAccess(t *testing.T) {
 	for _, s := range testStrings {
-		b := NewBytes([]byte(s))
+		b := InitOEBNewBytes([]byte(s))
 
 		if string(b.Slice(0, 0)) != "" {
 			t.Error("failure with empty slice at beginning")
@@ -128,7 +130,7 @@ func TestLimitSliceAccess(t *testing.T) {
 
 func TestBytes_Read(t *testing.T) {
 	for _, s := range testStrings {
-		b := NewBytes([]byte(s))
+		b := InitOEBNewBytes([]byte(s))
 		strLen := len(s)
 		var readTo int
 		if strLen == 0 {
@@ -140,7 +142,7 @@ func TestBytes_Read(t *testing.T) {
 		got := make([]byte, readTo)
 		b.Read(got)
 
-		reader := bytes.NewReader(b.Byte())
+		reader := bytes.NewReader(b.Bytes())
 		wanted := make([]byte, readTo)
 		reader.Read(wanted)
 
@@ -148,4 +150,11 @@ func TestBytes_Read(t *testing.T) {
 			t.Errorf("Expected: %s, got: %s\n", got, wanted)
 		}
 	}
+}
+
+func InitOEBNewBytes(data []byte) *Bytes {
+	b := NewBytes(data)
+	b.oeb = &ObservableEditableBuffer{}
+	b.oeb.undo = undo.NewBuffer(data)
+	return b
 }
