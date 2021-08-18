@@ -9,7 +9,6 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/draw"
 	"github.com/rjkroege/edwood/internal/dumpfile"
 	"github.com/rjkroege/edwood/internal/file"

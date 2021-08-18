@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/draw"
 	"github.com/rjkroege/edwood/internal/file"
 	"github.com/rjkroege/edwood/internal/frame"

@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/rjkroege/edwood/internal/util"
 	"image"
 	"log"
 	"net/http"
