@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/rjkroege/edwood/internal/sam"
+	"github.com/rjkroege/edwood/internal/undo"
 )
 
 // The ObservableEditableBuffer is used by the main program
@@ -28,6 +29,8 @@ type ObservableEditableBuffer struct {
 	EditClean bool
 	details   *DiskDetails
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
+	rbi       *Bytes
+	undo      *undo.Buffer
 }
 
 // Set is a forwarding function for file_hash.Set
@@ -312,37 +315,38 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
-	return e.f.b.Read(q0, r)
+	r = []rune(string(e.rbi.Slice(q0, len(r))))
+	return len(r), nil
 }
 
 // View is a forwarding function for rune_array.View.
 func (e *ObservableEditableBuffer) View(q0 int, q1 int) []rune {
-	return e.f.b.View(q0, q1)
+	return []rune(string(e.rbi.Slice(q0, q1)))
 }
 
 // String is a forwarding function for rune_array.String.
 func (e *ObservableEditableBuffer) String() string {
-	return e.f.b.String()
+	return string(e.Bytes())
 }
 
 // ResetBuffer is a forwarding function for rune_array.Reset.
 func (e *ObservableEditableBuffer) ResetBuffer() {
-	e.f.b.Reset()
+	e.undo = undo.NewBuffer(e.Bytes())
 }
 
 // Reader is a forwarding function for rune_array.Reader.
 func (e *ObservableEditableBuffer) Reader(q0 int, q1 int) io.Reader {
-	return e.f.b.Reader(q0, q1)
+	return e.rbi.Reader(q0, q1)
 }
 
 // IndexRune is a forwarding function for rune_array.IndexRune.
 func (e *ObservableEditableBuffer) IndexRune(r rune) int {
-	return e.f.b.IndexRune(r)
+	return e.rbi.IndexRune(r)
 }
 
 // Nbyte is a forwarding function for rune_array.Nbyte.
 func (e *ObservableEditableBuffer) Nbyte() int {
-	return e.f.b.Nbyte()
+	return int(e.undo.Size())
 }
 
 // Setnameandisscratch updates the oeb.details.name and isscratch bit
@@ -356,27 +360,12 @@ func (e *ObservableEditableBuffer) Setnameandisscratch(name string) {
 	}
 }
 
-// SetSeq is a setter for file.seq for use in tests.
-func (e *ObservableEditableBuffer) SetSeq(seq int) {
-	e.f.seq = seq
-}
-
-// SetPutseq is a setter for file.putseq for use in tests.
-func (e *ObservableEditableBuffer) SetPutseq(putseq int) {
-	e.f.putseq = putseq
-}
-
-// SetDelta is a setter for file.delta for use in tests.
-func (e *ObservableEditableBuffer) SetDelta(delta []*Undo) {
-	e.f.delta = delta
-}
-
-// SetEpsilon is a setter for file.epsilon for use in tests.
-func (e *ObservableEditableBuffer) SetEpsilon(epsilon []*Undo) {
-	e.f.epsilon = epsilon
-}
-
 // GetCache is a Getter for file.cache for use in tests.
-func (e *ObservableEditableBuffer) GetCache() []rune {
-	return e.f.cache
+func (e *ObservableEditableBuffer) GetCache() []byte {
+	return e.undo.GetCache()
+}
+
+// Bytes returns the contents of the Undo.buffer as a byte slice.
+func (e *ObservableEditableBuffer) Bytes() []byte {
+	return e.undo.Bytes()
 }

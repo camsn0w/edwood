@@ -510,3 +510,11 @@ func (b *Buffer) Bytes() []byte {
 	}
 	return byteBuf
 }
+
+// GetCache returns the data of the cached piece or nil if it does not exist.
+func (b *Buffer) GetCache() []byte {
+	if b.cachedPiece == nil {
+		return nil
+	}
+	return b.cachedPiece.data
+}
