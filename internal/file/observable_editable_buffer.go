@@ -18,7 +18,6 @@ import (
 type ObservableEditableBuffer struct {
 	currobserver BufferObserver
 	observers    map[BufferObserver]struct{} // [private I think]
-	f            *File
 	Elog         sam.Elog
 	// TODO(rjk): Remove this when I've inserted undo.RuneArray.
 	// At present, InsertAt and DeleteAt have an implicit Commit operation
@@ -95,69 +94,72 @@ func (e *ObservableEditableBuffer) HasMultipleObservers() bool {
 
 // MakeObservableEditableBuffer is a constructor wrapper for NewFile() to abstract File from the main program.
 func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEditableBuffer {
-	f := NewFile()
-	f.b = b
+	data := []byte(b.String())
+
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
-		f:            f,
 		details:      &DiskDetails{Name: filename, Hash: Hash{}},
 		Elog:         sam.MakeElog(),
 		EditClean:    true,
+		undo:         undo.NewBuffer(data),
+		rbi:          NewBytes(data),
 	}
-	oeb.f.oeb = oeb
+	oeb.rbi.oeb = oeb
 	return oeb
 }
 
 // MakeObservableEditableBufferTag is a constructor wrapper for NewTagFile() to abstract File from the main program.
 func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
-	f := NewTagFile()
-	f.b = b
+	data := []byte(b.String())
+
 	oeb := &ObservableEditableBuffer{
 		currobserver: nil,
 		observers:    nil,
-		f:            f,
 		Elog:         sam.MakeElog(),
 		details:      &DiskDetails{Hash: Hash{}},
 		EditClean:    true,
+		undo:         undo.NewBuffer(data),
+		rbi:          NewBytes(data),
 	}
-	oeb.f.oeb = oeb
+	oeb.rbi.oeb = oeb
 	return oeb
 }
 
-// Clean is a forwarding function for file.Clean.
+// Clean is a forwarding function for undo.Clean.
 func (e *ObservableEditableBuffer) Clean() {
-	e.f.Clean()
+	e.undo.Clean()
 }
 
 // Size is a forwarding function for file.Size.
 func (e *ObservableEditableBuffer) Size() int {
-	return e.f.Size()
+	return e.rbi.RuneCount()
 }
 
 // Mark is a forwarding function for file.Mark.
 func (e *ObservableEditableBuffer) Mark(seq int) {
-	e.f.Mark(seq)
+	e.undo.Commit()
 }
 
-// Reset is a forwarding function for file.Reset.
+// Reset removes all Undo records for this File.
 func (e *ObservableEditableBuffer) Reset() {
-	e.f.Reset()
+	e.undo = undo.NewBuffer(e.Bytes())
 }
 
-// HasUncommitedChanges is a forwarding function for file.HasUncommitedChanges.
+// HasUncommitedChanges is a forwarding function for undo.HasUncommitedChanges
 func (e *ObservableEditableBuffer) HasUncommitedChanges() bool {
-	return e.f.HasUncommitedChanges()
+	// TODO(sn0w): This will need to be changed along with Commit as the idea for Commit is changing.
+	return e.undo.HasUncommitedChanges()
 }
 
 // HasRedoableChanges is a forwarding function for file.HasRedoableChanges.
 func (e *ObservableEditableBuffer) HasRedoableChanges() bool {
-	return e.f.HasRedoableChanges()
+	return e.undo.HasRedoableChanges()
 }
 
 // HasUndoableChanges is a forwarding function for file.HasUndoableChanges
 func (e ObservableEditableBuffer) HasUndoableChanges() bool {
-	return e.f.HasUndoableChanges()
+	return e.undo.HasUndoableChanges()
 }
 
 // IsDir is a forwarding function for DiskDetails.IsDir.
@@ -170,19 +172,32 @@ func (e *ObservableEditableBuffer) SetDir(flag bool) {
 	e.details.SetDir(flag)
 }
 
-// Nr is a forwarding function for file.Nr.
+// Nr is a forwarding function for bytes.RuneCount.
 func (e *ObservableEditableBuffer) Nr() int {
-	return e.f.Nr()
+	return e.rbi.RuneCount()
 }
 
-// ReadC is a forwarding function for file.ReadC.
+// ReadC is a forwarding function for bytes.At.
 func (e *ObservableEditableBuffer) ReadC(q int) rune {
-	return e.f.ReadC(q)
+	return e.rbi.At(q)
 }
 
-// SaveableAndDirty is a forwarding function for file.SaveableAndDirty.
+// SaveableAndDirty returns true if the File's contents differ from the
+// backing diskfile File.name, and the diskfile is plausibly writable
+// (not a directory or scratch file).
+//
+// When this is true, the tag's button should
+// be drawn in the modified state if appropriate to the window type
+// and Edit commands should treat the file as modified.
+//
+// TODO(rjk): figure out how this overlaps with hash. (hash would appear
+// to be used to determine the "if the contents differ")
+//
+// Latest thought: there are two separate issues: are we at a point marked
+// as clean and is this File writable to a backing. They are combined in this
+// this method.
 func (e *ObservableEditableBuffer) SaveableAndDirty() bool {
-	return e.details.Name != "" && e.f.SaveableAndDirty()
+	return e.details.Name != "" && (e.undo.Mod() || e.undo.Dirty() || len(e.undo.GetCache()) > 0) && !e.IsDirOrScratch()
 }
 
 // Load is a forwarding function for file.Load.
@@ -200,7 +215,7 @@ func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n i
 
 // Dirty is a forwarding function for file.Dirty.
 func (e *ObservableEditableBuffer) Dirty() bool {
-	return e.f.Dirty()
+	return e.undo.Dirty()
 }
 
 // InsertAt is a forwarding function for file.InsertAt.
@@ -224,6 +239,7 @@ func (e *ObservableEditableBuffer) SetName(name string) {
 
 // Undo is a forwarding function for file.Undo.
 func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
+	e.undo.TreatAsDirty()
 	return e.f.Undo(isundo)
 }
 
@@ -232,14 +248,14 @@ func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
 	e.f.DeleteAt(q0, q1)
 }
 
-// TreatAsClean is a forwarding function for file.TreatAsClean.
+// TreatAsClean is a forwarding function for undo.TreatAsClean.
 func (e *ObservableEditableBuffer) TreatAsClean() {
-	e.f.TreatAsClean()
+	e.undo.TreatAsClean()
 }
 
-// Modded is a forwarding function for file.Modded.
+// Modded is a forwarding function for undo.Modded.
 func (e *ObservableEditableBuffer) Modded() {
-	e.f.Modded()
+	e.undo.Modded()
 }
 
 // Name is a getter for file.details.Name.
@@ -269,12 +285,14 @@ func (e *ObservableEditableBuffer) SetHash(hash Hash) {
 
 // Seq is a getter for file.details.Seq.
 func (e *ObservableEditableBuffer) Seq() int {
-	return e.f.seq
+	// TODO(sn0w): Remove this.
+	return 0
 }
 
 // RedoSeq is a getter for file.details.RedoSeq.
 func (e *ObservableEditableBuffer) RedoSeq() int {
-	return e.f.RedoSeq()
+	// TODO(sn0w): Remove this.
+	return 0
 }
 
 // inserted is a forwarding function for text.inserted.
@@ -293,7 +311,7 @@ func (e *ObservableEditableBuffer) deleted(q0 int, q1 int) {
 
 // Commit is a forwarding function for file.Commit.
 func (e *ObservableEditableBuffer) Commit() {
-	e.f.Commit()
+	// TODO(sn0w): This will need to be updated to be the global commit for changes.
 }
 
 // InsertAtWithoutCommit is a forwarding function for file.InsertAtWithoutCommit.
