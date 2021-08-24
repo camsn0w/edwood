@@ -247,16 +247,24 @@ func (e *ObservableEditableBuffer) SetName(name string) {
 func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
 	e.undo.MarkUnclean()
 
-	var off, n int64
+	var info undo.ChangeInfo
 	if isundo {
-		off, n = e.undo.Undo()
+		info = e.undo.Undo()
 	} else {
-		off, n = e.undo.Redo()
+		info = e.undo.Redo()
 	}
-
-	if off == -1 {
-		return int(off), int(n), false
+	if info == (undo.ChangeInfo{}) {
+		return 0, 0, false
 	}
+	if info.NonAscii == -1 && info.Off < int64(e.rbi.nonASCII) {
+		e.rbi.nonASCII += int(info.Off)
+	} else {
+		if info.Off < int64(e.rbi.nonASCII) {
+			e.rbi.nonASCII = info.NonAscii + int(info.Off)
+			e.rbi.width = info.Width
+		}
+	}
+	e.rbi.numRunes = info.Nr
 
 	return
 }
@@ -342,15 +350,23 @@ func (e *ObservableEditableBuffer) Commit() {
 
 // InsertAtWithoutCommit is a forwarding function for file.InsertAtWithoutCommit.
 func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
-	e.rbi.At(p0)
-	origpos := e.rbi.bytePos
+	origpos := 0
+	if p0 < e.rbi.numRunes {
+		e.rbi.At(p0)
+		origpos = e.rbi.bytePos
+	} else {
+		if e.rbi.numRunes > 0 {
+			c := e.rbi.At(e.rbi.numRunes - 1)
+			origpos = e.rbi.bytePos + utf8.RuneLen(c)
+		}
+	}
 
 	e.rbi.numRunes += len(s)
 
-	ob := make([]byte, utf8.MaxRune*len(s))
-	b := ob
+	ob := make([]byte, 0, utf8.UTFMax*len(s))
 	tb := 0
 	for _, r := range s {
+		b := make([]byte, utf8.UTFMax)
 		nb := utf8.EncodeRune(b, r)
 		e.rbi.bytePos += nb
 		e.rbi.runePos++
@@ -360,7 +376,7 @@ func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
 		if nb > 1 {
 			e.rbi.width = nb
 		}
-		b = b[nb:]
+		ob = append(ob, b[:nb]...)
 		tb += nb
 	}
 	e.undo.Insert(int64(origpos), ob[0:tb])
@@ -381,7 +397,8 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
-	r = []rune(string(e.rbi.Slice(q0, len(r))))
+	data := e.View(q0, len(r))
+	copy(r, data)
 	return len(r), nil
 }
 

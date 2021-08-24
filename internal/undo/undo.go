@@ -83,6 +83,7 @@ import (
 	"errors"
 	"io"
 	"time"
+	"unicode/utf8"
 )
 
 var ErrWrongOffset = errors.New("offset is greater than buffer size")
@@ -100,6 +101,14 @@ type Buffer struct {
 	savedAction   *action
 	mod           bool // true if the file has been changed. [private]
 	treatasclean  bool // Window Clean tests should succeed if set. [private]
+}
+
+type ChangeInfo struct {
+	Off      int64 // Location of the change, in bytes (always positive)
+	Size     int   // Size of change in bytes (can be negative)
+	Nr       int   // Number of runes in change (can be negative)
+	NonAscii int   // Byte index of of the first non-ascii character
+	Width    int   // Width in bytes of the first non-ascii character
 }
 
 // NewBuffer initializes a new buffer with the given content as a starting point.
@@ -315,23 +324,25 @@ func (b *Buffer) findPiece(off int64) (p *piece, offset int) {
 // at which the first change of the action occurred and the number of bytes
 // the change added at off. If there is no action to undo, Undo returns -1
 // as the offset.
-func (b *Buffer) Undo() (off, n int64) {
+func (b *Buffer) Undo() ChangeInfo {
 	b.Commit()
 	a := b.unshiftAction()
 	if a == nil {
-		return -1, 0
+		return ChangeInfo{}
 	}
+
+	var off int64
 
 	for i := len(a.changes) - 1; i >= 0; i-- {
 		c := a.changes[i]
 		swapSpans(c.new, c.old)
 		off = c.off
-		n = c.old.len - c.new.len
+		if i == 0 {
+			size, nR, nonAscii, width := CountRunes(c)
+			return ChangeInfo{Off: off, Size: size, Nr: nR, NonAscii: nonAscii, Width: width}
+		}
 	}
-	if n < 0 {
-		n = 0
-	}
-	return
+	return ChangeInfo{}
 }
 
 func (b *Buffer) unshiftAction() *action {
@@ -346,22 +357,25 @@ func (b *Buffer) unshiftAction() *action {
 // at which the last change of the action occurred and the number of bytes
 // the change added at off. If there is no action to redo, Redo returns -1
 // as the offset.
-func (b *Buffer) Redo() (off, n int64) {
+func (b *Buffer) Redo() ChangeInfo {
 	b.Commit()
 	a := b.shiftAction()
 	if a == nil {
-		return -1, 0
+		return ChangeInfo{}
 	}
 
+	var size, nR, nonAscii, width int
+	var off int64
+	var savedChange change
+
 	for _, c := range a.changes {
+		savedChange = *c
 		swapSpans(c.old, c.new)
 		off = c.off
-		n = c.new.len - c.old.len
+
 	}
-	if n < 0 {
-		n = 0
-	}
-	return
+	size, nR, nonAscii, width = CountRunes(&savedChange)
+	return ChangeInfo{Off: off, Size: size, Nr: nR, NonAscii: nonAscii, Width: width}
 }
 
 func (b *Buffer) shiftAction() *action {
@@ -554,4 +568,25 @@ func (b *Buffer) TreatAsClean() {
 
 func (b *Buffer) MarkUnclean() {
 	b.treatasclean = false
+}
+
+func CountRunes(c *change) (int, int, int, int) {
+	var size, nR, width int
+	nonAscii := -1
+
+	for p := c.new.start; p != nil; p = p.next {
+		size += p.len()
+		for i, r := range p.data {
+			if r > utf8.RuneSelf {
+				nonAscii = i
+				_, width = utf8.DecodeRune(p.data)
+			}
+		}
+		nR += utf8.RuneCount(p.data)
+	}
+	for p := c.old.start; p != nil; p = p.next {
+		size -= p.len()
+		nR -= utf8.RuneCount(p.data)
+	}
+	return size, nR, nonAscii, width
 }
