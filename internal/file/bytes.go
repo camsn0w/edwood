@@ -8,9 +8,10 @@ package file // import "golang.org/x/exp/utf8Bytes"
 
 import (
 	"errors"
-	"github.com/rjkroege/edwood/internal/undo"
 	"io"
 	"unicode/utf8"
+
+	"github.com/rjkroege/edwood/internal/undo"
 )
 
 // Bytes wraps a regular bytes with a small structure that provides more
