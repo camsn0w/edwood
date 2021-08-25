@@ -32,6 +32,7 @@ type ObservableEditableBuffer struct {
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
 	rbi       *Bytes
 	undo      *undo.Buffer
+	marked    bool
 }
 
 // Set is a forwarding function for file_hash.Set
@@ -106,6 +107,7 @@ func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEdita
 		EditClean:    true,
 		undo:         undo.NewBuffer(data),
 		rbi:          NewBytes(data),
+		marked:       false,
 	}
 	oeb.rbi.oeb = oeb
 	return oeb
@@ -123,6 +125,7 @@ func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
 		EditClean:    true,
 		undo:         undo.NewBuffer(data),
 		rbi:          NewBytes(data),
+		marked:       false,
 	}
 	oeb.rbi.oeb = oeb
 	return oeb
@@ -140,7 +143,9 @@ func (e *ObservableEditableBuffer) Size() int {
 
 // Mark is a forwarding function for file.Mark.
 func (e *ObservableEditableBuffer) Mark(seq int) {
-	e.undo.Commit()
+	if e.marked == false {
+		e.undo.Commit()
+	}
 }
 
 // Reset removes all Undo records for this File.
@@ -229,7 +234,9 @@ func (e *ObservableEditableBuffer) Dirty() bool {
 // InsertAt is a forwarding function for file.InsertAt.
 func (e *ObservableEditableBuffer) InsertAt(p0 int, s []rune) {
 	e.InsertAtWithoutCommit(p0, s)
-	e.undo.Commit()
+	if e.marked == false {
+		e.undo.Commit()
+	}
 }
 
 // SetName sets the name of the backing for this file.
@@ -397,6 +404,10 @@ func (e *ObservableEditableBuffer) TreatAsDirty() bool {
 
 // Read is a forwarding function for rune_array.Read.
 func (e *ObservableEditableBuffer) Read(q0 int, r []rune) (int, error) {
+	if cap(r) > e.rbi.RuneCount() {
+		r = r[:e.rbi.RuneCount()]
+
+	}
 	data := e.View(q0, len(r))
 	copy(r, data)
 	return len(r), nil
