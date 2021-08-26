@@ -328,21 +328,21 @@ func (b *Buffer) Undo() ChangeInfo {
 	b.Commit()
 	a := b.unshiftAction()
 	if a == nil {
-		return ChangeInfo{}
+		return ChangeInfo{Off: -1, Size: 0}
 	}
 
-	var off int64
+	var off, size int64
+	var nR int
 
 	for i := len(a.changes) - 1; i >= 0; i-- {
 		c := a.changes[i]
 		swapSpans(c.new, c.old)
 		off = c.off
-		if i == 0 {
-			size, nR, nonAscii, width := CountRunes(c)
-			return ChangeInfo{Off: off, Size: size, Nr: nR, NonAscii: nonAscii, Width: width}
-		}
+		size = c.old.len - c.new.len
+		nR -= c.new.Nr() - c.old.Nr()
 	}
-	return ChangeInfo{}
+	nonAscii, width := b.FindNewNonAscii()
+	return ChangeInfo{Off: off, Size: int(size), Nr: nR, NonAscii: nonAscii, Width: width}
 }
 
 func (b *Buffer) unshiftAction() *action {
@@ -361,21 +361,19 @@ func (b *Buffer) Redo() ChangeInfo {
 	b.Commit()
 	a := b.shiftAction()
 	if a == nil {
-		return ChangeInfo{}
+		return ChangeInfo{Off: -1, Size: 0}
 	}
 
-	var size, nR, nonAscii, width int
+	var nR int
 	var off int64
-	var savedChange change
 
 	for _, c := range a.changes {
-		savedChange = *c
 		swapSpans(c.old, c.new)
 		off = c.off
-
+		nR -= c.new.Nr() - c.old.Nr()
 	}
-	size, nR, nonAscii, width = CountRunes(&savedChange)
-	return ChangeInfo{Off: off, Size: size, Nr: nR, NonAscii: nonAscii, Width: width}
+	nonAscii, width := b.FindNewNonAscii()
+	return ChangeInfo{Off: off, Nr: nR, NonAscii: nonAscii, Width: width}
 }
 
 func (b *Buffer) shiftAction() *action {
@@ -540,11 +538,11 @@ func (b *Buffer) GetCache() []byte {
 }
 
 func (b *Buffer) HasUncommitedChanges() bool {
-	return b.cachedPiece != nil
+	return b.cachedPiece != nil && b.cachedPiece.len() > 0
 }
 
 func (b *Buffer) HasUndoableChanges() bool {
-	return b.HasUncommitedChanges() && b.cachedPiece.prev != nil
+	return b.HasUncommitedChanges() && b.head != 0
 }
 
 func (b *Buffer) HasRedoableChanges() bool {
@@ -570,23 +568,28 @@ func (b *Buffer) MarkUnclean() {
 	b.treatasclean = false
 }
 
-func CountRunes(c *change) (int, int, int, int) {
-	var size, nR, width int
-	nonAscii := -1
+func (s *span) Nr() int {
+	var nr int
 
-	for p := c.new.start; p != nil; p = p.next {
-		size += p.len()
-		for i, r := range p.data {
-			if r > utf8.RuneSelf {
+	for p := s.start; p != nil; p = p.next {
+		nr += utf8.RuneCount(p.data)
+		if p == s.end {
+			break
+		}
+	}
+	return nr
+}
+
+func (b *Buffer) FindNewNonAscii() (int, int) {
+	var nonAscii, width int
+	for p := b.begin; p != nil; p = p.next {
+		for i := range p.data {
+			if p.data[i] > 127 {
+				_, width = utf8.DecodeRune(p.data[i:])
 				nonAscii = i
-				_, width = utf8.DecodeRune(p.data)
+				return nonAscii, width
 			}
 		}
-		nR += utf8.RuneCount(p.data)
 	}
-	for p := c.old.start; p != nil; p = p.next {
-		size -= p.len()
-		nR -= utf8.RuneCount(p.data)
-	}
-	return size, nR, nonAscii, width
+	return -1, 1
 }

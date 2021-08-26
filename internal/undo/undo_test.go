@@ -270,7 +270,7 @@ func TestUndoRedoReturnedOffsets(t *testing.T) {
 
 	undo, redo := (*Buffer).Undo, (*Buffer).Redo
 	tests := []struct {
-		op      func(*Buffer) (off, n int64)
+		op      func(*Buffer) ChangeInfo
 		wantOff int64
 		wantN   int64
 	}{
@@ -292,7 +292,8 @@ func TestUndoRedoReturnedOffsets(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		off, n := tt.op(b)
+		info := tt.op(b)
+		off, n := info.Off, int64(info.Size)
 		if off != tt.wantOff {
 			t.Errorf("%d: got offset %d, want %d", i, off, tt.wantOff)
 		}

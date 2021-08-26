@@ -32,7 +32,6 @@ type ObservableEditableBuffer struct {
 	isscratch bool // Used to track if this File should warn on unsaved deletion. [private]
 	rbi       *Bytes
 	undo      *undo.Buffer
-	marked    bool
 }
 
 // Set is a forwarding function for file_hash.Set
@@ -107,7 +106,6 @@ func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEdita
 		EditClean:    true,
 		undo:         undo.NewBuffer(data),
 		rbi:          NewBytes(data),
-		marked:       false,
 	}
 	oeb.rbi.oeb = oeb
 	return oeb
@@ -125,7 +123,6 @@ func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
 		EditClean:    true,
 		undo:         undo.NewBuffer(data),
 		rbi:          NewBytes(data),
-		marked:       false,
 	}
 	oeb.rbi.oeb = oeb
 	return oeb
@@ -143,9 +140,7 @@ func (e *ObservableEditableBuffer) Size() int {
 
 // Mark is a forwarding function for file.Mark.
 func (e *ObservableEditableBuffer) Mark(seq int) {
-	if e.marked == false {
-		e.undo.Commit()
-	}
+	e.undo.Commit()
 }
 
 // Reset removes all Undo records for this File.
@@ -223,7 +218,7 @@ func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n i
 	// NB: Runs the observers.
 	e.InsertAt(q0, runes)
 
-	return n, hasNulls, err
+	return len(d), hasNulls, err
 }
 
 // Dirty is a forwarding function for file.Dirty.
@@ -234,9 +229,6 @@ func (e *ObservableEditableBuffer) Dirty() bool {
 // InsertAt is a forwarding function for file.InsertAt.
 func (e *ObservableEditableBuffer) InsertAt(p0 int, s []rune) {
 	e.InsertAtWithoutCommit(p0, s)
-	if e.marked == false {
-		e.undo.Commit()
-	}
 }
 
 // SetName sets the name of the backing for this file.
@@ -257,35 +249,70 @@ func (e *ObservableEditableBuffer) Undo(isundo bool) (q0, q1 int, ok bool) {
 	var info undo.ChangeInfo
 	if isundo {
 		info = e.undo.Undo()
+		e.rbi.numRunes += info.Nr
+		if info.Off == -1 {
+			return
+		}
 	} else {
 		info = e.undo.Redo()
+		e.rbi.numRunes -= info.Nr
+		if info.Off == -1 {
+			return
+		}
 	}
 	if info == (undo.ChangeInfo{}) {
 		return 0, 0, false
 	}
-	if info.NonAscii == -1 && info.Off < int64(e.rbi.nonASCII) {
-		e.rbi.nonASCII += int(info.Off)
+	if info.NonAscii == -1 {
+		if info.Off+int64(info.Nr) < int64(e.rbi.nonASCII) {
+			e.rbi.nonASCII += int(info.Off) + info.Nr
+		}
 	} else {
 		if info.Off < int64(e.rbi.nonASCII) {
 			e.rbi.nonASCII = info.NonAscii + int(info.Off)
 			e.rbi.width = info.Width
 		}
 	}
-	e.rbi.numRunes = info.Nr
 
 	return
 }
 
 // DeleteAt is a forwarding function for file.DeleteAt.
 func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
-	if q1 <= e.rbi.nonASCII {
-		e.undo.Delete(int64(q0), int64(q1-q0))
+	e.rbi.At(q0)
+	b0 := e.rbi.bytePos
+	e.rbi.At(q1)
+	b1 := e.rbi.bytePos
+	e.undo.Delete(int64(b0), int64(b1-b0))
+	n := q1 - q0
+	fmt.Printf("Len to remove: %v", n)
+	e.rbi.numRunes -= n
 
+	if q1 < e.rbi.nonASCII {
+		e.rbi.nonASCII -= n
 	} else {
-		off := len(e.rbi.Slice(0, q0))
-		n := len(e.rbi.Slice(q0, q1))
-		e.undo.Delete(int64(off), int64(n))
+		nonASCII, width := e.undo.FindNewNonAscii()
+		if nonASCII != -1 {
+			e.rbi.nonASCII = nonASCII
+			e.rbi.width = width
+		} else {
+			e.rbi.nonASCII = e.Nr()
+			e.rbi.width = 1
+		}
 	}
+
+	/*	if q1 <= e.rbi.nonASCII {
+			e.rbi.At(q0)
+			q0 = e.rbi.bytePos
+			e.rbi.At(q1)
+			q1 = e.rbi.bytePos
+			e.undo.Delete(int64(q0), int64(q1-q0))
+
+		} else {
+			off := len(e.rbi.Slice(0, q0))
+			n := len(e.rbi.Slice(q0, q1))
+			e.undo.Delete(int64(off), int64(n))
+		}*/
 	e.deleted(q0, q1)
 }
 
@@ -386,7 +413,7 @@ func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
 		ob = append(ob, b[:nb]...)
 		tb += nb
 	}
-	e.undo.Insert(int64(origpos), ob[0:tb])
+	e.undo.Insert(int64(origpos), ob[:tb])
 	// TODO(sn0w): Maybe run the observers here?
 }
 
