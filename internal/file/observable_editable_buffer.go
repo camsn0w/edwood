@@ -217,6 +217,7 @@ func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n i
 	// Would appear to require a commit operation.
 	// NB: Runs the observers.
 	e.InsertAt(q0, runes)
+	e.inserted(q0, runes)
 
 	return len(d), hasNulls, err
 }
@@ -414,7 +415,7 @@ func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
 		tb += nb
 	}
 	e.undo.Insert(int64(origpos), ob[:tb])
-	// TODO(sn0w): Maybe run the observers here?
+	e.inserted(origpos, s)
 }
 
 // IsDirOrScratch returns true if the File has a synthetic backing of

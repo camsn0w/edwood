@@ -538,15 +538,15 @@ func (b *Buffer) GetCache() []byte {
 }
 
 func (b *Buffer) HasUncommitedChanges() bool {
-	return b.cachedPiece != nil && b.cachedPiece.len() > 0
+	return b.cachedPiece != nil || b.currentAction != nil
 }
 
 func (b *Buffer) HasUndoableChanges() bool {
-	return b.HasUncommitedChanges() && b.head != 0
+	return b.head != 0
 }
 
 func (b *Buffer) HasRedoableChanges() bool {
-	return b.HasUncommitedChanges() && b.cachedPiece.next != nil
+	return b.head <= len(b.actions)-1
 }
 func (b *Buffer) Mod() bool {
 	return b.mod
