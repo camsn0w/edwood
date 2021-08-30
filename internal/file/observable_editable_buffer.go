@@ -369,3 +369,23 @@ func (e *ObservableEditableBuffer) GetCache() []byte {
 func (e *ObservableEditableBuffer) Bytes() []byte {
 	return e.undo.Bytes()
 }
+
+// SetDelta is a setter for file.Delta.
+func (e *ObservableEditableBuffer) SetDelta(delta []*Undo) {
+	e.f.delta = delta
+}
+
+// SetEpsilon is a setter for file.Epsilon.
+func (e *ObservableEditableBuffer) SetEpsilon(epsilon []*Undo) {
+	e.f.epsilon = epsilon
+}
+
+// SetSeq is a setter for file.Seq.
+func (e *ObservableEditableBuffer) SetSeq(i int) {
+	e.f.seq = i
+}
+
+// SetPutseq is a setter for file.putseq.
+func (e *ObservableEditableBuffer) SetPutseq(i int) {
+	e.f.putseq = i
+}
