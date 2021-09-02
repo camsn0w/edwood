@@ -425,6 +425,17 @@ func (b *Buffer) Size() int64 {
 	return size
 }
 
+func (b *Buffer) At(i int) rune {
+	runePos := 0
+	for p := b.begin; p != nil; p = p.next {
+		if i < p.data.numRunes+runePos {
+			return p.data.At(i - runePos)
+		}
+		runePos += p.data.numRunes
+	}
+	return 0
+}
+
 // action is a list of changes which are used to undo/redo all modifications.
 type action struct {
 	changes []*change

@@ -302,6 +302,16 @@ func TestUndoRedoReturnedOffsets(t *testing.T) {
 	}
 }
 
+func TestBuffer_At(t *testing.T) {
+	data := []rune("Hello 世!")
+	b := NewBuffer([]byte(string(data)))
+	for i, c := range data {
+		if b.At(i) != c {
+			t.Errorf("got '%v', want '%v'", b.At(i), c)
+		}
+	}
+}
+
 func (b *Buffer) checkPiecesCnt(t *testing.T, expected int) {
 	if b.piecesCnt != expected {
 		t.Errorf("got %d pieces, want %d", b.piecesCnt, expected)
