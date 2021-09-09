@@ -342,6 +342,9 @@ func (b *Buffer) Undo() ChangeInfo {
 		nR -= c.new.Nr() - c.old.Nr()
 	}
 	nonAscii, width := b.FindNewNonAscii()
+	if size < 0 {
+		size = 0
+	}
 	return ChangeInfo{Off: off, Size: int(size), Nr: nR, NonAscii: nonAscii, Width: width}
 }
 
@@ -365,15 +368,19 @@ func (b *Buffer) Redo() ChangeInfo {
 	}
 
 	var nR int
-	var off int64
+	var off, size int64
 
 	for _, c := range a.changes {
 		swapSpans(c.old, c.new)
 		off = c.off
+		size = c.new.len - c.old.len
 		nR -= c.new.Nr() - c.old.Nr()
 	}
 	nonAscii, width := b.FindNewNonAscii()
-	return ChangeInfo{Off: off, Nr: nR, NonAscii: nonAscii, Width: width}
+	if size < 0 {
+		size = 0
+	}
+	return ChangeInfo{Off: off, Size: int(size), Nr: nR, NonAscii: nonAscii, Width: width}
 }
 
 func (b *Buffer) shiftAction() *action {

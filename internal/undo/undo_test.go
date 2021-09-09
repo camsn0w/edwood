@@ -298,6 +298,7 @@ func TestUndoRedoReturnedOffsets(t *testing.T) {
 			t.Errorf("%d: got offset %d, want %d", i, off, tt.wantOff)
 		}
 		if n != tt.wantN {
+			t.Errorf("info: %v", info)
 			t.Errorf("%d: got n %d, want %d", i, n, tt.wantN)
 		}
 	}
