@@ -286,7 +286,6 @@ func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
 	b1 := e.rbi.bytePos
 	e.undo.Delete(int64(b0), int64(b1-b0))
 	n := q1 - q0
-	fmt.Printf("Len to remove: %v", n)
 	e.rbi.numRunes -= n
 
 	if q1 < e.rbi.nonASCII {
@@ -302,18 +301,6 @@ func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
 		}
 	}
 
-	/*	if q1 <= e.rbi.nonASCII {
-			e.rbi.At(q0)
-			q0 = e.rbi.bytePos
-			e.rbi.At(q1)
-			q1 = e.rbi.bytePos
-			e.undo.Delete(int64(q0), int64(q1-q0))
-
-		} else {
-			off := len(e.rbi.Slice(0, q0))
-			n := len(e.rbi.Slice(q0, q1))
-			e.undo.Delete(int64(off), int64(n))
-		}*/
 	e.deleted(q0, q1)
 }
 
