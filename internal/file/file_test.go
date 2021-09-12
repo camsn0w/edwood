@@ -158,9 +158,6 @@ type fileStateSummary struct {
 
 func check(t *testing.T, testname string, oeb *ObservableEditableBuffer, fss *fileStateSummary) {
 	f := oeb
-	if got, want := f.HasUncommitedChanges(), fss.HasUncommitedChanges; got != want {
-		t.Errorf("%s: HasUncommitedChanges failed. got %v want %v", testname, got, want)
-	}
 	if got, want := f.HasUndoableChanges(), fss.HasUndoableChanges; got != want {
 		t.Errorf("%s: HasUndoableChanges failed. got %v want %v", testname, got, want)
 	}
