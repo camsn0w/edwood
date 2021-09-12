@@ -218,7 +218,9 @@ func (e *ObservableEditableBuffer) Load(q0 int, fd io.Reader, sethash bool) (n i
 	// NB: Runs the observers.
 	e.InsertAt(q0, runes)
 	e.inserted(q0, runes)
+	e.Reset()
 
+	e.undo.Modded()
 	return len(d), hasNulls, err
 }
 
@@ -286,7 +288,6 @@ func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
 	b1 := e.rbi.bytePos
 	e.undo.Delete(int64(b0), int64(b1-b0))
 	n := q1 - q0
-	fmt.Printf("Len to remove: %v", n)
 	e.rbi.numRunes -= n
 
 	if q1 < e.rbi.nonASCII {
