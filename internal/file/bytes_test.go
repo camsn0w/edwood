@@ -155,6 +155,6 @@ func TestBytes_Read(t *testing.T) {
 func InitOEBNewBytes(data []byte) *Bytes {
 	b := NewBytes(data)
 	b.oeb = &ObservableEditableBuffer{}
-	b.oeb.undo = undo.NewBuffer(data)
+	b.oeb.undo = undo.NewBuffer(data, b.RuneCount())
 	return b
 }

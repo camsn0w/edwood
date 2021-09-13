@@ -228,7 +228,7 @@ func (bytes *Bytes) IndexRune(r rune) int {
 func (bytes *Bytes) Reader(q0 int, q1 int) io.Reader {
 	slice := bytes.Slice(q0, q1)
 	reader := NewBytes(slice)
-	reader.oeb.undo = undo.NewBuffer(slice)
+	reader.oeb.undo = undo.NewBuffer(slice, reader.numRunes)
 	return reader
 }
 
