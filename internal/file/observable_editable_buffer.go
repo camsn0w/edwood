@@ -104,7 +104,7 @@ func MakeObservableEditableBuffer(filename string, b RuneArray) *ObservableEdita
 		details:      &DiskDetails{Name: filename, Hash: Hash{}},
 		Elog:         sam.MakeElog(),
 		EditClean:    true,
-		undo:         undo.NewBuffer(data),
+		undo:         undo.NewBuffer(data, len(b)),
 		rbi:          NewBytes(data),
 	}
 	oeb.rbi.oeb = oeb
@@ -121,7 +121,7 @@ func MakeObservableEditableBufferTag(b RuneArray) *ObservableEditableBuffer {
 		Elog:         sam.MakeElog(),
 		details:      &DiskDetails{Hash: Hash{}},
 		EditClean:    true,
-		undo:         undo.NewBuffer(data),
+		undo:         undo.NewBuffer(data, len(b)),
 		rbi:          NewBytes(data),
 	}
 	oeb.rbi.oeb = oeb
@@ -145,7 +145,7 @@ func (e *ObservableEditableBuffer) Mark(seq int) {
 
 // Reset removes all Undo records for this File.
 func (e *ObservableEditableBuffer) Reset() {
-	e.undo = undo.NewBuffer(e.Bytes())
+	e.undo = undo.NewBuffer(e.Bytes(), e.Nr())
 }
 
 // HasUncommitedChanges is a forwarding function for undo.HasUncommitedChanges
@@ -297,25 +297,10 @@ func (e *ObservableEditableBuffer) DeleteAt(q0, q1 int) {
 		if nonASCII != -1 {
 			e.rbi.nonASCII = nonASCII
 			e.rbi.width = width
-		} else {
-			e.rbi.nonASCII = e.Nr()
-			e.rbi.width = 1
 		}
 	}
 
-	/*	if q1 <= e.rbi.nonASCII {
-			e.rbi.At(q0)
-			q0 = e.rbi.bytePos
-			e.rbi.At(q1)
-			q1 = e.rbi.bytePos
-			e.undo.Delete(int64(q0), int64(q1-q0))
-
-		} else {
-			off := len(e.rbi.Slice(0, q0))
-			n := len(e.rbi.Slice(q0, q1))
-			e.undo.Delete(int64(off), int64(n))
-		}*/
-	e.deleted(q0, q1)
+	e.deleted(b0, b1)
 }
 
 // TreatAsClean is a forwarding function for undo.TreatAsClean.
@@ -415,7 +400,7 @@ func (e *ObservableEditableBuffer) InsertAtWithoutCommit(p0 int, s []rune) {
 		ob = append(ob, b[:nb]...)
 		tb += nb
 	}
-	e.undo.Insert(int64(origpos), ob[:tb])
+	e.undo.Insert(int64(origpos), ob[:tb], len(s))
 	e.inserted(origpos, s)
 }
 
@@ -454,7 +439,7 @@ func (e *ObservableEditableBuffer) String() string {
 
 // ResetBuffer is a forwarding function for rune_array.Reset.
 func (e *ObservableEditableBuffer) ResetBuffer() {
-	e.undo = undo.NewBuffer(e.Bytes())
+	e.undo = undo.NewBuffer(e.Bytes(), e.Nr())
 }
 
 // Reader is a forwarding function for rune_array.Reader.
