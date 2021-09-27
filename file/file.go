@@ -59,7 +59,7 @@ type File struct {
 //func (b *RuneArray) Commit()
 //func (b *RuneArray) Delete(off, length int64) error
 //func (b *RuneArray) Dirty() bool
-//func (b *RuneArray) Insert(off int64, data []byte) error
+//func (b *RuneArray) InsertWithNr(off int64, data []byte) error
 //func (b *RuneArray) ReadAt(data []byte, off int64) (n int, err error)
 //func (b *RuneArray) Redo() (off, n int64)
 //func (b *RuneArray) Size() int64
@@ -214,7 +214,7 @@ func (f *File) Dirty() bool {
 // InsertAt inserts s runes at rune address p0.
 // TODO(rjk): run the observers here to simplify the Text code.
 // TODO(rjk): In terms of the undo.RuneArray conversion, this correponds
-// to undo.RuneArray.Insert.
+// to undo.RuneArray.InsertWithNr.
 // NB: At suffix is to correspond to utf8string.String.At().
 func (f *File) InsertAt(p0 int, s []rune) {
 	f.treatasclean = false
