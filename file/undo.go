@@ -141,6 +141,7 @@ func NewBufferNoNr(content []byte) *Buffer {
 // InsertWithNr inserts the data at the given offset in the buffer. An error is return when the
 // given offset is invalid.
 func (b *Buffer) InsertWithNr(off int64, data []byte, nr int) error {
+	off = b.GetRuneIndex(off)
 	b.treatasclean = false
 	if len(data) == 0 {
 		return nil
@@ -193,6 +194,8 @@ func (b *Buffer) Insert(off int64, data []byte) error {
 // size of the buffer, the portions from off to the end of the buffer will be
 // deleted.
 func (b *Buffer) Delete(off, length int64) error {
+	off = b.GetRuneIndex(off)
+	length = b.GetRuneIndex(off + length)
 	b.treatasclean = false
 	if length <= 0 {
 		return nil
@@ -327,7 +330,7 @@ func (b *Buffer) newEmptyPiece() *piece {
 func (b *Buffer) findPiece(off int64) (p *piece, offset int) {
 	var cur int64
 	for p = b.begin; p.next != nil; p = p.next {
-		if cur <= off && off <= cur+int64(p.len()) {
+		if cur <= off && off <= cur+int64(p.nr) {
 			return p, int(off - cur)
 		}
 		cur += int64(p.len())
@@ -605,15 +608,6 @@ func (s *span) Nr() int {
 	return nr
 }
 
-func (b *Buffer) FindNewNonAscii() (int, int) {
-	for p := b.begin; p != nil; p = p.next {
-		if p.len() > p.nr {
-			return p.FirstNonAscii()
-		}
-	}
-	return -1, 1
-}
-
 func (p *piece) FirstNonAscii() (int, int) {
 	var nonAscii, width int
 	for i := range p.data {
@@ -624,4 +618,62 @@ func (p *piece) FirstNonAscii() (int, int) {
 		}
 	}
 	return -1, 1
+}
+
+// isAscii returns true if the piece is Ascii.
+func (p *piece) isAscii() bool {
+	if p.len() == p.nr {
+		return true
+	}
+	return false
+}
+
+// NonAscii searches up to off for the first nonAscii character, and
+// returns the index in bytes, or -1 if not found.
+func (b *Buffer) nonAscii(off int64) int64 {
+	var nb, nr int
+	for p := b.begin; p != nil && off >= int64(nr); p = p.next {
+		if !p.isAscii() {
+			nonAscii, _ := p.FirstNonAscii()
+			return int64(nb + nonAscii)
+		}
+		nb += p.len()
+		nr += p.nr
+	}
+	return -1
+}
+
+// GetRuneIndex returns index, corrected for the width of the nonAscii characters.
+func (b *Buffer) GetRuneIndex(off int64) int64 {
+	runeOff := b.nonAscii(off)
+	if runeOff == -1 {
+		return off
+	}
+	var nb int
+	var nr int
+	for p := b.begin; p != nil; p = p.next {
+		if off > int64(p.nr+nr) {
+			nb += p.len()
+			nr += p.nr
+		} else {
+			if p.isAscii() {
+				nb += p.len()
+				nr += p.nr
+				return int64(nb)
+			}
+			for i := 0; i < p.len() && int64(nr) < off; i++ {
+				if p.data[i] >= utf8.RuneSelf {
+					_, width := utf8.DecodeRune(p.data[i:])
+					nb += width
+					nr += 1
+					i += width - 1
+				} else {
+					nr += 1
+					nb += 1
+				}
+			}
+			return int64(nb)
+		}
+	}
+	return off
 }

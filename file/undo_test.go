@@ -306,17 +306,20 @@ func TestUndoRedoReturnedOffsets(t *testing.T) {
 func TestPieceNr(t *testing.T) {
 	b := NewBufferNoNr(nil)
 
-	manderianBytes := []byte("痛苦本身可能是很多痛苦, 但主要的原因是痛苦, 但我给它时间陷入这种痛苦, 以至于有些巨大的痛苦")
-	eng1 := []byte("Lorem ipsum in Mandarin")
-	eng2 := []byte("This is the")
+	mandarinBytes := []byte("痛苦本身可能是很多痛苦, 但主要的原因是痛苦, 但我给它时间陷入这种痛苦, 以至于有些巨大的痛苦")
+	eng1 := []byte(" is the Lorem ipsum in Mandarin")
+	eng2 := []byte("This: ")
 	eng3 := []byte("In the midst")
 
-	b.Insert(0, manderianBytes)
+	b.Insert(0, mandarinBytes)
+
 	b.Insert(b.Nr(), eng1)
+
 	b.Insert(0, eng2)
 
-	b.Delete(13, 10)
-	b.Insert(8, eng3)
+	b.Delete(9, 5)
+
+	b.Insert(10, eng3)
 
 	undo, redo := (*Buffer).Undo, (*Buffer).Redo
 	tests := []struct {
@@ -342,6 +345,7 @@ func TestPieceNr(t *testing.T) {
 	for i, tt := range tests {
 		tt.op(b)
 		nr := b.Nr()
+		println(string(b.Bytes()))
 		wantNr := countRunes(b)
 		if nr != wantNr {
 			t.Errorf("%d: got n %d, want %d", i, nr, wantNr)
