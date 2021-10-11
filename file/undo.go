@@ -485,6 +485,7 @@ type piece struct {
 	id         int
 	prev, next *piece
 	data       []byte
+	nr         int
 }
 
 func (p *piece) len() int {
@@ -501,4 +502,8 @@ func (p *piece) delete(off int, length int64) bool {
 	}
 	p.data = append(p.data[:off], p.data[off+int(length):]...)
 	return true
+}
+
+func (p *piece) Nr() int {
+	return p.nr
 }
